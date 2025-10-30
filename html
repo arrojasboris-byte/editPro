@@ -251,6 +251,20 @@
         background: #000;
         color: #fff;
       }
+      /* fila superior de acciones en panel central */
+      .sub-top-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+      }
+      .sub-top-actions button {
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 8px;
+        padding: 3px 10px;
+        font-size: 11px;
+        cursor: pointer;
+      }
 
       /* PANEL PASOS */
       #steps {
@@ -504,7 +518,6 @@
           div.onclick = () => {
             currentP = p.id;
             currentS = null;
-            // si no tiene subprocesos pero sí pasos -> mostramos pasos y ocultamos central
             const hasSubs = (p.subprocesses || []).length > 0;
             const hasSteps = (p.steps || []).length > 0;
             if (!hasSubs && hasSteps) {
@@ -649,8 +662,7 @@
         const subs = p.subprocesses || [];
         const procSteps = p.steps || [];
 
-        // CASO QUE PIDES:
-        // si NO hay subprocesos y SÍ hay pasos → ocultamos central y mostramos pasos
+        // si NO hay subprocesos y SÍ hay pasos → ocultamos central
         if (subs.length === 0 && procSteps.length > 0) {
           subPanel.classList.add("hidden-sub");
           stepsPanel.classList.add("full-width");
@@ -658,28 +670,25 @@
           showSteps = true;
           return;
         } else {
-          // en cualquier otro caso mostramos el panel central
           subPanel.classList.remove("hidden-sub");
           stepsPanel.classList.remove("full-width");
         }
 
-        // bloque pasos directos del proceso
-        const infoProc = document.createElement("div");
-        infoProc.style.marginBottom = "10px";
-        infoProc.innerHTML = "<span class='label'>Pasos directos de este proceso</span>";
-        const btnProcSteps = document.createElement("button");
-        btnProcSteps.textContent = "Ver pasos del proceso";
-        btnProcSteps.className =
-          "sub-steps-btn" + (stepScope.type === "process" && showSteps ? " active" : "");
-        btnProcSteps.onclick = () => {
+        // fila con botón "Pasos →"
+        const topActions = document.createElement("div");
+        topActions.className = "sub-top-actions";
+        const btnPasosProc = document.createElement("button");
+        btnPasosProc.textContent = "Pasos →";
+        btnPasosProc.onclick = () => {
           stepScope = { type: "process", id: p.id };
           showSteps = true;
           render();
         };
-        infoProc.appendChild(btnProcSteps);
-        list.appendChild(infoProc);
+        topActions.appendChild(btnPasosProc);
+        list.appendChild(topActions);
 
         if (subs.length === 0) {
+          // Aquí ya no mostramos "Ver pasos del proceso", porque ya tienes el botón arriba
           list.innerHTML +=
             "<div style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Este proceso no tiene subprocesos.</div>";
           return;
@@ -834,7 +843,7 @@
         list.innerHTML = "";
         if (!showSteps) {
           list.innerHTML =
-            "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos” en un subproceso o “Ver pasos del proceso”.</p>";
+            "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos” →</p>";
           return;
         }
         let steps = [];
