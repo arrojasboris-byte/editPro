@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PROCESOS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- React desde CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      :root {
+        --rojo-1: #7f0000;
+        --rojo-2: #bc0000;
+        --fondo: #f3f4f6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--fondo);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(90deg, #7f0000 0%, #d12929 100%);
+        color: #fff;
+      }
+      .topbar-title {
+        font-size: 2rem;
+        font-weight: 800;
+      }
+      .search-input {
+        flex: 1;
+        max-width: 480px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+        padding: 0.4rem 0.8rem;
+        color: #fff;
+      }
+      .btn-top {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 9999px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+      .main {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        height: calc(100vh - 58px);
+      }
+      .panel {
+        background: #fff;
+        border-radius: 1.6rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        display: flex;
+        flex-direction: column;
+      }
+      .panel-procesos {
+        width: 260px;
+        overflow: hidden;
+      }
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .panel-title {
+        font-weight: 600;
+      }
+      .panel-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.75rem;
+      }
+      .item-proceso {
+        border-radius: 1.1rem;
+        border: 1px solid #fff;
+        background: #fff;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .item-proceso.active {
+        background: #fff3f3;
+        border-color: #f5c7c7;
+      }
+      .item-proceso-body {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.7rem 0.6rem 0.7rem 0.8rem;
+        align-items: center;
+      }
+      .small-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 9999px;
+        border: none;
+        background: rgba(188, 0, 0, 0.07);
+        color: #bc0000;
+        cursor: pointer;
+      }
+      .middle-panel {
+        flex: 1;
+      }
+      .sub-box {
+        border: 1px solid #f0f0f0;
+        border-radius: 1.25rem;
+        padding: 0.7rem 0.8rem;
+        margin-bottom: 0.6rem;
+      }
+      .sub-box.active {
+        background: #fff3f3;
+        border-color: #f5c7c7;
+      }
+      .label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: #888;
+        letter-spacing: 0.03em;
+        margin-bottom: 0.25rem;
+      }
+      .input-inline,
+      .textarea-inline,
+      .select-inline {
+        width: 100%;
+        border: 1px solid #eee;
+        border-radius: 0.45rem;
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+      }
+      .textarea-inline {
+        min-height: 48px;
+        resize: vertical;
+      }
+      .panel-pasos {
+        width: 310px;
+      }
+      .step-box {
+        border: 1px solid #eee;
+        border-radius: 1.1rem;
+        padding: 0.6rem 0.7rem;
+        margin-bottom: 0.6rem;
+      }
+      /* pantalla pin */
+      .pin-wrapper {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 10% 10%, #d72626, #410000 65%);
+      }
+      .pin-box {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 1.5rem;
+        padding: 2.5rem 2rem 2rem;
+        backdrop-filter: blur(10px);
+        width: 320px;
+        text-align: center;
+        color: #fff;
+      }
+      .pin-input {
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 0.7rem;
+        padding: 0.45rem 0.4rem;
+        text-align: center;
+        color: #fff;
+        letter-spacing: 0.3em;
+      }
+      .btn-red {
+        background: #d72626;
+        border: none;
+        color: #fff;
+        width: 100%;
+        padding: 0.5rem 0;
+        border-radius: 0.7rem;
+        margin-top: 1rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useMemo } = React;
+
+      const DEFAULT_PROCESSES = [
+        { id: "p1", name: "REPARACIONES", description: "", subprocesses: [] },
+        { id: "p2", name: "AJUSTE REMOTO", description: "", subprocesses: [] },
+        { id: "p3", name: "HIT", description: "", subprocesses: [] },
+        { id: "p4", name: "DEVOLUCIÓN DE PRODUCTO", description: "", subprocesses: [] },
+      ];
+      const DEFAULT_RESP = ["Audiólogo", "Responsable", "Franquiciado"];
+
+      function uid() {
+        return Math.random().toString(36).slice(2, 9);
+      }
+
+      function App() {
+        const [unlocked, setUnlocked] = useState(false);
+        const [pin, setPin] = useState("");
+        const [pinError, setPinError] = useState("");
+        const [processes, setProcesses] = useState(DEFAULT_PROCESSES);
+        const [responsables, setResponsables] = useState(DEFAULT_RESP);
+        const [selectedProcessId, setSelectedProcessId] = useState("p1");
+        const [selectedSubId, setSelectedSubId] = useState(null);
+        const [search, setSearch] = useState("");
+
+        const selectedProcess = useMemo(
+          () => processes.find((p) => p.id === selectedProcessId) || null,
+          [processes, selectedProcessId]
+        );
+
+        const selectedSubprocess = useMemo(() => {
+          if (!selectedProcess) return null;
+          return (selectedProcess.subprocesses || []).find((s) => s.id === selectedSubId) || null;
+        }, [selectedProcess, selectedSubId]);
+
+        const visibleProcesses = useMemo(() => {
+          if (!search.trim()) return processes;
+          const q = search.toLowerCase();
+          return processes
+            .map((p) => {
+              const matchP = p.name.toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q);
+              const filteredSub = (p.subprocesses || [])
+                .map((s) => {
+                  const matchS =
+                    s.name.toLowerCase().includes(q) ||
+                    (s.description || "").toLowerCase().includes(q) ||
+                    (s.link || "").toLowerCase().includes(q);
+                  const filteredSteps = (s.steps || []).filter(
+                    (st) =>
+                      st.name.toLowerCase().includes(q) ||
+                      (st.description || "").toLowerCase().includes(q) ||
+                      (st.link || "").toLowerCase().includes(q)
+                  );
+                  if (matchS || filteredSteps.length) {
+                    return { ...s, steps: filteredSteps.length ? filteredSteps : s.steps };
+                  }
+                  return null;
+                })
+                .filter(Boolean);
+              if (matchP || filteredSub.length) {
+                return { ...p, subprocesses: filteredSub.length ? filteredSub : p.subprocesses };
+              }
+              return null;
+            })
+            .filter(Boolean);
+        }, [processes, search]);
+
+        const handleAddProcess = () => {
+          const np = {
+            id: uid(),
+            name: "Nuevo proceso",
+            description: "",
+            subprocesses: [],
+          };
+          setProcesses((prev) => [...prev, np]);
+          setSelectedProcessId(np.id);
+          setSelectedSubId(null);
+        };
+
+        const handleDeleteProcess = (id) => {
+          if (!confirm("¿Eliminar este proceso?")) return;
+          setProcesses((prev) => prev.filter((p) => p.id !== id));
+          if (selectedProcessId === id) {
+            setSelectedProcessId(null);
+            setSelectedSubId(null);
+          }
+        };
+
+        const handleEditProcess = (id, field, value) => {
+          setProcesses((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+        };
+
+        const handleAddSub = () => {
+          if (!selectedProcess) return;
+          const ns = {
+            id: uid(),
+            name: "Nuevo subproceso",
+            description: "",
+            responsable: responsables[0] || "Audiólogo",
+            link: "",
+            document: "",
+            steps: [],
+          };
+          setProcesses((prev) =>
+            prev.map((p) =>
+              p.id === selectedProcess.id
+                ? { ...p, subprocesses: [...(p.subprocesses || []), ns] }
+                : p
+            )
+          );
+          setSelectedSubId(ns.id);
+        };
+
+        const handleDeleteSub = (subId) => {
+          if (!selectedProcess) return;
+          setProcesses((prev) =>
+            prev.map((p) =>
+              p.id === selectedProcess.id
+                ? {
+                    ...p,
+                    subprocesses: (p.subprocesses || []).filter((s) => s.id !== subId),
+                  }
+                : p
+            )
+          );
+          if (selectedSubId === subId) setSelectedSubId(null);
+        };
+
+        const handleEditSub = (subId, field, value) => {
+          if (!selectedProcess) return;
+          setProcesses((prev) =>
+            prev.map((p) => {
+              if (p.id !== selectedProcess.id) return p;
+              return {
+                ...p,
+                subprocesses: (p.subprocesses || []).map((s) =>
+                  s.id === subId ? { ...s, [field]: value } : s
+                ),
+              };
+            })
+          );
+        };
+
+        const handleAddStep = () => {
+          if (!selectedProcess || !selectedSubprocess) return;
+          const st = {
+            id: uid(),
+            name: "Nuevo paso",
+            description: "",
+            link: "",
+            document: "",
+          };
+          setProcesses((prev) =>
+            prev.map((p) => {
+              if (p.id !== selectedProcess.id) return p;
+              return {
+                ...p,
+                subprocesses: (p.subprocesses || []).map((s) => {
+                  if (s.id !== selectedSubprocess.id) return s;
+                  return { ...s, steps: [...(s.steps || []), st] };
+                }),
+              };
+            })
+          );
+        };
+
+        const handleEditStep = (stepId, field, value) => {
+          if (!selectedProcess || !selectedSubprocess) return;
+          setProcesses((prev) =>
+            prev.map((p) => {
+              if (p.id !== selectedProcess.id) return p;
+              return {
+                ...p,
+                subprocesses: (p.subprocesses || []).map((s) => {
+                  if (s.id !== selectedSubprocess.id) return s;
+                  return {
+                    ...s,
+                    steps: (s.steps || []).map((st) =>
+                      st.id === stepId ? { ...st, [field]: value } : st
+                    ),
+                  };
+                }),
+              };
+            })
+          );
+        };
+
+        const handleDeleteStep = (stepId) => {
+          if (!selectedProcess || !selectedSubprocess) return;
+          setProcesses((prev) =>
+            prev.map((p) => {
+              if (p.id !== selectedProcess.id) return p;
+              return {
+                ...p,
+                subprocesses: (p.subprocesses || []).map((s) => {
+                  if (s.id !== selectedSubprocess.id) return s;
+                  return {
+                    ...s,
+                    steps: (s.steps || []).filter((st) => st.id !== stepId),
+                  };
+                }),
+              };
+            })
+          );
+        };
+
+        const handleAddResponsable = () => {
+          const nombre = prompt("Nuevo responsable:");
+          if (!nombre) return;
+          setResponsables((prev) => [...prev, nombre]);
+        };
+
+        const checkPin = (e) => {
+          e.preventDefault();
+          if (pin === "AR4321") {
+            setUnlocked(true);
+          } else {
+            setPinError("PIN incorrecto");
+          }
+        };
+
+        if (!unlocked) {
+          return (
+            <div className="pin-wrapper">
+              <form className="pin-box" onSubmit={checkPin}>
+                <h2 style={{ fontSize: "1.6rem", marginBottom: "0.4rem" }}>PROCESOS</h2>
+                <p style={{ opacity: 0.7, fontSize: "0.8rem" }}>
+                  Introduce tu PIN de acceso
+                </p>
+                <input
+                  className="pin-input"
+                  type="password"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  placeholder="••••••"
+                />
+                {pinError && <p style={{ color: "#ffe3e3", fontSize: "0.7rem", marginTop: "0.5rem" }}>{pinError}</p>}
+                <button className="btn-red" type="submit">
+                  Entrar
+                </button>
+              </form>
+            </div>
+          );
+        }
+
+        return (
+          <>
+            <div className="topbar">
+              <div className="topbar-title">PROCESOS</div>
+              <input
+                className="search-input"
+                placeholder="Buscar procesos y subprocesos"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <button className="btn-top" onClick={() => alert("Demo: aquí llamas a Firestore")}>
+                💾 Guardar
+              </button>
+              <button className="btn-top" onClick={() => alert("Demo: aquí recargas de Firestore")}>
+                🔄 Actualizar
+              </button>
+              <div style={{ fontSize: "0.7rem", opacity: 0.7 }}>Nube: Firestore (DEMO)</div>
+            </div>
+            <div className="main">
+              {/* panel procesos */}
+              <div className="panel panel-procesos">
+                <div className="panel-header">
+                  <div className="panel-title">Procesos</div>
+                  <button className="btn-top" onClick={handleAddProcess}>
+                    + Añadir
+                  </button>
+                </div>
+                <div className="panel-content">
+                  {visibleProcesses.map((p) => (
+                    <div
+                      key={p.id}
+                      className={"item-proceso " + (p.id === selectedProcessId ? "active" : "")}
+                      onClick={() => {
+                        setSelectedProcessId(p.id);
+                        setSelectedSubId(null);
+                      }}
+                    >
+                      <div className="item-proceso-body">
+                        <input
+                          value={p.name}
+                          onChange={(e) => handleEditProcess(p.id, "name", e.target.value)}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            fontWeight: 600,
+                            width: "100%",
+                          }}
+                        />
+                        <button
+                          className="small-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProcess(p.id);
+                          }}
+                        >
+                          −
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* middle panel - subprocesos */}
+              <div className="panel middle-panel">
+                <div className="panel-header">
+                  <div>
+                    <div className="panel-title" style={{ color: "#981313" }}>
+                      {selectedProcess ? selectedProcess.name : "—"}
+                    </div>
+                    <div style={{ fontSize: "0.6rem", textTransform: "uppercase", color: "#999" }}>
+                      Subprocesos
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button className="btn-top" onClick={handleAddResponsable}>
+                      + Responsable
+                    </button>
+                    <button className="btn-top" style={{ background: "#d72626" }} onClick={handleAddSub}>
+                      + Subproceso
+                    </button>
+                  </div>
+                </div>
+                <div className="panel-content">
+                  {selectedProcess && (selectedProcess.subprocesses || []).length === 0 && (
+                    <div style={{ textAlign: "center", color: "#bbb", padding: "2rem 0" }}>
+                      Este proceso no tiene subprocesos aún.
+                    </div>
+                  )}
+                  {selectedProcess &&
+                    (selectedProcess.subprocesses || []).map((s) => (
+                      <div
+                        key={s.id}
+                        className={"sub-box " + (selectedSubId === s.id ? "active" : "")}
+                        onClick={() => setSelectedSubId(s.id)}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                          <input
+                            className="input-inline"
+                            value={s.name}
+                            onChange={(e) => handleEditSub(s.id, "name", e.target.value)}
+                          />
+                          <button
+                            className="small-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSub(s.id);
+                            }}
+                          >
+                            −
+                          </button>
+                        </div>
+                        <div className="label">Descripción</div>
+                        <textarea
+                          className="textarea-inline"
+                          value={s.description}
+                          onChange={(e) => handleEditSub(s.id, "description", e.target.value)}
+                        ></textarea>
+                        <div className="label">Persona responsable</div>
+                        <select
+                          className="select-inline"
+                          value={s.responsable || responsables[0] || "Audiólogo"}
+                          onChange={(e) => handleEditSub(s.id, "responsable", e.target.value)}
+                        >
+                          {responsables.map((r) => (
+                            <option key={r} value={r}>
+                              {r}
+                            </option>
+                          ))}
+                        </select>
+                        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.4rem" }}>
+                          <div style={{ flex: 1 }}>
+                            <div className="label">Enlace</div>
+                            <input
+                              className="input-inline"
+                              value={s.link || ""}
+                              onChange={(e) => handleEditSub(s.id, "link", e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div className="label">Documento</div>
+                            <input
+                              className="input-inline"
+                              value={s.document || ""}
+                              onChange={(e) => handleEditSub(s.id, "document", e.target.value)}
+                              placeholder="Ruta / nombre"
+                            />
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "0.65rem", color: "#999", marginTop: "0.3rem" }}>
+                          {(s.steps || []).length} pasos
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* panel pasos */}
+              <div className="panel panel-pasos">
+                <div className="panel-header">
+                  <div>
+                    <div className="panel-title" style={{ color: "#981313" }}>
+                      {selectedSubprocess ? selectedSubprocess.name : "Pasos"}
+                    </div>
+                    <div style={{ fontSize: "0.6rem", textTransform: "uppercase", color: "#999" }}>
+                      Pasos
+                    </div>
+                  </div>
+                  <button className="btn-top" onClick={handleAddStep}>
+                    + Paso
+                  </button>
+                </div>
+                <div className="panel-content">
+                  {!selectedSubprocess && (
+                    <div style={{ textAlign: "center", color: "#bbb", padding: "2rem 0" }}>
+                      Selecciona un subproceso
+                    </div>
+                  )}
+                  {selectedSubprocess &&
+                    (selectedSubprocess.steps || []).map((st) => (
+                      <div key={st.id} className="step-box">
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                          <input
+                            className="input-inline"
+                            value={st.name}
+                            onChange={(e) => handleEditStep(st.id, "name", e.target.value)}
+                          />
+                          <button className="small-btn" onClick={() => handleDeleteStep(st.id)}>
+                            −
+                          </button>
+                        </div>
+                        <div className="label">Descripción</div>
+                        <textarea
+                          className="textarea-inline"
+                          value={st.description}
+                          onChange={(e) => handleEditStep(st.id, "description", e.target.value)}
+                        ></textarea>
+                        <div className="label">Enlace</div>
+                        <input
+                          className="input-inline"
+                          value={st.link || ""}
+                          onChange={(e) => handleEditStep(st.id, "link", e.target.value)}
+                        />
+                        <div className="label">Documento</div>
+                        <input
+                          className="input-inline"
+                          value={st.document || ""}
+                          onChange={(e) => handleEditStep(st.id, "document", e.target.value)}
+                        />
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
