@@ -58,6 +58,7 @@
         display: none;
         height: 100vh;
         flex-direction: column;
+        max-width: 100vw;
       }
       .top {
         display: flex;
@@ -86,6 +87,9 @@
         display: flex;
         gap: 10px;
         padding: 10px;
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 0;
       }
       .panel {
         background: #fff;
@@ -94,6 +98,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        min-width: 0;
       }
       .panel header {
         padding: 9px 12px;
@@ -106,16 +111,8 @@
       .panel-title {
         font-weight: 600;
       }
-      #proc {
-        width: 290px;
-      }
-      .panel .body {
-        flex: 1;
-        overflow: auto;
-        padding: 8px;
-      }
 
-      /* BOTONES SOBRE FONDO NEGRO */
+      /* BOTONES SOBRE NEGRO */
       .top .btn,
       .panel > header .btn,
       .top .btn-small,
@@ -125,6 +122,16 @@
         border: 1px solid rgba(248, 250, 252, 0.14);
       }
 
+      /* PANEL IZQUIERDA */
+      #proc {
+        flex: 0 0 280px;
+        max-width: 320px;
+      }
+      .panel .body {
+        flex: 1;
+        overflow: auto;
+        padding: 8px;
+      }
       .proc-item {
         background: #fff;
         border: 2px solid transparent;
@@ -187,9 +194,13 @@
         font-size: 11px;
       }
 
-      /* SUBPROCESOS */
+      /* PANEL CENTRAL */
       #sub {
-        flex: 1;
+        flex: 1 1 35%;
+        min-width: 260px;
+      }
+      #sub.hidden-sub {
+        display: none;
       }
       .sub-box {
         border: 1px solid rgba(0, 0, 0, 0.03);
@@ -241,9 +252,10 @@
         color: #fff;
       }
 
-      /* PASOS */
+      /* PANEL PASOS */
       #steps {
-        width: 320px;
+        flex: 1 1 35%;
+        min-width: 260px;
         transition: all 0.2s ease;
       }
       #steps.hidden {
@@ -252,15 +264,16 @@
         opacity: 0;
         pointer-events: none;
       }
+      #steps.full-width {
+        flex: 1 1 auto;
+        width: 100%;
+      }
       .step {
         border: 1px solid #eee;
         border-radius: 14px;
         padding: 5px 7px;
         margin-bottom: 6px;
         background: #fff;
-      }
-      .step .input {
-        font-size: 12px;
       }
       .step-num {
         font-weight: 700;
@@ -272,6 +285,27 @@
         color: #555;
         margin-bottom: 5px;
         font-weight: 500;
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 1024px) {
+        .main {
+          flex-wrap: wrap;
+        }
+        #proc {
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+        #sub,
+        #steps {
+          flex: 1 1 100%;
+          max-width: 100%;
+        }
+      }
+      @media (max-width: 640px) {
+        .top {
+          flex-wrap: wrap;
+        }
       }
     </style>
   </head>
@@ -329,12 +363,10 @@
     </div>
 
     <script>
-      /* ====== CONFIG LOCAL ====== */
       const LS_KEY = "procesos_app_v1";
       const pastel = ["#ffe4e1", "#fff5cc", "#e2f0ff", "#e5ffe8", "#f3e5ff", "#ffeaf2", "#e9fff9"];
       const responsables = ["Audiólogo", "Responsable", "Franquiciado"];
 
-      // intentamos cargar del navegador
       const saved = localStorage.getItem(LS_KEY);
       let data = saved
         ? JSON.parse(saved)
@@ -370,7 +402,7 @@
 
       let currentP = data[0]?.id || null;
       let currentS = null;
-      let stepScope = { type: "process", id: currentP }; // process | subprocess
+      let stepScope = { type: "process", id: currentP };
       let showSteps = false;
       let searchTerm = "";
 
@@ -414,11 +446,9 @@
         render();
       }
 
-      // === ORDENAMOS: primero con subprocesos, luego sin ===
+      // ORDENAMOS: primero procesos con subprocesos
       function getFilteredData() {
-        let base = data.slice(); // copia
-
-        // filtro por búsqueda (como antes)
+        let base = data.slice();
         if (searchTerm) {
           base = base
             .map((p) => {
@@ -446,15 +476,12 @@
             })
             .filter(Boolean);
         }
-
-        // orden: primero los que tienen subprocesos
         base.sort((a, b) => {
           const aHas = (a.subprocesses || []).length > 0;
           const bHas = (b.subprocesses || []).length > 0;
           if (aHas === bHas) return 0;
           return aHas ? -1 : 1;
         });
-
         return base;
       }
 
@@ -477,19 +504,24 @@
           div.onclick = () => {
             currentP = p.id;
             currentS = null;
-            showSteps = false;
-            stepScope = { type: "process", id: p.id };
+            // si no tiene subprocesos pero sí pasos -> mostramos pasos y ocultamos central
+            const hasSubs = (p.subprocesses || []).length > 0;
+            const hasSteps = (p.steps || []).length > 0;
+            if (!hasSubs && hasSteps) {
+              stepScope = { type: "process", id: p.id };
+              showSteps = true;
+            } else {
+              showSteps = false;
+              stepScope = { type: "process", id: p.id };
+            }
             render();
           };
-
           const num = document.createElement("div");
           num.className = "proc-num";
           num.textContent = idx + 1 + ".";
           div.appendChild(num);
-
           const flex = document.createElement("div");
           flex.style.flex = "1";
-
           const inp = document.createElement("input");
           inp.className = "proc-input";
           inp.value = p.name;
@@ -499,7 +531,6 @@
             saveLocal();
           };
           flex.appendChild(inp);
-
           const tgl = document.createElement("button");
           tgl.className = "proc-desc-toggle";
           tgl.textContent = p.showDesc ? "▲ Descripción" : "▼ Descripción";
@@ -509,7 +540,6 @@
             render();
           };
           flex.appendChild(tgl);
-
           if (p.showDesc) {
             const d = document.createElement("div");
             d.className = "proc-desc";
@@ -522,9 +552,7 @@
             d.appendChild(ta);
             flex.appendChild(d);
           }
-
           div.appendChild(flex);
-
           const del = document.createElement("button");
           del.className = "btn";
           del.textContent = "−";
@@ -533,7 +561,6 @@
             delProcess(p.id);
           };
           div.appendChild(del);
-
           box.appendChild(div);
         });
       }
@@ -601,16 +628,42 @@
       function renderSub() {
         const p = getCurrentP();
         const list = document.getElementById("subList");
+        const subPanel = document.getElementById("sub");
         const subHeader = document.getElementById("subHeader");
-        if (p) subHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
+        const stepsPanel = document.getElementById("steps");
+
+        if (p) {
+          subHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
+        }
+
         list.innerHTML = "";
+
         if (!p) {
+          subPanel.classList.remove("hidden-sub");
+          stepsPanel.classList.remove("full-width");
           list.innerHTML =
             "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
           return;
         }
 
-        // bloque para pasos directos del proceso
+        const subs = p.subprocesses || [];
+        const procSteps = p.steps || [];
+
+        // CASO QUE PIDES:
+        // si NO hay subprocesos y SÍ hay pasos → ocultamos central y mostramos pasos
+        if (subs.length === 0 && procSteps.length > 0) {
+          subPanel.classList.add("hidden-sub");
+          stepsPanel.classList.add("full-width");
+          stepScope = { type: "process", id: p.id };
+          showSteps = true;
+          return;
+        } else {
+          // en cualquier otro caso mostramos el panel central
+          subPanel.classList.remove("hidden-sub");
+          stepsPanel.classList.remove("full-width");
+        }
+
+        // bloque pasos directos del proceso
         const infoProc = document.createElement("div");
         infoProc.style.marginBottom = "10px";
         infoProc.innerHTML = "<span class='label'>Pasos directos de este proceso</span>";
@@ -626,7 +679,6 @@
         infoProc.appendChild(btnProcSteps);
         list.appendChild(infoProc);
 
-        const subs = p.subprocesses || [];
         if (subs.length === 0) {
           list.innerHTML +=
             "<div style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Este proceso no tiene subprocesos.</div>";
@@ -640,10 +692,8 @@
           box.onclick = () => {
             currentS = s.id;
           };
-
           const head = document.createElement("div");
           head.className = "sub-header-inline";
-
           const name = document.createElement("input");
           name.className = "input";
           name.value = s.name;
@@ -652,10 +702,8 @@
             saveLocal();
           };
           head.appendChild(name);
-
           const actions = document.createElement("div");
           actions.className = "sub-actions";
-
           const btnPasos = document.createElement("button");
           btnPasos.textContent = "Pasos";
           btnPasos.className =
@@ -668,7 +716,6 @@
             showSteps = true;
             render();
           };
-
           const del = document.createElement("button");
           del.className = "btn";
           del.textContent = "−";
@@ -676,27 +723,22 @@
             ev.stopPropagation();
             delSub(s.id);
           };
-
           actions.appendChild(btnPasos);
           actions.appendChild(del);
           head.appendChild(actions);
           box.appendChild(head);
-
           const origin = document.createElement("div");
           origin.className = "label";
           origin.textContent = "Proceso origen";
           box.appendChild(origin);
-
           const originVal = document.createElement("div");
           originVal.style.fontSize = "11px";
           originVal.textContent = p.name;
           box.appendChild(originVal);
-
           const lab = document.createElement("div");
           lab.className = "label";
           lab.textContent = "Descripción";
           box.appendChild(lab);
-
           const ta = document.createElement("textarea");
           ta.className = "input";
           ta.value = s.description || "";
@@ -705,12 +747,10 @@
             saveLocal();
           };
           box.appendChild(ta);
-
           const lab2 = document.createElement("div");
           lab2.className = "label";
           lab2.textContent = "Persona responsable";
           box.appendChild(lab2);
-
           const sel = document.createElement("select");
           sel.className = "input";
           responsables.forEach((r) => {
@@ -725,7 +765,6 @@
             saveLocal();
           };
           box.appendChild(sel);
-
           const lab3 = document.createElement("div");
           lab3.className = "label";
           lab3.textContent = "Enlace";
@@ -738,7 +777,6 @@
             saveLocal();
           };
           box.appendChild(link);
-
           const lab4 = document.createElement("div");
           lab4.className = "label";
           lab4.textContent = "Documento";
@@ -751,7 +789,6 @@
             saveLocal();
           };
           box.appendChild(doc);
-
           list.appendChild(box);
         });
       }
@@ -791,14 +828,15 @@
         const list = document.getElementById("stepList");
         const stepHeader = document.getElementById("stepHeader");
         const p = getCurrentP();
-        if (p) stepHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
+        if (p) {
+          stepHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
+        }
         list.innerHTML = "";
         if (!showSteps) {
           list.innerHTML =
             "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos” en un subproceso o “Ver pasos del proceso”.</p>";
           return;
         }
-
         let steps = [];
         let originTitle = "";
         if (stepScope.type === "process") {
@@ -810,17 +848,14 @@
           steps = sp ? sp.steps || [] : [];
           originTitle = "Subproceso origen: " + (sp ? sp.name : "");
         }
-
         const originEl = document.createElement("div");
         originEl.className = "origin";
         originEl.textContent = originTitle;
         list.appendChild(originEl);
-
         if (!steps || steps.length === 0) {
           list.innerHTML +=
             "<div style='color:#888;font-size:13px;text-align:center;margin-top:10px'>No hay pasos aún.</div>";
         }
-
         steps.forEach((st, idx) => {
           const box = document.createElement("div");
           box.className = "step";
@@ -828,7 +863,6 @@
           num.className = "step-num";
           num.textContent = "Paso " + (idx + 1);
           box.appendChild(num);
-
           const name = document.createElement("input");
           name.className = "input";
           name.value = st.name;
@@ -838,12 +872,10 @@
             saveLocal();
           };
           box.appendChild(name);
-
           const lab1 = document.createElement("div");
           lab1.className = "label";
           lab1.textContent = "Descripción";
           box.appendChild(lab1);
-
           const ta = document.createElement("textarea");
           ta.className = "input";
           ta.value = st.description || "";
@@ -852,12 +884,10 @@
             saveLocal();
           };
           box.appendChild(ta);
-
           const lab2 = document.createElement("div");
           lab2.className = "label";
           lab2.textContent = "Enlace";
           box.appendChild(lab2);
-
           const lin = document.createElement("input");
           lin.className = "input";
           lin.value = st.link || "";
@@ -866,12 +896,10 @@
             saveLocal();
           };
           box.appendChild(lin);
-
           const lab3 = document.createElement("div");
           lab3.className = "label";
           lab3.textContent = "Documento/adjunto";
           box.appendChild(lab3);
-
           const doc = document.createElement("input");
           doc.className = "input";
           doc.value = st.document || "";
@@ -880,7 +908,6 @@
             saveLocal();
           };
           box.appendChild(doc);
-
           const del = document.createElement("button");
           del.className = "btn";
           del.textContent = "− Eliminar paso";
@@ -888,7 +915,6 @@
             delStep(st.id);
           };
           box.appendChild(del);
-
           list.appendChild(box);
         });
       }
@@ -928,7 +954,6 @@
         renderSteps();
       }
 
-      // helpers
       function hexToRgba(hex, alpha) {
         if (!hex) return "rgba(255,255,255," + alpha + ")";
         const h = hex.replace("#", "");
