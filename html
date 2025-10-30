@@ -1,417 +1,411 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Procesos</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f3f4f6}
-    #app{display:flex;flex-direction:column;height:100vh;max-width:100vw}
-    .top{display:flex;gap:8px;align-items:center;background:linear-gradient(90deg,#000,#5a0000);color:#fff;padding:10px}
-    .top h1{margin:0;font-size:18px}
-    .top input{flex:1;border:none;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 10px;color:#fff}
-    .main{flex:1;display:flex;gap:10px;padding:10px;box-sizing:border-box;min-height:0}
-    .panel{background:#fff;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;min-width:0;box-shadow:0 4px 14px rgba(0,0,0,.04)}
-    .panel header{background:#000;color:#fff;padding:6px 10px;display:flex;justify-content:space-between;align-items:center}
-    .panel .body{flex:1;overflow:auto;padding:6px}
-    .btn{background:rgba(248,250,252,.12);color:#fff;border:1px solid rgba(248,250,252,.14);border-radius:999px;padding:2px 8px;font-size:11px;cursor:pointer}
-    #proc{flex:0 0 280px;max-width:320px}
-    .proc-item{background:#fff;border-radius:14px;margin-bottom:6px;padding:4px 6px 4px 8px;display:flex;gap:4px;cursor:pointer}
-    .proc-item.active{outline:2px solid rgba(0,0,0,.06)}
-    .proc-num{font-size:11px;font-weight:700;margin-right:4px}
-    .proc-input{border:none;background:transparent;font-weight:600;font-size:13px;width:100%;outline:none}
-    .proc-desc-toggle{font-size:10px;background:rgba(0,0,0,.05);border:none;border-radius:999px;padding:0 6px;cursor:pointer}
-    #sub{flex:1 1 35%;min-width:240px}
-    #sub.hidden{display:none}
-    .sub-top{display:flex;justify-content:flex-end;margin-bottom:6px}
-    .sub-top button{background:rgba(0,0,0,.05);border:none;border-radius:8px;padding:2px 10px;font-size:11px;cursor:pointer}
-    .sub-box{background:#fff;border:1px solid rgba(0,0,0,.03);border-radius:14px;padding:6px 6px 8px;margin-bottom:5px}
-    .sub-head{display:flex;justify-content:space-between;gap:4px}
-    .input{width:100%;border:1px solid #eee;border-radius:6px;padding:3px 5px;font-size:12px}
-    .label{font-size:10px;text-transform:uppercase;color:#777;margin-top:3px}
-    #steps{flex:1 1 35%;min-width:240px;transition:.2s}
-    #steps.hidden{width:0;min-width:0;opacity:0;pointer-events:none}
-    #steps.full{flex:1 1 auto;width:100%}
-    .step{border:1px solid #eee;border-radius:14px;padding:5px 7px;margin-bottom:6px;background:#fff}
-    .origin{font-size:11px;font-weight:500;margin-bottom:5px}
-    @media(max-width:900px){.main{flex-wrap:wrap}#proc{flex-basis:100%;max-width:100%}#sub,#steps{flex:1 1 100%;max-width:100%}}
-  </style>
-</head>
-<body>
-  <div id="app">
-    <div class="top">
-      <h1>PROCESOS</h1>
-      <input id="search" placeholder="Buscar..." oninput="doSearch(this.value)" />
-      <button class="btn" onclick="alert('Guardado en localStorage ✅')">💾</button>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Plataforma de procesos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f3f4f6; }
+      :root { --radius:18px; }
+      #app { display:flex; height:100vh; flex-direction:column; max-width:100vw; }
+      .top { display:flex; gap:8px; align-items:center; background:linear-gradient(90deg,#000,#5a0000); color:#fff; padding:10px; }
+      .top h1 { margin:0; font-size:20px; }
+      .top input { flex:1; max-width:430px; border:none; background:rgba(255,255,255,0.12); padding:5px 10px; border-radius:999px; color:#fff; }
+      .main { flex:1; display:flex; gap:10px; padding:10px; box-sizing:border-box; min-height:0; }
+      .panel { background:#fff; border-radius:var(--radius); box-shadow:0 4px 14px rgba(0,0,0,0.04); display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+      .panel header { padding:9px 12px; background:#000; color:#fff; display:flex; align-items:center; justify-content:space-between; }
+      .panel .body { flex:1; overflow:auto; padding:8px; }
+      .btn { background:rgba(248,250,252,.12); color:#fff; border:1px solid rgba(248,250,252,.14); border-radius:999px; padding:2px 8px; font-size:11px; cursor:pointer; }
+      #proc { flex:0 0 280px; max-width:320px; }
+      .proc-item { background:#fff; border-radius:14px; margin-bottom:6px; padding:4px 6px 4px 8px; display:flex; gap:4px; align-items:flex-start; cursor:pointer; }
+      .proc-item.active { outline:2px solid rgba(0,0,0,.06); }
+      .proc-num { font-size:11px; font-weight:700; margin-right:4px; }
+      .proc-input { border:none; background:transparent; font-weight:600; font-size:13px; width:100%; outline:none; }
+      .proc-desc-toggle { font-size:10px; background:rgba(0,0,0,.05); border:none; border-radius:12px; padding:1px 6px; cursor:pointer; }
+      .proc-desc textarea { width:100%; min-height:45px; border:1px solid rgba(0,0,0,.08); border-radius:8px; padding:3px 4px; font-size:11px; }
+      #sub { flex:1 1 35%; min-width:260px; }
+      #sub.hidden-sub { display:none; }
+      .sub-top-actions { display:flex; justify-content:flex-end; margin-bottom:8px; }
+      .sub-top-actions button { background:rgba(0,0,0,.05); border:none; border-radius:8px; padding:3px 10px; font-size:11px; cursor:pointer; }
+      .sub-box { border:1px solid rgba(0,0,0,0.03); border-radius:14px; padding:6px 7px; margin-bottom:6px; background:#fff; }
+      .sub-header-inline { display:flex; gap:4px; align-items:center; justify-content:space-between; }
+      .input { width:100%; border:1px solid #eee; border-radius:6px; padding:3px 5px; font-size:12px; }
+      .label { font-size:10px; text-transform:uppercase; color:#777; margin-top:3px; }
+      #steps { flex:1 1 35%; min-width:260px; transition:.2s; }
+      #steps.hidden { width:0; min-width:0; opacity:0; pointer-events:none; }
+      #steps.full-width { flex:1 1 auto; width:100%; }
+      .step { border:1px solid #eee; border-radius:14px; padding:5px 7px; margin-bottom:6px; background:#fff; }
+      .step-num { font-weight:700; font-size:11px; margin-bottom:4px; }
+      .origin { font-size:11px; color:#555; margin-bottom:5px; font-weight:500; }
+      @media (max-width:1024px){ .main{flex-wrap:wrap;} #proc{flex-basis:100%;max-width:100%;} #sub,#steps{flex:1 1 100%;max-width:100%;} }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="top">
+        <h1>PROCESOS</h1>
+        <input id="search" placeholder="Buscar..." oninput="doSearch(this.value)" />
+        <button class="btn" onclick="alert('Guardado en localStorage ✅')">💾 Guardar</button>
+      </div>
+      <div class="main">
+        <div class="panel" id="proc">
+          <header>
+            <span>Procesos</span>
+            <div>
+              <button class="btn" onclick="addProcess()">+ Proceso</button>
+              <button class="btn" onclick="quickAddSub()">+ Subp.</button>
+              <button class="btn" onclick="quickAddStep()">+ Paso</button>
+            </div>
+          </header>
+          <div class="body" id="procList"></div>
+        </div>
+        <div class="panel" id="sub">
+          <header id="subHeader">
+            <span>Subproceso</span>
+            <button class="btn" onclick="addSub()">+ Subproceso</button>
+          </header>
+          <div class="body" id="subList"></div>
+        </div>
+        <div class="panel" id="steps">
+          <header id="stepHeader">
+            <span>Pasos</span>
+            <button class="btn" onclick="addStep()">+ Paso</button>
+          </header>
+          <div class="body" id="stepList"></div>
+        </div>
+      </div>
     </div>
-    <div class="main">
-      <div class="panel" id="proc">
-        <header>
-          <span>Procesos</span>
-          <div>
-            <button class="btn" onclick="addProcess()">+ Proceso</button>
-            <button class="btn" onclick="quickAddSub()">+ Subp.</button>
-            <button class="btn" onclick="quickAddStep()">+ Paso</button>
-          </div>
-        </header>
-        <div class="body" id="procList"></div>
-      </div>
-      <div class="panel" id="sub">
-        <header id="subHeader">
-          <span>Subproceso</span>
-          <button class="btn" onclick="addSub()">+ Subproceso</button>
-        </header>
-        <div class="body" id="subList"></div>
-      </div>
-      <div class="panel" id="steps">
-        <header id="stepHeader">
-          <span>Pasos</span>
-          <button class="btn" onclick="addStep()">+ Paso</button>
-        </header>
-        <div class="body" id="stepList"></div>
-      </div>
-    </div>
-  </div>
+    <script>
+      const LS_KEY="procesos_app_v1";
+      const pastel=["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff"];
+      let data=JSON.parse(localStorage.getItem(LS_KEY)||"null")||[
+        {id:"p1",name:"REPARACIONES",color:pastel[0],description:"",showDesc:false,subprocesses:[],steps:[]},
+        {id:"p2",name:"AJUSTE REMOTO",color:pastel[1],description:"",showDesc:false,subprocesses:[],steps:[]}
+      ];
+      let currentP=data[0]?.id||null;
+      let currentS=null;
+      let stepScope={type:"process",id:currentP};
+      let showSteps=false;
+      let searchTerm="";
 
-  <script>
-    const LS_KEY = "procesos_app_v1";
-    const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff"];
-    let data = JSON.parse(localStorage.getItem(LS_KEY) || "null") || [
-      {id:"p1",name:"REPARACIONES",color:pastel[0],description:"",showDesc:false,subprocesses:[],steps:[]},
-      {id:"p2",name:"AJUSTE REMOTO",color:pastel[1],description:"",showDesc:false,subprocesses:[],steps:[]}
-    ];
-    let currentP = data[0]?.id || null;
-    let currentS = null;
-    let stepScope = {type:"process",id:currentP};
-    let showSteps = false;
-    let searchTerm = "";
+      function save(){localStorage.setItem(LS_KEY,JSON.stringify(data));}
+      function uid(){return Math.random().toString(36).slice(2,9);}
+      function doSearch(v){searchTerm=v.toLowerCase();render();}
 
-    function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+      function getCurrentP(){return data.find(p=>p.id===currentP)||null;}
+      function getCurrentS(){const p=getCurrentP();if(!p)return null;return (p.subprocesses||[]).find(s=>s.id===currentS)||null;}
 
-    function doSearch(v){ searchTerm=v.toLowerCase(); render(); }
-    function uid(){ return Math.random().toString(36).slice(2,9); }
-
-    function getCurrentP(){ return data.find(p=>p.id===currentP) || null; }
-    function getCurrentS(){ const p=getCurrentP(); if(!p) return null; return (p.subprocesses||[]).find(s=>s.id===currentS) || null; }
-
-    function render(){
-      renderProcesses();
-      renderSub();
-      renderSteps();
-      document.getElementById("steps").classList.toggle("hidden", !showSteps);
-      save();
-    }
-
-    function renderProcesses(){
-      const box = document.getElementById("procList");
-      box.innerHTML = "";
-      let list = data.slice();
-      if (searchTerm){
-        list = list.filter(p =>
-          p.name.toLowerCase().includes(searchTerm) ||
-          (p.description||"").toLowerCase().includes(searchTerm)
-        );
+      function render(){
+        renderProcesses();
+        renderSub();
+        renderSteps();
+        document.getElementById("steps").classList.toggle("hidden",!showSteps);
+        save();
       }
-      // primero los que tienen subprocesos
-      list.sort((a,b)=>{
-        const ah = (a.subprocesses||[]).length>0;
-        const bh = (b.subprocesses||[]).length>0;
-        return ah===bh ? 0 : ah ? -1 : 1;
-      });
-      list.forEach((p,idx)=>{
-        const d = document.createElement("div");
-        d.className = "proc-item" + (p.id===currentP ? " active" : "");
-        d.style.background = p.color;
-        d.onclick = () => {
-          currentP = p.id;
-          currentS = null;
-          const hasSubs = (p.subprocesses||[]).length>0;
-          const hasSteps = (p.steps||[]).length>0;
-          if (!hasSubs && hasSteps){
-            stepScope = {type:"process",id:p.id};
-            showSteps = true;
-          } else {
-            stepScope = {type:"process",id:p.id};
-            showSteps = false;
-          }
-          render();
-        };
-        const num = document.createElement("div");
-        num.className = "proc-num";
-        num.textContent = (idx+1)+".";
-        d.appendChild(num);
-        const wrap = document.createElement("div");
-        wrap.style.flex = "1";
-        const inp = document.createElement("input");
-        inp.className = "proc-input";
-        inp.value = p.name;
-        inp.onclick = e => e.stopPropagation();
-        inp.oninput = e => { p.name=e.target.value; save(); };
-        wrap.appendChild(inp);
-        const tgl = document.createElement("button");
-        tgl.className = "proc-desc-toggle";
-        tgl.textContent = p.showDesc ? "▲" : "▼";
-        tgl.onclick = e => { e.stopPropagation(); p.showDesc=!p.showDesc; render(); };
-        wrap.appendChild(tgl);
-        if (p.showDesc){
-          const dv = document.createElement("div");
-          dv.className = "proc-desc";
-          const ta = document.createElement("textarea");
-          ta.value = p.description || "";
-          ta.oninput = e => { p.description=e.target.value; save(); };
-          dv.appendChild(ta);
-          wrap.appendChild(dv);
+
+      function renderProcesses(){
+        const box=document.getElementById("procList");
+        box.innerHTML="";
+        let list=data.slice();
+        if(searchTerm){
+          list=list.filter(p=>p.name.toLowerCase().includes(searchTerm)||(p.description||"").toLowerCase().includes(searchTerm));
         }
-        d.appendChild(wrap);
-        const del = document.createElement("button");
-        del.className = "btn";
-        del.textContent = "−";
-        del.onclick = e => { e.stopPropagation(); delProcess(p.id); };
-        d.appendChild(del);
-        box.appendChild(d);
-      });
-    }
-
-    function delProcess(id){
-      data = data.filter(p=>p.id!==id);
-      currentP = data[0]?.id || null;
-      stepScope = {type:"process",id:currentP};
-      currentS = null;
-      showSteps = false;
-      render();
-    }
-
-    function addProcess(){
-      const np = {id:uid(),name:"Nuevo proceso",color:pastel[data.length%pastel.length],description:"",showDesc:false,subprocesses:[],steps:[]};
-      data.push(np);
-      currentP = np.id;
-      stepScope = {type:"process",id:np.id};
-      showSteps = false;
-      render();
-    }
-
-    function quickAddSub(){
-      if (!currentP) { alert("Selecciona un proceso"); return; }
-      addSub();
-    }
-
-    function quickAddStep(){
-      if (stepScope.type==="process" && !currentP){ alert("Selecciona un proceso"); return; }
-      if (stepScope.type==="subprocess" && !currentS){ alert("Selecciona un subproceso y pulsa Pasos"); return; }
-      addStep();
-    }
-
-    function renderSub(){
-      const p = getCurrentP();
-      const list = document.getElementById("subList");
-      const subPanel = document.getElementById("sub");
-      const stepsPanel = document.getElementById("steps");
-      const subHeader = document.getElementById("subHeader");
-      list.innerHTML = "";
-      if (!p){
-        subPanel.classList.remove("hidden");
-        stepsPanel.classList.remove("full");
-        list.innerHTML = "<p style='color:#888;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
-        return;
-      }
-      subHeader.style.background = "linear-gradient(90deg,#000,"+shade(p.color,-20)+")";
-      const subs = p.subprocesses || [];
-      const procSteps = p.steps || [];
-      // caso: sin subprocesos y con pasos -> ocultar panel central
-      if (subs.length===0 && procSteps.length>0){
-        subPanel.classList.add("hidden");
-        stepsPanel.classList.add("full");
-        stepScope = {type:"process",id:p.id};
-        showSteps = true;
-        return;
-      } else {
-        subPanel.classList.remove("hidden");
-        stepsPanel.classList.remove("full");
+        list.sort((a,b)=>{
+          const ah=(a.subprocesses||[]).length>0;
+          const bh=(b.subprocesses||[]).length>0;
+          return ah===bh?0:ah?-1:1;
+        });
+        list.forEach((p,idx)=>{
+          const d=document.createElement("div");
+          d.className="proc-item"+(p.id===currentP?" active":"");
+          d.style.background=p.color;
+          d.onclick=()=>{
+            currentP=p.id;
+            currentS=null;
+            const hasSubs=(p.subprocesses||[]).length>0;
+            const hasSteps=(p.steps||[]).length>0;
+            if(!hasSubs && hasSteps){
+              stepScope={type:"process",id:p.id};
+              showSteps=true;
+            } else {
+              stepScope={type:"process",id:p.id};
+              showSteps=false;
+            }
+            render();
+          };
+          const num=document.createElement("div");
+          num.className="proc-num";
+          num.textContent=(idx+1)+".";
+          d.appendChild(num);
+          const wrap=document.createElement("div");
+          wrap.style.flex="1";
+          const inp=document.createElement("input");
+          inp.className="proc-input";
+          inp.value=p.name;
+          inp.onclick=e=>e.stopPropagation();
+          inp.oninput=e=>{p.name=e.target.value;save();};
+          wrap.appendChild(inp);
+          const tgl=document.createElement("button");
+          tgl.className="proc-desc-toggle";
+          tgl.textContent=p.showDesc?"▲ Desc":"▼ Desc";
+          tgl.onclick=e=>{e.stopPropagation();p.showDesc=!p.showDesc;render();};
+          wrap.appendChild(tgl);
+          if(p.showDesc){
+            const dv=document.createElement("div");
+            dv.className="proc-desc";
+            const ta=document.createElement("textarea");
+            ta.value=p.description||"";
+            ta.oninput=e=>{p.description=e.target.value;save();};
+            dv.appendChild(ta);
+            wrap.appendChild(dv);
+          }
+          d.appendChild(wrap);
+          const del=document.createElement("button");
+          del.className="btn";
+          del.textContent="−";
+          del.onclick=e=>{e.stopPropagation();delProcess(p.id);};
+          d.appendChild(del);
+          box.appendChild(d);
+        });
       }
 
-      // botón PASOS →
-      const top = document.createElement("div");
-      top.className = "sub-top";
-      const btn = document.createElement("button");
-      btn.textContent = "Pasos →";
-      btn.onclick = () => {
-        stepScope = {type:"process",id:p.id};
-        showSteps = true;
+      function delProcess(id){
+        data=data.filter(p=>p.id!==id);
+        currentP=data[0]?.id||null;
+        stepScope={type:"process",id:currentP};
+        currentS=null;
+        showSteps=false;
         render();
-      };
-      top.appendChild(btn);
-      list.appendChild(top);
-
-      if (subs.length===0){
-        list.innerHTML += "<div style='color:#888;text-align:center;margin-top:15px'>Este proceso no tiene subprocesos.</div>";
-        return;
       }
 
-      subs.forEach(s=>{
-        const box = document.createElement("div");
-        box.className = "sub-box" + (s.id===currentS ? " active" : "");
-        box.onclick = () => { currentS = s.id; };
-        const head = document.createElement("div");
-        head.className = "sub-head";
-        const nm = document.createElement("input");
-        nm.className = "input";
-        nm.value = s.name;
-        nm.oninput = e => { s.name=e.target.value; save(); };
-        head.appendChild(nm);
-        const acts = document.createElement("div");
-        const bp = document.createElement("button");
-        bp.textContent = "Pasos";
-        bp.style.fontSize = "10px";
-        bp.onclick = e => {
-          e.stopPropagation();
-          currentS = s.id;
-          stepScope = {type:"subprocess",id:s.id};
-          showSteps = true;
+      function addProcess(){
+        const np={id:uid(),name:"Nuevo proceso",color:pastel[data.length%pastel.length],description:"",showDesc:false,subprocesses:[],steps:[]};
+        data.push(np);
+        currentP=np.id;
+        stepScope={type:"process",id:np.id};
+        showSteps=false;
+        render();
+      }
+
+      function quickAddSub(){
+        if(!currentP){alert("Selecciona un proceso");return;}
+        addSub();
+      }
+
+      function quickAddStep(){
+        if(stepScope.type==="process" && !currentP){alert("Selecciona un proceso");return;}
+        if(stepScope.type==="subprocess" && !currentS){alert("Selecciona un subproceso y pulsa Pasos");return;}
+        addStep();
+      }
+
+      function renderSub(){
+        const p=getCurrentP();
+        const list=document.getElementById("subList");
+        const subPanel=document.getElementById("sub");
+        const stepsPanel=document.getElementById("steps");
+        const subHeader=document.getElementById("subHeader");
+        list.innerHTML="";
+        if(p){subHeader.style.background="linear-gradient(90deg,#000,"+shade(p.color,-20)+")";}
+        if(!p){
+          subPanel.classList.remove("hidden-sub");
+          stepsPanel.classList.remove("full-width");
+          list.innerHTML="<p style='color:#888;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
+          return;
+        }
+        const subs=p.subprocesses||[];
+        const procSteps=p.steps||[];
+        if(subs.length===0 && procSteps.length>0){
+          subPanel.classList.add("hidden-sub");
+          stepsPanel.classList.add("full-width");
+          stepScope={type:"process",id:p.id};
+          showSteps=true;
+          return;
+        } else {
+          subPanel.classList.remove("hidden-sub");
+          stepsPanel.classList.remove("full-width");
+        }
+        const top=document.createElement("div");
+        top.className="sub-top-actions";
+        const btn=document.createElement("button");
+        btn.textContent="Pasos →";
+        btn.onclick=()=>{
+          stepScope={type:"process",id:p.id};
+          showSteps=true;
           render();
         };
-        acts.appendChild(bp);
-        const bd = document.createElement("button");
-        bd.textContent = "−";
-        bd.style.fontSize = "10px";
-        bd.onclick = e => { e.stopPropagation(); delSub(s.id); };
-        acts.appendChild(bd);
-        head.appendChild(acts);
-        box.appendChild(head);
-        const lab = document.createElement("div");
-        lab.className = "label";
-        lab.textContent = "Proceso origen";
-        box.appendChild(lab);
-        const or = document.createElement("div");
-        or.style.fontSize = "11px";
-        or.textContent = p.name;
-        box.appendChild(or);
-        list.appendChild(box);
-      });
-    }
+        top.appendChild(btn);
+        list.appendChild(top);
+        if(subs.length===0){
+          list.innerHTML+="<div style='color:#888;text-align:center;margin-top:15px'>Este proceso no tiene subprocesos.</div>";
+          return;
+        }
+        subs.forEach(s=>{
+          const box=document.createElement("div");
+          box.className="sub-box"+(s.id===currentS?" active":"");
+          box.onclick=()=>{currentS=s.id;};
+          const head=document.createElement("div");
+          head.className="sub-header-inline";
+          const name=document.createElement("input");
+          name.className="input";
+          name.value=s.name;
+          name.oninput=e=>{s.name=e.target.value;save();};
+          head.appendChild(name);
+          const acts=document.createElement("div");
+          const btnP=document.createElement("button");
+          btnP.textContent="Pasos";
+          btnP.className="sub-steps-btn"+(stepScope.type==="subprocess" && stepScope.id===s.id && showSteps?" active":"");
+          btnP.onclick=e=>{
+            e.stopPropagation();
+            currentS=s.id;
+            stepScope={type:"subprocess",id:s.id};
+            showSteps=true;
+            render();
+          };
+          acts.appendChild(btnP);
+          const del=document.createElement("button");
+          del.textContent="−";
+          del.className="btn";
+          del.onclick=e=>{
+            e.stopPropagation();
+            delSub(s.id);
+          };
+          acts.appendChild(del);
+          head.appendChild(acts);
+          box.appendChild(head);
+          const lab=document.createElement("div");
+          lab.className="label";
+          lab.textContent="Proceso origen";
+          box.appendChild(lab);
+          const ov=document.createElement("div");
+          ov.style.fontSize="11px";
+          ov.textContent=p.name;
+          box.appendChild(ov);
+          list.appendChild(box);
+        });
+      }
 
-    function addSub(){
-      const p = getCurrentP();
-      if (!p) return;
-      const ns = {id:uid(),name:"Nuevo subproceso",steps:[]};
-      p.subprocesses.push(ns);
-      currentS = ns.id;
-      stepScope = {type:"subprocess",id:ns.id};
-      showSteps = false;
+      function addSub(){
+        const p=getCurrentP();
+        if(!p)return;
+        const ns={id:uid(),name:"Nuevo subproceso",steps:[]};
+        p.subprocesses.push(ns);
+        currentS=ns.id;
+        stepScope={type:"subprocess",id:ns.id};
+        showSteps=false;
+        render();
+      }
+
+      function delSub(id){
+        const p=getCurrentP();
+        if(!p)return;
+        p.subprocesses=(p.subprocesses||[]).filter(s=>s.id!==id);
+        if(stepScope.type==="subprocess" && stepScope.id===id){
+          stepScope={type:"process",id:p.id};
+          showSteps=false;
+        }
+        render();
+      }
+
+      function renderSteps(){
+        const list=document.getElementById("stepList");
+        const stepHeader=document.getElementById("stepHeader");
+        const p=getCurrentP();
+        if(p){stepHeader.style.background="linear-gradient(90deg,#000,"+shade(p.color,-20)+")";}
+        list.innerHTML="";
+        if(!showSteps){
+          list.innerHTML="<p style='color:#888;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
+          return;
+        }
+        let steps=[],originTitle="";
+        if(stepScope.type==="process"){
+          const pr=data.find(x=>x.id===stepScope.id);
+          steps=pr?(pr.steps||[]):[];
+          originTitle="Proceso origen: "+(pr?pr.name:"");
+        } else {
+          const sp=getCurrentS();
+          steps=sp?(sp.steps||[]):[];
+          originTitle="Subproceso origen: "+(sp?sp.name:"");
+        }
+        const org=document.createElement("div");
+        org.className="origin";
+        org.textContent=originTitle;
+        list.appendChild(org);
+        if(!steps.length){
+          list.innerHTML+="<div style='color:#888;text-align:center;margin-top:10px'>No hay pasos aún.</div>";
+        }
+        steps.forEach((st,idx)=>{
+          const box=document.createElement("div");
+          box.className="step";
+          const sn=document.createElement("div");
+          sn.className="step-num";
+          sn.textContent="Paso "+(idx+1);
+          box.appendChild(sn);
+          const name=document.createElement("input");
+          name.className="input";
+          name.value=st.name||"";
+          name.placeholder="Título del paso";
+          name.oninput=e=>{st.name=e.target.value;save();};
+          box.appendChild(name);
+          const link=document.createElement("input");
+          link.className="input";
+          link.value=st.link||"";
+          link.placeholder="Enlace / documento";
+          link.oninput=e=>{st.link=e.target.value;save();};
+          box.appendChild(link);
+          const del=document.createElement("button");
+          del.className="btn";
+          del.textContent="−";
+          del.onclick=()=>{delStep(st.id);};
+          box.appendChild(del);
+          list.appendChild(box);
+        });
+      }
+
+      function addStep(){
+        if(stepScope.type==="process"){
+          const p=getCurrentP();
+          if(!p){alert("Selecciona un proceso");return;}
+          p.steps=p.steps||[];
+          p.steps.push({id:uid(),name:"Nuevo paso"});
+          showSteps=true;
+        } else {
+          const s=getCurrentS();
+          if(!s){alert("Selecciona un subproceso");return;}
+          s.steps=s.steps||[];
+          s.steps.push({id:uid(),name:"Nuevo paso"});
+          showSteps=true;
+        }
+        render();
+      }
+
+      function delStep(id){
+        if(stepScope.type==="process"){
+          const p=getCurrentP();
+          p.steps=(p.steps||[]).filter(st=>st.id!==id);
+        } else {
+          const s=getCurrentS();
+          if(!s)return;
+          s.steps=(s.steps||[]).filter(st=>st.id!==id);
+        }
+        renderSteps();
+      }
+
+      function shade(hex,percent){
+        if(!hex) return "#000";
+        const f=parseInt(hex.slice(1),16),
+              t=percent<0?0:255,
+              p=percent<0?percent*-1:percent,
+              R=f>>16,
+              G=f>>8&0x00FF,
+              B=f&0x0000FF;
+        return "#"+(0x1000000+
+          (Math.round((t-R)*p/100)+R)*0x10000+
+          (Math.round((t-G)*p/100)+G)*0x100+
+          (Math.round((t-B)*p/100)+B)
+        ).toString(16).slice(1);
+      }
+
       render();
-    }
-
-    function delSub(id){
-      const p = getCurrentP();
-      if (!p) return;
-      p.subprocesses = p.subprocesses.filter(s=>s.id!==id);
-      if (stepScope.type==="subprocess" && stepScope.id===id){
-        stepScope = {type:"process",id:p.id};
-        showSteps = false;
-      }
-      render();
-    }
-
-    function renderSteps(){
-      const list = document.getElementById("stepList");
-      const stepHeader = document.getElementById("stepHeader");
-      const p = getCurrentP();
-      if (p) stepHeader.style.background = "linear-gradient(90deg,#000,"+shade(p.color,-20)+")";
-      list.innerHTML = "";
-      if (!showSteps){
-        list.innerHTML = "<p style='color:#888;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
-        return;
-      }
-      let steps = [];
-      let origin = "";
-      if (stepScope.type==="process"){
-        const pr = data.find(x=>x.id===stepScope.id);
-        steps = pr ? (pr.steps||[]) : [];
-        origin = "Proceso origen: " + (pr ? pr.name : "");
-      } else {
-        const sp = getCurrentS();
-        steps = sp ? (sp.steps||[]) : [];
-        origin = "Subproceso origen: " + (sp ? sp.name : "");
-      }
-      const o = document.createElement("div");
-      o.className = "origin";
-      o.textContent = origin;
-      list.appendChild(o);
-      if (!steps.length){
-        list.innerHTML += "<div style='color:#888;text-align:center;margin-top:10px'>No hay pasos aún.</div>";
-      }
-      steps.forEach((st,i)=>{
-        const box = document.createElement("div");
-        box.className = "step";
-        const t = document.createElement("div");
-        t.className = "step-num";
-        t.textContent = "Paso " + (i+1);
-        box.appendChild(t);
-        const inp = document.createElement("input");
-        inp.className = "input";
-        inp.value = st.name || "";
-        inp.placeholder = "Título del paso";
-        inp.oninput = e => { st.name=e.target.value; save(); };
-        box.appendChild(inp);
-        const lin = document.createElement("input");
-        lin.className = "input";
-        lin.value = st.link || "";
-        lin.placeholder = "Enlace / documento";
-        lin.oninput = e => { st.link=e.target.value; save(); };
-        box.appendChild(lin);
-        const del = document.createElement("button");
-        del.className = "btn";
-        del.textContent = "−";
-        del.onclick = () => { delStep(st.id); };
-        box.appendChild(del);
-        list.appendChild(box);
-      });
-    }
-
-    function addStep(){
-      if (stepScope.type==="process"){
-        const p = getCurrentP();
-        if (!p){ alert("Selecciona un proceso"); return; }
-        p.steps = p.steps || [];
-        p.steps.push({id:uid(),name:"Nuevo paso"});
-        showSteps = true;
-      } else {
-        const s = getCurrentS();
-        if (!s){ alert("Selecciona un subproceso"); return; }
-        s.steps = s.steps || [];
-        s.steps.push({id:uid(),name:"Nuevo paso"});
-        showSteps = true;
-      }
-      render();
-    }
-
-    function delStep(id){
-      if (stepScope.type==="process"){
-        const p = getCurrentP();
-        p.steps = (p.steps||[]).filter(st=>st.id!==id);
-      } else {
-        const s = getCurrentS();
-        if (!s) return;
-        s.steps = (s.steps||[]).filter(st=>st.id!==id);
-      }
-      renderSteps();
-    }
-
-    function shade(hex,percent){
-      if(!hex) return "#000";
-      const f=parseInt(hex.slice(1),16),
-            t=percent<0?0:255,
-            p=percent<0?percent*-1:percent,
-            R=f>>16,
-            G=f>>8&0x00FF,
-            B=f&0x0000FF;
-      return "#"+(0x1000000+
-        (Math.round((t-R)*p/100)+R)*0x10000+
-        (Math.round((t-G)*p/100)+G)*0x100+
-        (Math.round((t-B)*p/100)+B)
-      ).toString(16).slice(1);
-    }
-
-    render();
-  </script>
-</body>
+    </script>
+  </body>
 </html>
