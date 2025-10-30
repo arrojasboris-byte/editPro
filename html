@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>Plataforma de procesos (local)</title>
+    <title>Plataforma de procesos (sin PIN)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body {
@@ -13,49 +13,9 @@
       :root {
         --radius: 18px;
       }
-
-      /* PANTALLA PIN */
-      #pin {
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: radial-gradient(circle, #d72626, #410000 70%);
-      }
-      #pin .box {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 26px 20px 20px;
-        border-radius: 16px;
-        color: #fff;
-        text-align: center;
-        width: 280px;
-      }
-      #pin input {
-        width: 100%;
-        padding: 6px 4px;
-        margin-top: 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(0, 0, 0, 0.2);
-        color: #fff;
-        text-align: center;
-        letter-spacing: 0.3em;
-      }
-      #pin button {
-        margin-top: 12px;
-        width: 100%;
-        padding: 7px 0;
-        border: none;
-        background: #d72626;
-        color: #fff;
-        border-radius: 6px;
-        cursor: pointer;
-      }
-
-      /* APP */
+      /* APP directamente visible */
       #app {
-        display: none;
+        display: flex;
         height: 100vh;
         flex-direction: column;
         max-width: 100vw;
@@ -111,7 +71,6 @@
       .panel-title {
         font-weight: 600;
       }
-
       /* BOTONES SOBRE NEGRO */
       .top .btn,
       .panel > header .btn,
@@ -121,7 +80,6 @@
         color: #f8fafc;
         border: 1px solid rgba(248, 250, 252, 0.14);
       }
-
       /* PANEL IZQUIERDA */
       #proc {
         flex: 0 0 280px;
@@ -193,7 +151,6 @@
         padding: 2px 7px;
         font-size: 11px;
       }
-
       /* PANEL CENTRAL */
       #sub {
         flex: 1 1 35%;
@@ -265,7 +222,6 @@
         font-size: 11px;
         cursor: pointer;
       }
-
       /* PANEL PASOS */
       #steps {
         flex: 1 1 35%;
@@ -300,7 +256,6 @@
         margin-bottom: 5px;
         font-weight: 500;
       }
-
       /* RESPONSIVE */
       @media (max-width: 1024px) {
         .main {
@@ -324,18 +279,6 @@
     </style>
   </head>
   <body>
-    <!-- PANTALLA PIN -->
-    <div id="pin">
-      <div class="box">
-        <h2>PROCESOS</h2>
-        <p style="opacity:.7;font-size:12px">Introduce tu PIN</p>
-        <input id="pinInput" type="password" placeholder="AR4321" />
-        <button onclick="checkPin()">Entrar</button>
-        <p id="pinErr" style="color:#ffe0e0;font-size:11px"></p>
-      </div>
-    </div>
-
-    <!-- APP -->
     <div id="app">
       <div class="top">
         <h1>PROCESOS</h1>
@@ -343,7 +286,6 @@
         <button class="btn" onclick="alert('Guardado en localStorage ✅')">💾 Guardar</button>
       </div>
       <div class="main">
-        <!-- PANEL PROCESOS -->
         <div class="panel" id="proc">
           <header>
             <span class="panel-title">Procesos</span>
@@ -355,8 +297,6 @@
           </header>
           <div class="body" id="procList"></div>
         </div>
-
-        <!-- PANEL SUBPROCESO -->
         <div class="panel" id="sub">
           <header id="subHeader">
             <span class="panel-title">Subproceso</span>
@@ -364,8 +304,6 @@
           </header>
           <div class="body" id="subList"></div>
         </div>
-
-        <!-- PANEL PASOS -->
         <div class="panel" id="steps">
           <header id="stepHeader">
             <span class="panel-title">Pasos</span>
@@ -385,33 +323,9 @@
       let data = saved
         ? JSON.parse(saved)
         : [
-            {
-              id: "p1",
-              name: "REPARACIONES",
-              color: pastel[0],
-              description: "",
-              showDesc: false,
-              subprocesses: [],
-              steps: [],
-            },
-            {
-              id: "p2",
-              name: "AJUSTE REMOTO",
-              color: pastel[1],
-              description: "",
-              showDesc: false,
-              subprocesses: [],
-              steps: [],
-            },
-            {
-              id: "p3",
-              name: "HIT",
-              color: pastel[2],
-              description: "",
-              showDesc: false,
-              subprocesses: [],
-              steps: [],
-            },
+            { id: "p1", name: "REPARACIONES", color: pastel[0], description: "", showDesc: false, subprocesses: [], steps: [] },
+            { id: "p2", name: "AJUSTE REMOTO", color: pastel[1], description: "", showDesc: false, subprocesses: [], steps: [] },
+            { id: "p3", name: "HIT", color: pastel[2], description: "", showDesc: false, subprocesses: [], steps: [] }
           ];
 
       let currentP = data[0]?.id || null;
@@ -424,15 +338,8 @@
         localStorage.setItem(LS_KEY, JSON.stringify(data));
       }
 
-      // ENTER global
       window.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
-          const pinVisible = document.getElementById("pin").style.display !== "none";
-          if (pinVisible) {
-            e.preventDefault();
-            checkPin();
-            return;
-          }
           const a = document.activeElement;
           if (a && a.tagName === "INPUT") {
             e.preventDefault();
@@ -440,17 +347,6 @@
           }
         }
       });
-
-      function checkPin() {
-        const v = document.getElementById("pinInput").value;
-        if (v === "AR4321") {
-          document.getElementById("pin").style.display = "none";
-          document.getElementById("app").style.display = "flex";
-          render();
-        } else {
-          document.getElementById("pinErr").textContent = "PIN incorrecto";
-        }
-      }
 
       function uid() {
         return Math.random().toString(36).slice(2, 9);
@@ -460,7 +356,6 @@
         render();
       }
 
-      // ORDENAMOS: primero procesos con subprocesos
       function getFilteredData() {
         let base = data.slice();
         if (searchTerm) {
@@ -483,13 +378,14 @@
                 return {
                   ...p,
                   subprocesses: filteredSub.length ? filteredSub : p.subprocesses,
-                  steps: filteredSteps.length ? filteredSteps : p.steps,
+                  steps: filteredSteps.length ? filteredSteps : p.steps
                 };
               }
               return null;
             })
             .filter(Boolean);
         }
+        // primero procesos con subprocesos
         base.sort((a, b) => {
           const aHas = (a.subprocesses || []).length > 0;
           const bHas = (b.subprocesses || []).length > 0;
@@ -598,7 +494,7 @@
           description: "",
           showDesc: false,
           subprocesses: [],
-          steps: [],
+          steps: []
         };
         data.push(np);
         currentP = np.id;
@@ -645,11 +541,11 @@
         const subHeader = document.getElementById("subHeader");
         const stepsPanel = document.getElementById("steps");
 
+        list.innerHTML = "";
+
         if (p) {
           subHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
         }
-
-        list.innerHTML = "";
 
         if (!p) {
           subPanel.classList.remove("hidden-sub");
@@ -662,7 +558,7 @@
         const subs = p.subprocesses || [];
         const procSteps = p.steps || [];
 
-        // si NO hay subprocesos y SÍ hay pasos → ocultamos central
+        // si no hay subprocesos pero sí pasos -> ocultamos central
         if (subs.length === 0 && procSteps.length > 0) {
           subPanel.classList.add("hidden-sub");
           stepsPanel.classList.add("full-width");
@@ -674,7 +570,7 @@
           stepsPanel.classList.remove("full-width");
         }
 
-        // fila con botón "Pasos →"
+        // botón único "Pasos →"
         const topActions = document.createElement("div");
         topActions.className = "sub-top-actions";
         const btnPasosProc = document.createElement("button");
@@ -688,7 +584,6 @@
         list.appendChild(topActions);
 
         if (subs.length === 0) {
-          // Aquí ya no mostramos "Ver pasos del proceso", porque ya tienes el botón arriba
           list.innerHTML +=
             "<div style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Este proceso no tiene subprocesos.</div>";
           return;
@@ -812,7 +707,7 @@
           responsable: responsables[0],
           link: "",
           document: "",
-          steps: [],
+          steps: []
         };
         p.subprocesses = p.subprocesses || [];
         p.subprocesses.push(ns);
@@ -842,8 +737,7 @@
         }
         list.innerHTML = "";
         if (!showSteps) {
-          list.innerHTML =
-            "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos” →</p>";
+          list.innerHTML = "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
           return;
         }
         let steps = [];
@@ -989,6 +883,9 @@
             .slice(1)
         );
       }
+
+      // primera carga
+      render();
     </script>
   </body>
 </html>
