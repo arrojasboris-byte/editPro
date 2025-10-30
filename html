@@ -87,4 +87,389 @@
         <div class="panel" id="steps">
           <header id="stepHeader">
             <span class="panel-title">Pasos</span>
-            <button class="btn" onclick="addStep()">+ Pas
+            <button class="btn" onclick="addStep()">+ Paso</button>
+          </header>
+          <div class="body" id="stepList"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const LS_KEY = "procesos_app_v1";
+      const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff","#ffeaf2","#e9fff9"];
+      const responsables = ["Audiólogo","Responsable","Franquiciado"];
+
+      // cargar
+      const saved = localStorage.getItem(LS_KEY);
+      let data = saved ? JSON.parse(saved) : [
+        {id:"p1",name:"REPARACIONES",color:pastel[0],description:"",showDesc:false,subprocesses:[],steps:[]},
+        {id:"p2",name:"AJUSTE REMOTO",color:pastel[1],description:"",showDesc:false,subprocesses:[],steps:[]},
+        {id:"p3",name:"HIT",color:pastel[2],description:"",showDesc:false,subprocesses:[],steps:[]},
+      ];
+
+      let currentP = data[0]?.id || null;
+      let currentS = null;
+      let stepScope = { type: "process", id: currentP };
+      let showSteps = false;
+      let searchTerm = "";
+
+      function saveLocal() {
+        localStorage.setItem(LS_KEY, JSON.stringify(data));
+      }
+
+      // ENTER global
+      window.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){
+          const pinVisible = document.getElementById("pin").style.display !== "none";
+          if(pinVisible){ e.preventDefault(); checkPin(); return; }
+          const a = document.activeElement;
+          if(a && a.tagName === "INPUT"){ e.preventDefault(); a.blur(); }
+        }
+      });
+
+      function checkPin(){
+        const v = document.getElementById("pinInput").value;
+        if(v === "AR4321"){
+          document.getElementById("pin").style.display="none";
+          document.getElementById("app").style.display="flex";
+          render();
+        } else {
+          document.getElementById("pinErr").textContent="PIN incorrecto";
+        }
+      }
+
+      function uid(){return Math.random().toString(36).slice(2,9);}
+      function doSearch(val){searchTerm=val.toLowerCase();render();}
+
+      function getFilteredData(){
+        if(!searchTerm) return data;
+        return data.map(p=>{
+          const matchP = p.name.toLowerCase().includes(searchTerm) || (p.description||"").toLowerCase().includes(searchTerm);
+          const filteredSub = (p.subprocesses||[]).filter(s=>
+            s.name.toLowerCase().includes(searchTerm) || (s.description||"").toLowerCase().includes(searchTerm)
+          );
+          const filteredSteps = (p.steps||[]).filter(st=>
+            st.name.toLowerCase().includes(searchTerm) || (st.description||"").toLowerCase().includes(searchTerm)
+          );
+          if(matchP || filteredSub.length || filteredSteps.length){
+            return {...p, subprocesses: filteredSub.length?filteredSub:p.subprocesses, steps: filteredSteps.length?filteredSteps:p.steps};
+          }
+          return null;
+        }).filter(Boolean);
+      }
+
+      function render(){
+        renderProcesses();
+        renderSub();
+        renderSteps();
+        document.getElementById("steps").classList.toggle("hidden", !showSteps);
+        saveLocal();
+      }
+
+      function renderProcesses(){
+        const box = document.getElementById("procList");
+        box.innerHTML="";
+        const list = getFilteredData();
+        list.forEach((p,idx)=>{
+          const div = document.createElement("div");
+          div.className = "proc-item" + (p.id===currentP?" active":"");
+          div.style.background = p.color;
+          div.onclick = () => {
+            currentP = p.id;
+            currentS = null;
+            showSteps = false;
+            stepScope = { type: "process", id: p.id };
+            render();
+          };
+          const num = document.createElement("div");
+          num.className="proc-num";
+          num.textContent = (idx+1)+".";
+          div.appendChild(num);
+          const flex = document.createElement("div");
+          flex.style.flex="1";
+          const inp = document.createElement("input");
+          inp.className="proc-input";
+          inp.value = p.name;
+          inp.onclick = (ev)=>ev.stopPropagation();
+          inp.oninput = (ev)=>{ p.name = ev.target.value; saveLocal(); };
+          flex.appendChild(inp);
+          const tgl = document.createElement("button");
+          tgl.className="proc-desc-toggle";
+          tgl.textContent = p.showDesc ? "▲ Descripción" : "▼ Descripción";
+          tgl.onclick = (ev)=>{ ev.stopPropagation(); p.showDesc = !p.showDesc; render(); };
+          flex.appendChild(tgl);
+          if(p.showDesc){
+            const d = document.createElement("div");
+            d.className = "proc-desc";
+            const ta = document.createElement("textarea");
+            ta.value = p.description || "";
+            ta.oninput = (ev)=>{ p.description = ev.target.value; saveLocal(); };
+            d.appendChild(ta);
+            flex.appendChild(d);
+          }
+          div.appendChild(flex);
+          const del = document.createElement("button");
+          del.className="btn";
+          del.textContent="−";
+          del.onclick = (ev)=>{ ev.stopPropagation(); delProcess(p.id); };
+          div.appendChild(del);
+          box.appendChild(div);
+        });
+      }
+
+      function delProcess(id){
+        data = data.filter(p=>p.id!==id);
+        if(currentP===id){
+          currentP = data[0]?.id || null;
+          stepScope = { type:"process", id: currentP };
+          currentS = null;
+          showSteps = false;
+        }
+        render();
+      }
+
+      function addProcess(){
+        const idx = data.length % pastel.length;
+        const np = {id:uid(),name:"Nuevo proceso",color:pastel[idx],description:"",showDesc:false,subprocesses:[],steps:[]};
+        data.push(np);
+        currentP=np.id; currentS=null; stepScope={type:"process",id:np.id}; showSteps=false;
+        render();
+      }
+
+      function quickAddSub(){ if(!currentP){alert("Selecciona un proceso");return;} addSub(); }
+
+      function quickAddStep(){
+        if(stepScope.type==="process" && !currentP){alert("Selecciona un proceso");return;}
+        if(stepScope.type==="subprocess" && !currentS){alert("Selecciona un subproceso y pulsa Pasos");return;}
+        addStep();
+      }
+
+      function getCurrentP(){return data.find(p=>p.id===currentP)||null;}
+      function getCurrentS(){
+        const p=getCurrentP(); if(!p) return null;
+        return (p.subprocesses||[]).find(s=>s.id===currentS)||null;
+      }
+
+      function renderSub(){
+        const p = getCurrentP();
+        const list = document.getElementById("subList");
+        const subHeader = document.getElementById("subHeader");
+        if(p) subHeader.style.background = "linear-gradient(90deg,#000,"+shade(p.color,-20)+")";
+        list.innerHTML="";
+        if(!p){
+          list.innerHTML = "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
+          return;
+        }
+        // pasos directos
+        const infoProc = document.createElement("div");
+        infoProc.style.marginBottom="10px";
+        infoProc.innerHTML = "<span class='label'>Pasos directos de este proceso</span>";
+        const btnProcSteps = document.createElement("button");
+        btnProcSteps.textContent="Ver pasos del proceso";
+        btnProcSteps.className="sub-steps-btn"+(stepScope.type==="process" && showSteps ? " active":"");
+        btnProcSteps.onclick=()=>{stepScope={type:"process",id:p.id};showSteps=true;render();};
+        infoProc.appendChild(btnProcSteps);
+        list.appendChild(infoProc);
+
+        const subs = p.subprocesses || [];
+        if(subs.length===0){
+          list.innerHTML += "<div style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Este proceso no tiene subprocesos.</div>";
+          return;
+        }
+
+        subs.forEach((s)=>{
+          const box = document.createElement("div");
+          box.className="sub-box"+(s.id===currentS?" active":"");
+          box.style.background = hexToRgba(p.color, 0.35);
+          box.onclick=()=>{ currentS=s.id; };
+          const head = document.createElement("div");
+          head.className="sub-header-inline";
+          const name = document.createElement("input");
+          name.className="input";
+          name.value=s.name;
+          name.oninput=(e)=>{s.name=e.target.value;saveLocal();};
+          head.appendChild(name);
+          const actions = document.createElement("div");
+          actions.className="sub-actions";
+          const btnPasos = document.createElement("button");
+          btnPasos.textContent="Pasos";
+          btnPasos.className="sub-steps-btn"+(stepScope.type==="subprocess" && stepScope.id===s.id && showSteps ? " active":"");
+          btnPasos.onclick=(ev)=>{ev.stopPropagation();currentS=s.id;stepScope={type:"subprocess",id:s.id};showSteps=true;render();};
+          const del = document.createElement("button");
+          del.className="btn"; del.textContent="−";
+          del.onclick=(ev)=>{ev.stopPropagation();delSub(s.id);};
+          actions.appendChild(btnPasos); actions.appendChild(del);
+          head.appendChild(actions);
+          box.appendChild(head);
+
+          const origin = document.createElement("div");
+          origin.className="label"; origin.textContent="Proceso origen";
+          box.appendChild(origin);
+          const originVal = document.createElement("div");
+          originVal.style.fontSize="11px"; originVal.textContent = p.name;
+          box.appendChild(originVal);
+
+          const lab = document.createElement("div");
+          lab.className="label"; lab.textContent="Descripción";
+          box.appendChild(lab);
+          const ta = document.createElement("textarea");
+          ta.className="input"; ta.value=s.description||""; ta.oninput=(e)=>{s.description=e.target.value;saveLocal();};
+          box.appendChild(ta);
+
+          const lab2 = document.createElement("div");
+          lab2.className="label"; lab2.textContent="Persona responsable";
+          box.appendChild(lab2);
+          const sel = document.createElement("select");
+          sel.className="input";
+          responsables.forEach(r=>{const opt=document.createElement("option");opt.value=r;opt.textContent=r;sel.appendChild(opt);});
+          sel.value=s.responsable||responsables[0];
+          sel.onchange=(e)=>{s.responsable=e.target.value;saveLocal();};
+          box.appendChild(sel);
+
+          const lab3 = document.createElement("div");
+          lab3.className="label"; lab3.textContent="Enlace";
+          box.appendChild(lab3);
+          const link = document.createElement("input");
+          link.className="input"; link.value=s.link||""; link.oninput=(e)=>{s.link=e.target.value;saveLocal();};
+          box.appendChild(link);
+
+          const lab4 = document.createElement("div");
+          lab4.className="label"; lab4.textContent="Documento";
+          box.appendChild(lab4);
+          const doc = document.createElement("input");
+          doc.className="input"; doc.value=s.document||""; doc.oninput=(e)=>{s.document=e.target.value;saveLocal();};
+          box.appendChild(doc);
+
+          list.appendChild(box);
+        });
+      }
+
+      function addSub(){
+        const p = getCurrentP(); if(!p) return;
+        const ns={id:uid(),name:"Nuevo subproceso",description:"",responsable:responsables[0],link:"",document:"",steps:[]};
+        p.subprocesses = p.subprocesses || [];
+        p.subprocesses.push(ns);
+        currentS = ns.id;
+        stepScope={type:"subprocess",id:ns.id};
+        showSteps=false;
+        render();
+      }
+
+      function delSub(id){
+        const p = getCurrentP(); if(!p) return;
+        p.subprocesses = (p.subprocesses||[]).filter(s=>s.id!==id);
+        if(stepScope.type==="subprocess" && stepScope.id===id){
+          stepScope={type:"process",id:p.id};
+          showSteps=false;
+        }
+        render();
+      }
+
+      function renderSteps(){
+        const list = document.getElementById("stepList");
+        const stepHeader = document.getElementById("stepHeader");
+        const p = getCurrentP();
+        if(p){ stepHeader.style.background = "linear-gradient(90deg,#000,"+shade(p.color,-20)+")"; }
+        list.innerHTML="";
+        if(!showSteps){
+          list.innerHTML="<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos” en un subproceso o “Ver pasos del proceso”.</p>";
+          return;
+        }
+        let steps = [];
+        let originTitle = "";
+        if(stepScope.type==="process"){
+          const proc = data.find(x=>x.id===stepScope.id);
+          steps = proc ? (proc.steps||[]) : [];
+          originTitle = "Proceso origen: " + (proc ? proc.name : "");
+        } else {
+          const sp = getCurrentS();
+          steps = sp ? (sp.steps||[]) : [];
+          originTitle = "Subproceso origen: " + (sp ? sp.name : "");
+        }
+        const originEl = document.createElement("div");
+        originEl.className="origin";
+        originEl.textContent = originTitle;
+        list.appendChild(originEl);
+        if(!steps || steps.length===0){
+          list.innerHTML += "<div style='color:#888;font-size:13px;text-align:center;margin-top:10px'>No hay pasos aún.</div>";
+        }
+        steps.forEach((st,idx)=>{
+          const box=document.createElement("div");
+          box.className="step";
+          const num=document.createElement("div");
+          num.className="step-num";
+          num.textContent="Paso "+(idx+1);
+          box.appendChild(num);
+          const name = document.createElement("input");
+          name.className="input";
+          name.value=st.name;
+          name.placeholder="Título del paso";
+          name.oninput=(e)=>{st.name=e.target.value;saveLocal();};
+          box.appendChild(name);
+          const lab1=document.createElement("div"); lab1.className="label"; lab1.textContent="Descripción";
+          box.appendChild(lab1);
+          const ta=document.createElement("textarea");
+          ta.className="input"; ta.value=st.description||""; ta.oninput=(e)=>{st.description=e.target.value;saveLocal();};
+          box.appendChild(ta);
+          const lab2=document.createElement("div"); lab2.className="label"; lab2.textContent="Enlace";
+          box.appendChild(lab2);
+          const lin=document.createElement("input");
+          lin.className="input"; lin.value=st.link||""; lin.oninput=(e)=>{st.link=e.target.value;saveLocal();};
+          box.appendChild(lin);
+          const lab3=document.createElement("div"); lab3.className="label"; lab3.textContent="Documento/adjunto";
+          box.appendChild(lab3);
+          const doc=document.createElement("input");
+          doc.className="input"; doc.value=st.document||""; doc.oninput=(e)=>{st.document=e.target.value;saveLocal();};
+          box.appendChild(doc);
+          const del=document.createElement("button");
+          del.className="btn"; del.textContent="− Eliminar paso";
+          del.onclick=()=>{delStep(st.id);};
+          box.appendChild(del);
+          list.appendChild(box);
+        });
+      }
+
+      function addStep(){
+        if(stepScope.type==="process"){
+          const p = getCurrentP(); if(!p){alert("Selecciona un proceso");return;}
+          p.steps = p.steps||[];
+          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:""});
+          showSteps=true;
+        } else {
+          const s = getCurrentS(); if(!s){alert("Selecciona un subproceso y pulsa Pasos");return;}
+          s.steps = s.steps||[];
+          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:""});
+          showSteps=true;
+        }
+        render();
+      }
+
+      function delStep(id){
+        if(stepScope.type==="process"){
+          const p=getCurrentP(); p.steps = (p.steps||[]).filter(st=>st.id!==id);
+        } else {
+          const s=getCurrentS(); if(!s) return;
+          s.steps = (s.steps||[]).filter(st=>st.id!==id);
+        }
+        renderSteps();
+      }
+
+      // helpers
+      function hexToRgba(hex, alpha){
+        if(!hex) return "rgba(255,255,255,"+alpha+")";
+        const h=hex.replace("#",""); const r=parseInt(h.substring(0,2),16); const g=parseInt(h.substring(2,4),16); const b=parseInt(h.substring(4,6),16);
+        return "rgba("+r+","+g+","+b+","+alpha+")";
+      }
+      function shade(hex,percent){
+        if(!hex) return "#000";
+        const f=parseInt(hex.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent;
+        const R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
+        return "#"+(0x1000000+
+          (Math.round((t-R)*p/100)+R)*0x10000+
+          (Math.round((t-G)*p/100)+G)*0x100+
+          (Math.round((t-B)*p/100)+B)
+        ).toString(16).slice(1);
+      }
+    </script>
+  </body>
+</html>
