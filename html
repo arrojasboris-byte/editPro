@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>Plataforma de procesos (sin PIN)</title>
+    <title>Plataforma de procesos</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body {
@@ -13,7 +13,6 @@
       :root {
         --radius: 18px;
       }
-      /* APP directamente visible */
       #app {
         display: flex;
         height: 100vh;
@@ -71,7 +70,6 @@
       .panel-title {
         font-weight: 600;
       }
-      /* BOTONES SOBRE NEGRO */
       .top .btn,
       .panel > header .btn,
       .top .btn-small,
@@ -80,7 +78,6 @@
         color: #f8fafc;
         border: 1px solid rgba(248, 250, 252, 0.14);
       }
-      /* PANEL IZQUIERDA */
       #proc {
         flex: 0 0 280px;
         max-width: 320px;
@@ -102,7 +99,7 @@
         cursor: pointer;
       }
       .proc-item.active {
-        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.05);
+        outline: 2px solid rgba(0, 0, 0, 0.06);
       }
       .proc-input {
         border: none;
@@ -151,7 +148,6 @@
         padding: 2px 7px;
         font-size: 11px;
       }
-      /* PANEL CENTRAL */
       #sub {
         flex: 1 1 35%;
         min-width: 260px;
@@ -208,7 +204,6 @@
         background: #000;
         color: #fff;
       }
-      /* fila superior de acciones en panel central */
       .sub-top-actions {
         display: flex;
         justify-content: flex-end;
@@ -222,7 +217,6 @@
         font-size: 11px;
         cursor: pointer;
       }
-      /* PANEL PASOS */
       #steps {
         flex: 1 1 35%;
         min-width: 260px;
@@ -256,7 +250,6 @@
         margin-bottom: 5px;
         font-weight: 500;
       }
-      /* RESPONSIVE */
       @media (max-width: 1024px) {
         .main {
           flex-wrap: wrap;
@@ -323,9 +316,33 @@
       let data = saved
         ? JSON.parse(saved)
         : [
-            { id: "p1", name: "REPARACIONES", color: pastel[0], description: "", showDesc: false, subprocesses: [], steps: [] },
-            { id: "p2", name: "AJUSTE REMOTO", color: pastel[1], description: "", showDesc: false, subprocesses: [], steps: [] },
-            { id: "p3", name: "HIT", color: pastel[2], description: "", showDesc: false, subprocesses: [], steps: [] }
+            {
+              id: "p1",
+              name: "REPARACIONES",
+              color: pastel[0],
+              description: "",
+              showDesc: false,
+              subprocesses: [],
+              steps: [],
+            },
+            {
+              id: "p2",
+              name: "AJUSTE REMOTO",
+              color: pastel[1],
+              description: "",
+              showDesc: false,
+              subprocesses: [],
+              steps: [],
+            },
+            {
+              id: "p3",
+              name: "HIT",
+              color: pastel[2],
+              description: "",
+              showDesc: false,
+              subprocesses: [],
+              steps: [],
+            },
           ];
 
       let currentP = data[0]?.id || null;
@@ -378,14 +395,13 @@
                 return {
                   ...p,
                   subprocesses: filteredSub.length ? filteredSub : p.subprocesses,
-                  steps: filteredSteps.length ? filteredSteps : p.steps
+                  steps: filteredSteps.length ? filteredSteps : p.steps,
                 };
               }
               return null;
             })
             .filter(Boolean);
         }
-        // primero procesos con subprocesos
         base.sort((a, b) => {
           const aHas = (a.subprocesses || []).length > 0;
           const bHas = (b.subprocesses || []).length > 0;
@@ -494,7 +510,7 @@
           description: "",
           showDesc: false,
           subprocesses: [],
-          steps: []
+          steps: [],
         };
         data.push(np);
         currentP = np.id;
@@ -558,7 +574,6 @@
         const subs = p.subprocesses || [];
         const procSteps = p.steps || [];
 
-        // si no hay subprocesos pero sí pasos -> ocultamos central
         if (subs.length === 0 && procSteps.length > 0) {
           subPanel.classList.add("hidden-sub");
           stepsPanel.classList.add("full-width");
@@ -570,7 +585,6 @@
           stepsPanel.classList.remove("full-width");
         }
 
-        // botón único "Pasos →"
         const topActions = document.createElement("div");
         topActions.className = "sub-top-actions";
         const btnPasosProc = document.createElement("button");
@@ -707,7 +721,7 @@
           responsable: responsables[0],
           link: "",
           document: "",
-          steps: []
+          steps: [],
         };
         p.subprocesses = p.subprocesses || [];
         p.subprocesses.push(ns);
@@ -737,7 +751,8 @@
         }
         list.innerHTML = "";
         if (!showSteps) {
-          list.innerHTML = "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
+          list.innerHTML =
+            "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
           return;
         }
         let steps = [];
@@ -884,7 +899,6 @@
         );
       }
 
-      // primera carga
       render();
     </script>
   </body>
