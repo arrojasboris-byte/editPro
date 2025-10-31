@@ -200,6 +200,20 @@
         min-height: 40px;
         resize: vertical;
       }
+      .file-btn {
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        cursor: pointer;
+        margin-top: 4px;
+      }
+      .file-name {
+        font-size: 11px;
+        color: #444;
+        margin-top: 2px;
+      }
 
       /* PASOS */
       #steps {
@@ -256,7 +270,6 @@
         margin-top: 4px;
       }
 
-      /* responsive */
       @media (max-width: 1024px) {
         .main { flex-wrap: wrap; }
         #proc { flex-basis: 100%; max-width: 100%; }
@@ -272,7 +285,6 @@
         <button class="btn" onclick="alert('Guardado en localStorage ✅')">💾 Guardar</button>
       </div>
       <div class="main" id="main">
-        <!-- PROCESOS -->
         <div class="panel" id="proc">
           <header>
             <span>Procesos</span>
@@ -285,7 +297,6 @@
           <div class="body" id="procList"></div>
         </div>
 
-        <!-- SUBPROCESOS -->
         <div class="panel" id="sub">
           <header id="subHeader">
             <span>Subproceso</span>
@@ -294,7 +305,6 @@
           <div class="body" id="subList"></div>
         </div>
 
-        <!-- PASOS -->
         <div class="panel" id="steps">
           <header id="stepHeader">
             <span>Pasos</span>
@@ -306,7 +316,7 @@
     </div>
 
     <script>
-      const LS_KEY = "procesos_app_v2";
+      const LS_KEY = "procesos_app_v3";
       const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff","#ffeaf2","#e9fff9"];
       const responsables = ["Audiólogo","Responsable","Franquiciado"];
 
@@ -322,7 +332,6 @@
       let showSteps = false;
       let searchTerm = "";
 
-      // ENTER: confirmar y salir del input
       window.addEventListener("keydown", e => {
         if (e.key === "Enter") {
           const a = document.activeElement;
@@ -334,11 +343,8 @@
       });
 
       function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
-
       function uid(){ return Math.random().toString(36).slice(2,9); }
-
       function doSearch(v){ searchTerm = v.toLowerCase(); render(); }
-
       function getCurrentP(){ return data.find(p => p.id === currentP) || null; }
       function getCurrentS(){
         const p = getCurrentP(); if (!p) return null;
@@ -355,7 +361,6 @@
 
       function adjustPanels(){
         const main = document.getElementById("main");
-        // si steps está oculto o no se está mostrando -> two panels
         if (!showSteps){
           main.classList.add("two-panels");
         } else {
@@ -363,17 +368,17 @@
         }
       }
 
-      /* -------- PROCESOS -------- */
+      /* PROCESOS */
       function renderProcesses(){
         const box = document.getElementById("procList");
         box.innerHTML = "";
         let list = data.slice();
-
         if (searchTerm){
-          list = list.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.description||"").toLowerCase().includes(searchTerm));
+          list = list.filter(p =>
+            p.name.toLowerCase().includes(searchTerm) ||
+            (p.description||"").toLowerCase().includes(searchTerm)
+          );
         }
-
-        // primero con subprocesos
         list.sort((a,b)=>{
           const ah = (a.subprocesses||[]).length>0;
           const bh = (b.subprocesses||[]).length>0;
@@ -383,7 +388,7 @@
 
         list.forEach((p,idx)=>{
           const div = document.createElement("div");
-          div.className = "proc-item" + (p.id===currentP ? " active" : "");
+          div.className = "proc-item" + (p.id===currentP ? " active":"");
           div.style.background = p.color;
           div.onclick = () => {
             currentP = p.id;
@@ -435,12 +440,8 @@
 
           const del = document.createElement("button");
           del.className = "del-btn";
-          del.type = "button";
           del.textContent = "−";
-          del.onclick = ev => {
-            ev.stopPropagation();
-            deleteProcess(p.id);
-          };
+          del.onclick = ev => { ev.stopPropagation(); deleteProcess(p.id); };
           div.appendChild(del);
 
           box.appendChild(div);
@@ -487,7 +488,7 @@
         addStep();
       }
 
-      /* -------- SUBPROCESOS -------- */
+      /* SUBPROCESOS */
       function renderSub(){
         const p = getCurrentP();
         const list = document.getElementById("subList");
@@ -502,34 +503,31 @@
 
         if (!p){
           subPanel.classList.remove("hidden-sub");
-          stepsPanel.classList.remove("full-width");
-          list.innerHTML = "<p style='color:#888;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
+          list.innerHTML = "<p style='color:#888;text-align:center;margin-top:18px'>Selecciona un proceso</p>";
           return;
         }
 
         const subs = p.subprocesses || [];
         const procSteps = p.steps || [];
 
-        // si no hay subprocesos y sí hay pasos -> ocultar panel central
         if (subs.length===0 && procSteps.length>0){
           subPanel.classList.add("hidden-sub");
           stepsPanel.style.display = "flex";
           stepsPanel.style.flex = "1 1 0";
-          showSteps = true;
           stepScope = {type:"process",id:p.id};
+          showSteps = true;
           return;
         } else {
           subPanel.classList.remove("hidden-sub");
           stepsPanel.style.display = "flex";
         }
 
-        // barra superior con botón único de pasos
-        const topActions = document.createElement("div");
-        topActions.className = "sub-top-actions";
+        // barra superior
+        const top = document.createElement("div");
+        top.className = "sub-top-actions";
         const btnPasos = document.createElement("button");
         btnPasos.textContent = "Pasos →";
         btnPasos.onclick = () => {
-          // si hay un subproceso seleccionado, muestra sus pasos
           if (currentS){
             stepScope = {type:"subprocess",id:currentS};
           } else {
@@ -538,17 +536,17 @@
           showSteps = true;
           render();
         };
-        topActions.appendChild(btnPasos);
-        list.appendChild(topActions);
+        top.appendChild(btnPasos);
+        list.appendChild(top);
 
         if (subs.length===0){
-          list.innerHTML += "<div style='color:#888;text-align:center;margin-top:15px'>Este proceso no tiene subprocesos.</div>";
+          list.innerHTML += "<div style='color:#888;text-align:center;margin-top:9px'>Este proceso no tiene subprocesos.</div>";
           return;
         }
 
         subs.forEach(s=>{
           const box = document.createElement("div");
-          box.className = "sub-box" + (s.id===currentS ? " active":"");
+          box.className = "sub-box" + (s.id===currentS ? " active" : "");
           box.style.background = hexToRgba(p.color,0.35);
           box.onclick = () => { currentS = s.id; renderSub(); };
 
@@ -569,18 +567,15 @@
 
           box.appendChild(head);
 
-          // Proceso origen
           const lab0 = document.createElement("div");
           lab0.className = "label";
           lab0.textContent = "Proceso origen";
           box.appendChild(lab0);
+          const pov = document.createElement("div");
+          pov.style.fontSize = "11px";
+          pov.textContent = p.name;
+          box.appendChild(pov);
 
-          const pv = document.createElement("div");
-          pv.style.fontSize = "11px";
-          pv.textContent = p.name;
-          box.appendChild(pv);
-
-          // Descripción
           const lab1 = document.createElement("div");
           lab1.className = "label";
           lab1.textContent = "Descripción";
@@ -591,7 +586,6 @@
           ta.oninput = e => { s.description = e.target.value; save(); };
           box.appendChild(ta);
 
-          // Responsable
           const lab2 = document.createElement("div");
           lab2.className = "label";
           lab2.textContent = "Persona responsable";
@@ -606,7 +600,6 @@
           sel.onchange = e => { s.responsable = e.target.value; save(); };
           box.appendChild(sel);
 
-          // Enlace
           const lab3 = document.createElement("div");
           lab3.className = "label";
           lab3.textContent = "Enlace";
@@ -617,7 +610,6 @@
           link.oninput = e => { s.link = e.target.value; save(); };
           box.appendChild(link);
 
-          // Documento
           const lab4 = document.createElement("div");
           lab4.className = "label";
           lab4.textContent = "Documento";
@@ -628,13 +620,41 @@
           doc.oninput = e => { s.document = e.target.value; save(); };
           box.appendChild(doc);
 
+          const fileInput = document.createElement("input");
+          fileInput.type = "file";
+          fileInput.style.display = "none";
+          fileInput.onchange = e => {
+            const file = e.target.files[0];
+            if (file){
+              s.attachedName = file.name;
+              save();
+              renderSub();
+            }
+          };
+          box.appendChild(fileInput);
+
+          const attachBtn = document.createElement("button");
+          attachBtn.className = "file-btn";
+          attachBtn.textContent = "📎 Adjuntar";
+          attachBtn.onclick = ev => {
+            ev.stopPropagation();
+            fileInput.click();
+          };
+          box.appendChild(attachBtn);
+
+          if (s.attachedName){
+            const fn = document.createElement("div");
+            fn.className = "file-name";
+            fn.textContent = "Adjunto: " + s.attachedName;
+            box.appendChild(fn);
+          }
+
           list.appendChild(box);
         });
       }
 
       function addSub(){
-        const p = getCurrentP();
-        if (!p) return;
+        const p = getCurrentP(); if (!p) return;
         const ns = {
           id: uid(),
           name: "Nuevo subproceso",
@@ -642,6 +662,7 @@
           responsable: responsables[0],
           link: "",
           document: "",
+          attachedName: "",
           steps: []
         };
         p.subprocesses.push(ns);
@@ -652,8 +673,7 @@
       }
 
       function deleteSub(id){
-        const p = getCurrentP();
-        if (!p) return;
+        const p = getCurrentP(); if (!p) return;
         p.subprocesses = (p.subprocesses||[]).filter(s=>s.id!==id);
         if (currentS === id){
           currentS = null;
@@ -663,7 +683,7 @@
         render();
       }
 
-      /* -------- PASOS -------- */
+      /* PASOS */
       function renderSteps(){
         const list = document.getElementById("stepList");
         const stepHeader = document.getElementById("stepHeader");
@@ -699,7 +719,6 @@
         }
 
         steps.forEach((st,idx)=>{
-          // aseguramos arrays
           st.extraLinks = st.extraLinks || [];
           st.extraDocs = st.extraDocs || [];
 
@@ -736,61 +755,74 @@
 
           const lab2 = document.createElement("div");
           lab2.className = "label";
-          lab2.textContent = "Enlace / documento";
+          lab2.textContent = "Enlace";
           box.appendChild(lab2);
-
           const link = document.createElement("input");
           link.className = "input";
           link.value = st.link || "";
-          link.placeholder = "Enlace / documento";
+          link.placeholder = "https:// ...";
           link.oninput = e => { st.link = e.target.value; save(); };
           box.appendChild(link);
 
+          const lab3 = document.createElement("div");
+          lab3.className = "label";
+          lab3.textContent = "Documento/adjunto";
+          box.appendChild(lab3);
           const doc = document.createElement("input");
           doc.className = "input";
           doc.value = st.document || "";
-          doc.placeholder = "Documento";
+          doc.placeholder = "Ruta / nombre documento";
           doc.oninput = e => { st.document = e.target.value; save(); };
           box.appendChild(doc);
 
-          // extras (iconos)
-          const extraBar = document.createElement("div");
-          extraBar.className = "extras";
+          // input file oculto
+          const fileInput = document.createElement("input");
+          fileInput.type = "file";
+          fileInput.style.display = "none";
+          fileInput.onchange = e => {
+            const f = e.target.files[0];
+            if (f){
+              st.attachedName = f.name;
+              save();
+              renderSteps();
+            }
+          };
+          box.appendChild(fileInput);
+
+          const exBar = document.createElement("div");
+          exBar.className = "extras";
           const addLink = document.createElement("button");
           addLink.textContent = "➕🔗";
           addLink.title = "Añadir otro enlace";
           addLink.onclick = () => {
             st.extraLinks.push("");
+            save();
             renderSteps();
           };
-          extraBar.appendChild(addLink);
-
+          exBar.appendChild(addLink);
           const addDoc = document.createElement("button");
-          addDoc.textContent = "➕📄";
-          addDoc.title = "Añadir otro documento";
-          addDoc.onclick = () => {
-            st.extraDocs.push("");
-            renderSteps();
-          };
-          extraBar.appendChild(addDoc);
-          box.appendChild(extraBar);
+          addDoc.textContent = "📎";
+          addDoc.title = "Adjuntar archivo";
+          addDoc.onclick = () => fileInput.click();
+          exBar.appendChild(addDoc);
+          box.appendChild(exBar);
 
-          // pintar extras
-          st.extraLinks.forEach((v,ix)=>{
-            const ef = document.createElement("input");
-            ef.className = "input extra-field";
-            ef.value = v;
-            ef.placeholder = "Enlace extra "+(ix+1);
-            ef.oninput = e => { st.extraLinks[ix] = e.target.value; save(); };
-            box.appendChild(ef);
-          });
-          st.extraDocs.forEach((v,ix)=>{
-            const ef = document.createElement("input");
-            ef.className = "input extra-field";
-            ef.value = v;
-            ef.placeholder = "Documento extra "+(ix+1);
-            ef.oninput = e => { st.extraDocs[ix] = e.target.value; save(); };
-            box.appendChild(ef);
+          // mostrar archivo adjuntado
+          if (st.attachedName){
+            const fn = document.createElement("div");
+            fn.className = "file-name";
+            fn.textContent = "Adjunto: " + st.attachedName;
+            box.appendChild(fn);
+          }
+
+          // pintar enlaces extra
+          st.extraLinks.forEach((v,i)=>{
+            const inx = document.createElement("input");
+            inx.className = "input extra-field";
+            inx.value = v;
+            inx.placeholder = "Enlace extra " + (i+1);
+            inx.oninput = e => { st.extraLinks[i] = e.target.value; save(); };
+            box.appendChild(inx);
           });
 
           list.appendChild(box);
@@ -801,11 +833,11 @@
         if (stepScope.type === "process"){
           const p = getCurrentP(); if (!p){ alert("Selecciona un proceso"); return; }
           p.steps = p.steps || [];
-          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",extraLinks:[],extraDocs:[]});
+          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],extraDocs:[]});
         } else {
           const s = getCurrentS(); if (!s){ alert("Selecciona un subproceso"); return; }
           s.steps = s.steps || [];
-          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",extraLinks:[],extraDocs:[]});
+          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],extraDocs:[]});
         }
         showSteps = true;
         render();
