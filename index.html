@@ -231,21 +231,31 @@
         background: #fff;
         position: relative;
       }
+      .step-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
       .step-num {
         font-weight: 700;
         font-size: 11px;
-        margin-bottom: 4px;
       }
-      .step-del {
-        position: absolute;
-        top: 5px;
-        right: 5px;
+      .step-actions {
+        display: flex;
+        gap: 4px;
+      }
+      .icon-btn {
         background: rgba(0, 0, 0, 0.04);
         border: none;
         border-radius: 999px;
         width: 22px;
         height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
+        font-size: 13px;
       }
       .origin {
         font-size: 11px;
@@ -253,21 +263,25 @@
         margin-bottom: 5px;
         font-weight: 500;
       }
-      .extras {
-        display: flex;
-        gap: 6px;
+      .inline-label {
+        font-size: 11px;
+        color: #333;
         margin-top: 4px;
       }
-      .extras button {
-        border: none;
-        background: rgba(0, 0, 0, 0.04);
-        border-radius: 999px;
+      .inline-value {
+        font-size: 12px;
+        background: #f7f7f7;
+        border-radius: 6px;
         padding: 2px 6px;
+      }
+      .add-below {
+        margin-top: 6px;
+        background: rgba(0, 0, 0, 0.04);
+        border: none;
+        border-radius: 999px;
+        padding: 3px 9px;
         font-size: 11px;
         cursor: pointer;
-      }
-      .extra-field {
-        margin-top: 4px;
       }
 
       @media (max-width: 1024px) {
@@ -285,6 +299,7 @@
         <button class="btn" onclick="alert('Guardado en localStorage ✅')">💾 Guardar</button>
       </div>
       <div class="main" id="main">
+        <!-- PROCESOS -->
         <div class="panel" id="proc">
           <header>
             <span>Procesos</span>
@@ -297,6 +312,7 @@
           <div class="body" id="procList"></div>
         </div>
 
+        <!-- SUBPROCESOS -->
         <div class="panel" id="sub">
           <header id="subHeader">
             <span>Subproceso</span>
@@ -305,6 +321,7 @@
           <div class="body" id="subList"></div>
         </div>
 
+        <!-- PASOS -->
         <div class="panel" id="steps">
           <header id="stepHeader">
             <span>Pasos</span>
@@ -316,7 +333,7 @@
     </div>
 
     <script>
-      const LS_KEY = "procesos_app_v3";
+      const LS_KEY = "procesos_app_v4";
       const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff","#ffeaf2","#e9fff9"];
       const responsables = ["Audiólogo","Responsable","Franquiciado"];
 
@@ -522,7 +539,6 @@
           stepsPanel.style.display = "flex";
         }
 
-        // barra superior
         const top = document.createElement("div");
         top.className = "sub-top-actions";
         const btnPasos = document.createElement("button");
@@ -635,7 +651,7 @@
 
           const attachBtn = document.createElement("button");
           attachBtn.className = "file-btn";
-          attachBtn.textContent = "📎 Adjuntar";
+          attachBtn.textContent = "📎 Adjuntar doc";
           attachBtn.onclick = ev => {
             ev.stopPropagation();
             fileInput.click();
@@ -719,111 +735,188 @@
         }
 
         steps.forEach((st,idx)=>{
+          // asegurar propiedades
+          st.editing = st.editing || false;
           st.extraLinks = st.extraLinks || [];
-          st.extraDocs = st.extraDocs || [];
 
           const box = document.createElement("div");
           box.className = "step";
 
-          const del = document.createElement("button");
-          del.className = "step-del";
-          del.textContent = "−";
-          del.onclick = () => { deleteStep(st.id); };
-          box.appendChild(del);
+          const top = document.createElement("div");
+          top.className = "step-row";
 
           const num = document.createElement("div");
           num.className = "step-num";
           num.textContent = "Paso " + (idx+1);
-          box.appendChild(num);
+          top.appendChild(num);
 
-          const name = document.createElement("input");
-          name.className = "input";
-          name.value = st.name || "";
-          name.placeholder = "Título del paso";
-          name.oninput = e => { st.name = e.target.value; save(); };
-          box.appendChild(name);
+          const acts = document.createElement("div");
+          acts.className = "step-actions";
 
-          const lab1 = document.createElement("div");
-          lab1.className = "label";
-          lab1.textContent = "Descripción";
-          box.appendChild(lab1);
-          const ta = document.createElement("textarea");
-          ta.className = "input";
-          ta.value = st.description || "";
-          ta.oninput = e => { st.description = e.target.value; save(); };
-          box.appendChild(ta);
-
-          const lab2 = document.createElement("div");
-          lab2.className = "label";
-          lab2.textContent = "Enlace";
-          box.appendChild(lab2);
-          const link = document.createElement("input");
-          link.className = "input";
-          link.value = st.link || "";
-          link.placeholder = "https:// ...";
-          link.oninput = e => { st.link = e.target.value; save(); };
-          box.appendChild(link);
-
-          const lab3 = document.createElement("div");
-          lab3.className = "label";
-          lab3.textContent = "Documento/adjunto";
-          box.appendChild(lab3);
-          const doc = document.createElement("input");
-          doc.className = "input";
-          doc.value = st.document || "";
-          doc.placeholder = "Ruta / nombre documento";
-          doc.oninput = e => { st.document = e.target.value; save(); };
-          box.appendChild(doc);
-
-          // input file oculto
-          const fileInput = document.createElement("input");
-          fileInput.type = "file";
-          fileInput.style.display = "none";
-          fileInput.onchange = e => {
-            const f = e.target.files[0];
-            if (f){
-              st.attachedName = f.name;
-              save();
-              renderSteps();
-            }
-          };
-          box.appendChild(fileInput);
-
-          const exBar = document.createElement("div");
-          exBar.className = "extras";
-          const addLink = document.createElement("button");
-          addLink.textContent = "➕🔗";
-          addLink.title = "Añadir otro enlace";
-          addLink.onclick = () => {
-            st.extraLinks.push("");
+          const editBtn = document.createElement("button");
+          editBtn.className = "icon-btn";
+          editBtn.title = "Editar";
+          editBtn.textContent = "🖉";
+          editBtn.onclick = () => {
+            st.editing = !st.editing;
             save();
             renderSteps();
           };
-          exBar.appendChild(addLink);
-          const addDoc = document.createElement("button");
-          addDoc.textContent = "📎";
-          addDoc.title = "Adjuntar archivo";
-          addDoc.onclick = () => fileInput.click();
-          exBar.appendChild(addDoc);
-          box.appendChild(exBar);
+          acts.appendChild(editBtn);
 
-          // mostrar archivo adjuntado
-          if (st.attachedName){
-            const fn = document.createElement("div");
-            fn.className = "file-name";
-            fn.textContent = "Adjunto: " + st.attachedName;
-            box.appendChild(fn);
+          const delBtn = document.createElement("button");
+          delBtn.className = "icon-btn";
+          delBtn.textContent = "−";
+          delBtn.title = "Eliminar paso";
+          delBtn.onclick = () => { deleteStep(st.id); };
+          acts.appendChild(delBtn);
+
+          top.appendChild(acts);
+          box.appendChild(top);
+
+          if (st.editing){
+            // modo edición
+            const name = document.createElement("input");
+            name.className = "input";
+            name.value = st.name || "";
+            name.placeholder = "Título del paso";
+            name.oninput = e => { st.name = e.target.value; save(); };
+            box.appendChild(name);
+
+            const lab1 = document.createElement("div");
+            lab1.className = "label";
+            lab1.textContent = "Descripción";
+            box.appendChild(lab1);
+            const ta = document.createElement("textarea");
+            ta.className = "input";
+            ta.value = st.description || "";
+            ta.oninput = e => { st.description = e.target.value; save(); };
+            box.appendChild(ta);
+
+            const lab2 = document.createElement("div");
+            lab2.className = "label";
+            lab2.textContent = "Enlace principal";
+            box.appendChild(lab2);
+            const link = document.createElement("input");
+            link.className = "input";
+            link.value = st.link || "";
+            link.placeholder = "https:// ...";
+            link.oninput = e => { st.link = e.target.value; save(); };
+            box.appendChild(link);
+
+            const lab3 = document.createElement("div");
+            lab3.className = "label";
+            lab3.textContent = "Documento";
+            box.appendChild(lab3);
+            const doc = document.createElement("input");
+            doc.className = "input";
+            doc.value = st.document || "";
+            doc.placeholder = "Nombre / ruta";
+            doc.oninput = e => { st.document = e.target.value; save(); };
+            box.appendChild(doc);
+
+            // input file oculto
+            const fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.style.display = "none";
+            fileInput.onchange = e => {
+              const f = e.target.files[0];
+              if (f){
+                st.attachedName = f.name;
+                save();
+                renderSteps();
+              }
+            };
+            box.appendChild(fileInput);
+
+            const attachBar = document.createElement("div");
+            attachBar.style.display = "flex";
+            attachBar.style.gap = "6px";
+            attachBar.style.marginTop = "4px";
+
+            const btnLink = document.createElement("button");
+            btnLink.className = "file-btn";
+            btnLink.textContent = "➕ Enlace";
+            btnLink.onclick = () => {
+              const u = prompt("Pega el enlace:");
+              if (u){
+                st.extraLinks.push(u);
+                save();
+                renderSteps();
+              }
+            };
+            attachBar.appendChild(btnLink);
+
+            const btnDoc = document.createElement("button");
+            btnDoc.className = "file-btn";
+            btnDoc.textContent = "📎 Documento";
+            btnDoc.onclick = () => fileInput.click();
+            attachBar.appendChild(btnDoc);
+
+            box.appendChild(attachBar);
+
+            if (st.attachedName){
+              const fn = document.createElement("div");
+              fn.className = "file-name";
+              fn.textContent = "Adjunto: " + st.attachedName;
+              box.appendChild(fn);
+            }
+
+            // enlaces extra
+            st.extraLinks.forEach((v,i)=>{
+              const inx = document.createElement("input");
+              inx.className = "input";
+              inx.style.marginTop = "4px";
+              inx.value = v;
+              inx.placeholder = "Enlace extra "+(i+1);
+              inx.oninput = e => { st.extraLinks[i] = e.target.value; save(); };
+              box.appendChild(inx);
+            });
+
+          } else {
+            // modo lectura
+            const t1 = document.createElement("div");
+            t1.className = "inline-label";
+            t1.textContent = st.name || "Sin título";
+            box.appendChild(t1);
+
+            const d1 = document.createElement("div");
+            d1.className = "inline-value";
+            d1.textContent = st.description || "Sin descripción";
+            box.appendChild(d1);
+
+            const l1 = document.createElement("div");
+            l1.className = "inline-label";
+            l1.textContent = "Enlace: " + (st.link || "—");
+            box.appendChild(l1);
+
+            const d2 = document.createElement("div");
+            d2.className = "inline-label";
+            d2.textContent = "Documento: " + (st.attachedName || st.document || "—");
+            box.appendChild(d2);
+
+            if (st.extraLinks && st.extraLinks.length){
+              const le = document.createElement("div");
+              le.className = "inline-label";
+              le.textContent = "Enlaces extra:";
+              box.appendChild(le);
+              st.extraLinks.forEach(u=>{
+                const li = document.createElement("div");
+                li.className = "inline-value";
+                li.textContent = u;
+                box.appendChild(li);
+              });
+            }
           }
 
-          // pintar enlaces extra
-          st.extraLinks.forEach((v,i)=>{
-            const inx = document.createElement("input");
-            inx.className = "input extra-field";
-            inx.value = v;
-            inx.placeholder = "Enlace extra " + (i+1);
-            inx.oninput = e => { st.extraLinks[i] = e.target.value; save(); };
-            box.appendChild(inx);
-          });
+          // botón "+ Paso debajo" (esto crea el siguiente)
+          const addBelow = document.createElement("button");
+          addBelow.className = "add-below";
+          addBelow.textContent = "+ Paso debajo";
+          addBelow.onclick = () => {
+            addStepAfter(idx);
+          };
+          box.appendChild(addBelow);
 
           list.appendChild(box);
         });
@@ -833,13 +926,26 @@
         if (stepScope.type === "process"){
           const p = getCurrentP(); if (!p){ alert("Selecciona un proceso"); return; }
           p.steps = p.steps || [];
-          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],extraDocs:[]});
+          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
         } else {
           const s = getCurrentS(); if (!s){ alert("Selecciona un subproceso"); return; }
           s.steps = s.steps || [];
-          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],extraDocs:[]});
+          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
         }
         showSteps = true;
+        render();
+      }
+
+      function addStepAfter(index){
+        if (stepScope.type === "process"){
+          const p = getCurrentP(); if (!p) return;
+          p.steps = p.steps || [];
+          p.steps.splice(index+1, 0, {id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
+        } else {
+          const s = getCurrentS(); if (!s) return;
+          s.steps = s.steps || [];
+          s.steps.splice(index+1, 0, {id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
+        }
         render();
       }
 
