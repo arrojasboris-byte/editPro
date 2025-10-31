@@ -263,17 +263,6 @@
         margin-bottom: 5px;
         font-weight: 500;
       }
-      .inline-label {
-        font-size: 11px;
-        color: #333;
-        margin-top: 4px;
-      }
-      .inline-value {
-        font-size: 12px;
-        background: #f7f7f7;
-        border-radius: 6px;
-        padding: 2px 6px;
-      }
       .add-below {
         margin-top: 6px;
         background: rgba(0, 0, 0, 0.04);
@@ -281,6 +270,28 @@
         border-radius: 999px;
         padding: 3px 9px;
         font-size: 11px;
+        cursor: pointer;
+      }
+
+      /* recursos panel */
+      .resources-box {
+        border-top: 1px solid rgba(0,0,0,.06);
+        margin-top: 10px;
+        padding-top: 6px;
+      }
+      .resource-tag {
+        display: inline-flex;
+        gap: 4px;
+        background: rgba(0,0,0,.03);
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        margin: 2px 4px 0 0;
+        align-items: center;
+      }
+      .resource-tag button {
+        border: none;
+        background: transparent;
         cursor: pointer;
       }
 
@@ -333,14 +344,14 @@
     </div>
 
     <script>
-      const LS_KEY = "procesos_app_v4";
+      const LS_KEY = "procesos_app_v5";
       const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff","#ffeaf2","#e9fff9"];
       const responsables = ["Audiólogo","Responsable","Franquiciado"];
 
       const saved = localStorage.getItem(LS_KEY);
       let data = saved ? JSON.parse(saved) : [
-        {id:"p1",name:"REPARACIONES",color:pastel[0],description:"",showDesc:false,subprocesses:[],steps:[]},
-        {id:"p2",name:"AJUSTE REMOTO",color:pastel[1],description:"",showDesc:false,subprocesses:[],steps:[]},
+        {id:"p1",name:"REPARACIONES",color:pastel[0],description:"",showDesc:false,subprocesses:[],steps:[],resources:{links:[],files:[]}},
+        {id:"p2",name:"AJUSTE REMOTO",color:pastel[1],description:"",showDesc:false,subprocesses:[],steps:[],resources:{links:[],files:[]}},
       ];
 
       let currentP = data[0]?.id || null;
@@ -484,7 +495,8 @@
           description: "",
           showDesc: false,
           subprocesses: [],
-          steps: []
+          steps: [],
+          resources: {links:[],files:[]}
         };
         data.push(np);
         currentP = np.id;
@@ -679,7 +691,8 @@
           link: "",
           document: "",
           attachedName: "",
-          steps: []
+          steps: [],
+          resources: {links:[],files:[]}
         };
         p.subprocesses.push(ns);
         currentS = ns.id;
@@ -715,14 +728,24 @@
 
         let steps = [];
         let origin = "";
+        let resourcesObj = null;
+
         if (stepScope.type === "process"){
           const pr = data.find(x=>x.id===stepScope.id);
           steps = pr ? (pr.steps||[]) : [];
           origin = "Proceso origen: " + (pr ? pr.name : "");
+          if (pr){
+            pr.resources = pr.resources || {links:[],files:[]};
+            resourcesObj = pr.resources;
+          }
         } else {
           const sp = getCurrentS();
           steps = sp ? (sp.steps||[]) : [];
           origin = "Subproceso origen: " + (sp ? sp.name : "");
+          if (sp){
+            sp.resources = sp.resources || {links:[],files:[]};
+            resourcesObj = sp.resources;
+          }
         }
 
         const org = document.createElement("div");
@@ -735,16 +758,11 @@
         }
 
         steps.forEach((st,idx)=>{
-          // asegurar propiedades
-          st.editing = st.editing || false;
-          st.extraLinks = st.extraLinks || [];
-
           const box = document.createElement("div");
           box.className = "step";
 
           const top = document.createElement("div");
           top.className = "step-row";
-
           const num = document.createElement("div");
           num.className = "step-num";
           num.textContent = "Paso " + (idx+1);
@@ -752,185 +770,119 @@
 
           const acts = document.createElement("div");
           acts.className = "step-actions";
-
-          const editBtn = document.createElement("button");
-          editBtn.className = "icon-btn";
-          editBtn.title = "Editar";
-          editBtn.textContent = "🖉";
-          editBtn.onclick = () => {
-            st.editing = !st.editing;
-            save();
-            renderSteps();
-          };
-          acts.appendChild(editBtn);
-
-          const delBtn = document.createElement("button");
-          delBtn.className = "icon-btn";
-          delBtn.textContent = "−";
-          delBtn.title = "Eliminar paso";
-          delBtn.onclick = () => { deleteStep(st.id); };
-          acts.appendChild(delBtn);
-
+          const del = document.createElement("button");
+          del.className = "icon-btn";
+          del.textContent = "−";
+          del.title = "Eliminar paso";
+          del.onclick = () => { deleteStep(st.id); };
+          acts.appendChild(del);
           top.appendChild(acts);
           box.appendChild(top);
 
-          if (st.editing){
-            // modo edición
-            const name = document.createElement("input");
-            name.className = "input";
-            name.value = st.name || "";
-            name.placeholder = "Título del paso";
-            name.oninput = e => { st.name = e.target.value; save(); };
-            box.appendChild(name);
+          const title = document.createElement("input");
+          title.className = "input";
+          title.value = st.name || "";
+          title.placeholder = "Título del paso";
+          title.oninput = e => { st.name = e.target.value; save(); };
+          box.appendChild(title);
 
-            const lab1 = document.createElement("div");
-            lab1.className = "label";
-            lab1.textContent = "Descripción";
-            box.appendChild(lab1);
-            const ta = document.createElement("textarea");
-            ta.className = "input";
-            ta.value = st.description || "";
-            ta.oninput = e => { st.description = e.target.value; save(); };
-            box.appendChild(ta);
+          const lab = document.createElement("div");
+          lab.className = "label";
+          lab.textContent = "Descripción";
+          box.appendChild(lab);
 
-            const lab2 = document.createElement("div");
-            lab2.className = "label";
-            lab2.textContent = "Enlace principal";
-            box.appendChild(lab2);
-            const link = document.createElement("input");
-            link.className = "input";
-            link.value = st.link || "";
-            link.placeholder = "https:// ...";
-            link.oninput = e => { st.link = e.target.value; save(); };
-            box.appendChild(link);
+          const textarea = document.createElement("textarea");
+          textarea.className = "input";
+          textarea.value = st.description || "";
+          textarea.oninput = e => { st.description = e.target.value; save(); };
+          box.appendChild(textarea);
 
-            const lab3 = document.createElement("div");
-            lab3.className = "label";
-            lab3.textContent = "Documento";
-            box.appendChild(lab3);
-            const doc = document.createElement("input");
-            doc.className = "input";
-            doc.value = st.document || "";
-            doc.placeholder = "Nombre / ruta";
-            doc.oninput = e => { st.document = e.target.value; save(); };
-            box.appendChild(doc);
-
-            // input file oculto
-            const fileInput = document.createElement("input");
-            fileInput.type = "file";
-            fileInput.style.display = "none";
-            fileInput.onchange = e => {
-              const f = e.target.files[0];
-              if (f){
-                st.attachedName = f.name;
-                save();
-                renderSteps();
-              }
-            };
-            box.appendChild(fileInput);
-
-            const attachBar = document.createElement("div");
-            attachBar.style.display = "flex";
-            attachBar.style.gap = "6px";
-            attachBar.style.marginTop = "4px";
-
-            const btnLink = document.createElement("button");
-            btnLink.className = "file-btn";
-            btnLink.textContent = "➕ Enlace";
-            btnLink.onclick = () => {
-              const u = prompt("Pega el enlace:");
-              if (u){
-                st.extraLinks.push(u);
-                save();
-                renderSteps();
-              }
-            };
-            attachBar.appendChild(btnLink);
-
-            const btnDoc = document.createElement("button");
-            btnDoc.className = "file-btn";
-            btnDoc.textContent = "📎 Documento";
-            btnDoc.onclick = () => fileInput.click();
-            attachBar.appendChild(btnDoc);
-
-            box.appendChild(attachBar);
-
-            if (st.attachedName){
-              const fn = document.createElement("div");
-              fn.className = "file-name";
-              fn.textContent = "Adjunto: " + st.attachedName;
-              box.appendChild(fn);
-            }
-
-            // enlaces extra
-            st.extraLinks.forEach((v,i)=>{
-              const inx = document.createElement("input");
-              inx.className = "input";
-              inx.style.marginTop = "4px";
-              inx.value = v;
-              inx.placeholder = "Enlace extra "+(i+1);
-              inx.oninput = e => { st.extraLinks[i] = e.target.value; save(); };
-              box.appendChild(inx);
-            });
-
-          } else {
-            // modo lectura
-            const t1 = document.createElement("div");
-            t1.className = "inline-label";
-            t1.textContent = st.name || "Sin título";
-            box.appendChild(t1);
-
-            const d1 = document.createElement("div");
-            d1.className = "inline-value";
-            d1.textContent = st.description || "Sin descripción";
-            box.appendChild(d1);
-
-            const l1 = document.createElement("div");
-            l1.className = "inline-label";
-            l1.textContent = "Enlace: " + (st.link || "—");
-            box.appendChild(l1);
-
-            const d2 = document.createElement("div");
-            d2.className = "inline-label";
-            d2.textContent = "Documento: " + (st.attachedName || st.document || "—");
-            box.appendChild(d2);
-
-            if (st.extraLinks && st.extraLinks.length){
-              const le = document.createElement("div");
-              le.className = "inline-label";
-              le.textContent = "Enlaces extra:";
-              box.appendChild(le);
-              st.extraLinks.forEach(u=>{
-                const li = document.createElement("div");
-                li.className = "inline-value";
-                li.textContent = u;
-                box.appendChild(li);
-              });
-            }
-          }
-
-          // botón "+ Paso debajo" (esto crea el siguiente)
           const addBelow = document.createElement("button");
           addBelow.className = "add-below";
           addBelow.textContent = "+ Paso debajo";
-          addBelow.onclick = () => {
-            addStepAfter(idx);
-          };
+          addBelow.onclick = () => addStepAfter(idx);
           box.appendChild(addBelow);
 
           list.appendChild(box);
         });
+
+        // una sola zona de recursos
+        const res = document.createElement("div");
+        res.className = "resources-box";
+        const titleRes = document.createElement("div");
+        titleRes.className = "label";
+        titleRes.textContent = "Recursos de este flujo";
+        res.appendChild(titleRes);
+
+        const btnLink = document.createElement("button");
+        btnLink.className = "file-btn";
+        btnLink.textContent = "➕ Enlace";
+        btnLink.onclick = () => {
+          const u = prompt("Pega el enlace:");
+          if (!u) return;
+          resourcesObj.links.push(u);
+          save();
+          renderSteps();
+        };
+        res.appendChild(btnLink);
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.style.display = "none";
+        fileInput.onchange = e => {
+          const f = e.target.files[0];
+          if (f){
+            resourcesObj.files.push(f.name);
+            save();
+            renderSteps();
+          }
+        };
+        res.appendChild(fileInput);
+
+        const btnFile = document.createElement("button");
+        btnFile.className = "file-btn";
+        btnFile.textContent = "📎 Adjuntar archivo";
+        btnFile.onclick = () => fileInput.click();
+        res.appendChild(btnFile);
+
+        // listar recursos
+        if (resourcesObj.links.length || resourcesObj.files.length){
+          const wrap = document.createElement("div");
+          resourcesObj.links.forEach((lk,i)=>{
+            const tag = document.createElement("span");
+            tag.className = "resource-tag";
+            tag.textContent = "🔗 " + lk;
+            const x = document.createElement("button");
+            x.textContent = "x";
+            x.onclick = () => { resourcesObj.links.splice(i,1); save(); renderSteps(); };
+            tag.appendChild(x);
+            wrap.appendChild(tag);
+          });
+          resourcesObj.files.forEach((fn,i)=>{
+            const tag = document.createElement("span");
+            tag.className = "resource-tag";
+            tag.textContent = "📄 " + fn;
+            const x = document.createElement("button");
+            x.textContent = "x";
+            x.onclick = () => { resourcesObj.files.splice(i,1); save(); renderSteps(); };
+            tag.appendChild(x);
+            wrap.appendChild(tag);
+          });
+          res.appendChild(wrap);
+        }
+
+        list.appendChild(res);
       }
 
       function addStep(){
         if (stepScope.type === "process"){
           const p = getCurrentP(); if (!p){ alert("Selecciona un proceso"); return; }
           p.steps = p.steps || [];
-          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
+          p.steps.push({id:uid(),name:"Nuevo paso",description:""});
         } else {
           const s = getCurrentS(); if (!s){ alert("Selecciona un subproceso"); return; }
           s.steps = s.steps || [];
-          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
+          s.steps.push({id:uid(),name:"Nuevo paso",description:""});
         }
         showSteps = true;
         render();
@@ -940,11 +892,11 @@
         if (stepScope.type === "process"){
           const p = getCurrentP(); if (!p) return;
           p.steps = p.steps || [];
-          p.steps.splice(index+1, 0, {id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
+          p.steps.splice(index+1,0,{id:uid(),name:"Nuevo paso",description:""});
         } else {
           const s = getCurrentS(); if (!s) return;
           s.steps = s.steps || [];
-          s.steps.splice(index+1, 0, {id:uid(),name:"Nuevo paso",description:"",link:"",document:"",attachedName:"",extraLinks:[],editing:true});
+          s.steps.splice(index+1,0,{id:uid(),name:"Nuevo paso",description:""});
         }
         render();
       }
@@ -957,7 +909,7 @@
           const s = getCurrentS(); if (!s) return;
           s.steps = (s.steps||[]).filter(st=>st.id!==id);
         }
-        renderSteps(); // reenumera
+        renderSteps();
       }
 
       function shade(hex,percent){
