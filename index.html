@@ -14,7 +14,6 @@
         background: var(--bg);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
-      /* LAYOUT */
       #app {
         height: 100vh;
         display: flex;
@@ -59,15 +58,9 @@
         box-sizing: border-box;
         min-height: 0;
       }
-      /* cuando hay solo dos paneles (proc + sub), se activa esta clase desde JS */
-      .main.two-panels #sub {
-        display: flex;
-      }
       .main.two-panels #steps {
         display: none !important;
       }
-
-      /* PANEL BASE */
       .panel {
         background: #fff;
         border-radius: var(--radius);
@@ -91,13 +84,10 @@
         padding: 6px;
       }
 
-      /* PANEL PROCESOS (más ancho) */
+      /* PROCESOS */
       #proc {
-        flex: 0 0 340px; /* más ancho que antes */
+        flex: 0 0 340px;
         max-width: 360px;
-      }
-      #proc header {
-        background: #000;
       }
       .proc-item {
         border-radius: 14px;
@@ -139,10 +129,9 @@
         border-radius: 8px;
         padding: 3px 4px;
         font-size: 11px;
-        background: #fff;
       }
-      .btn-round {
-        background: rgba(0, 0, 0, 0.06);
+      .del-btn {
+        background: rgba(0, 0, 0, 0.07);
         border: none;
         border-radius: 999px;
         width: 22px;
@@ -150,13 +139,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 15px;
         cursor: pointer;
       }
 
-      /* PANEL SUBPROCESO */
+      /* SUBPROCESOS */
       #sub {
-        flex: 1 1 35%;
+        flex: 1 1 0;
         min-width: 260px;
       }
       #sub.hidden-sub {
@@ -212,22 +201,18 @@
         resize: vertical;
       }
 
-      /* PANEL PASOS */
+      /* PASOS */
       #steps {
-        flex: 1 1 35%;
+        flex: 1 1 0;
         min-width: 260px;
-        transition: all 0.2s ease;
       }
-      #steps.hidden {
-        width: 0;
-        min-width: 0;
-        opacity: 0;
-        pointer-events: none;
+      #steps header {
+        background: linear-gradient(90deg, #000, #5e6f5e);
       }
       .step {
         border: 1px solid #eee;
         border-radius: 14px;
-        padding: 5px 7px 7px;
+        padding: 6px 7px 9px;
         margin-bottom: 6px;
         background: #fff;
         position: relative;
@@ -239,13 +224,13 @@
       }
       .step-del {
         position: absolute;
-        top: 4px;
-        right: 4px;
-        background: rgba(0, 0, 0, 0.06);
+        top: 5px;
+        right: 5px;
+        background: rgba(0, 0, 0, 0.04);
         border: none;
         border-radius: 999px;
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
         cursor: pointer;
       }
       .origin {
@@ -254,20 +239,28 @@
         margin-bottom: 5px;
         font-weight: 500;
       }
+      .extras {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .extras button {
+        border: none;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 999px;
+        padding: 2px 6px;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .extra-field {
+        margin-top: 4px;
+      }
+
       /* responsive */
       @media (max-width: 1024px) {
-        .main {
-          flex-wrap: wrap;
-        }
-        #proc {
-          flex-basis: 100%;
-          max-width: 100%;
-        }
-        #sub,
-        #steps {
-          flex: 1 1 100%;
-          max-width: 100%;
-        }
+        .main { flex-wrap: wrap; }
+        #proc { flex-basis: 100%; max-width: 100%; }
+        #sub, #steps { flex: 1 1 100%; max-width: 100%; }
       }
     </style>
   </head>
@@ -283,7 +276,7 @@
         <div class="panel" id="proc">
           <header>
             <span>Procesos</span>
-            <div style="display:flex; gap:6px">
+            <div style="display:flex;gap:6px">
               <button class="btn" onclick="addProcess()">+ Proceso</button>
               <button class="btn" onclick="quickAddSub()">+ Subp.</button>
               <button class="btn" onclick="quickAddStep()">+ Paso</button>
@@ -313,109 +306,103 @@
     </div>
 
     <script>
-      const LS_KEY = "procesos_app_v1";
-      const pastel = ["#ffe4e1", "#fff5cc", "#e2f0ff", "#e5ffe8", "#f3e5ff", "#ffeaf2", "#e9fff9"];
-      const responsables = ["Audiólogo", "Responsable", "Franquiciado"];
+      const LS_KEY = "procesos_app_v2";
+      const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff","#ffeaf2","#e9fff9"];
+      const responsables = ["Audiólogo","Responsable","Franquiciado"];
 
-      // cargar
       const saved = localStorage.getItem(LS_KEY);
-      let data = saved
-        ? JSON.parse(saved)
-        : [
-            { id: "p1", name: "REPARACIONES", color: pastel[0], description: "", showDesc: false, subprocesses: [], steps: [] },
-            { id: "p2", name: "AJUSTE REMOTO", color: pastel[1], description: "", showDesc: false, subprocesses: [], steps: [] },
-          ];
+      let data = saved ? JSON.parse(saved) : [
+        {id:"p1",name:"REPARACIONES",color:pastel[0],description:"",showDesc:false,subprocesses:[],steps:[]},
+        {id:"p2",name:"AJUSTE REMOTO",color:pastel[1],description:"",showDesc:false,subprocesses:[],steps:[]},
+      ];
 
       let currentP = data[0]?.id || null;
       let currentS = null;
-      let stepScope = { type: "process", id: currentP };
+      let stepScope = {type:"process",id:currentP};
       let showSteps = false;
       let searchTerm = "";
 
-      function saveLocal() {
-        localStorage.setItem(LS_KEY, JSON.stringify(data));
+      // ENTER: confirmar y salir del input
+      window.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          const a = document.activeElement;
+          if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) {
+            e.preventDefault();
+            a.blur();
+          }
+        }
+      });
+
+      function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+
+      function uid(){ return Math.random().toString(36).slice(2,9); }
+
+      function doSearch(v){ searchTerm = v.toLowerCase(); render(); }
+
+      function getCurrentP(){ return data.find(p => p.id === currentP) || null; }
+      function getCurrentS(){
+        const p = getCurrentP(); if (!p) return null;
+        return (p.subprocesses||[]).find(s=>s.id===currentS) || null;
       }
 
-      function uid() {
-        return Math.random().toString(36).slice(2, 9);
-      }
-
-      function doSearch(val) {
-        searchTerm = val.toLowerCase();
-        render();
-      }
-
-      function getCurrentP() {
-        return data.find((p) => p.id === currentP) || null;
-      }
-      function getCurrentS() {
-        const p = getCurrentP();
-        if (!p) return null;
-        return (p.subprocesses || []).find((s) => s.id === currentS) || null;
-      }
-
-      function render() {
+      function render(){
         renderProcesses();
         renderSub();
         renderSteps();
-        // ajustar layout 2 paneles o 3 paneles
-        const main = document.getElementById("main");
-        if (showSteps) {
-          main.classList.remove("two-panels");
-        } else {
-          // si el proceso NO tiene subprocesos pero SÍ tiene pasos, steps se muestra igual en renderSub()
-          const p = getCurrentP();
-          const subsLen = p ? (p.subprocesses || []).length : 0;
-          const stepsLen = p ? (p.steps || []).length : 0;
-          if (subsLen > 0 || stepsLen === 0) {
-            main.classList.add("two-panels");
-          } else {
-            main.classList.remove("two-panels");
-          }
-        }
-        saveLocal();
+        adjustPanels();
+        save();
       }
 
-      function renderProcesses() {
+      function adjustPanels(){
+        const main = document.getElementById("main");
+        // si steps está oculto o no se está mostrando -> two panels
+        if (!showSteps){
+          main.classList.add("two-panels");
+        } else {
+          main.classList.remove("two-panels");
+        }
+      }
+
+      /* -------- PROCESOS -------- */
+      function renderProcesses(){
         const box = document.getElementById("procList");
         box.innerHTML = "";
         let list = data.slice();
-        if (searchTerm) {
-          list = list.filter(
-            (p) =>
-              p.name.toLowerCase().includes(searchTerm) ||
-              (p.description || "").toLowerCase().includes(searchTerm)
-          );
+
+        if (searchTerm){
+          list = list.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.description||"").toLowerCase().includes(searchTerm));
         }
-        // primero procesos con subprocesos
-        list.sort((a, b) => {
-          const aHas = (a.subprocesses || []).length > 0;
-          const bHas = (b.subprocesses || []).length > 0;
-          if (aHas === bHas) return 0;
-          return aHas ? -1 : 1;
+
+        // primero con subprocesos
+        list.sort((a,b)=>{
+          const ah = (a.subprocesses||[]).length>0;
+          const bh = (b.subprocesses||[]).length>0;
+          if (ah===bh) return 0;
+          return ah ? -1 : 1;
         });
 
-        list.forEach((p, idx) => {
+        list.forEach((p,idx)=>{
           const div = document.createElement("div");
-          div.className = "proc-item" + (p.id === currentP ? " active" : "");
+          div.className = "proc-item" + (p.id===currentP ? " active" : "");
           div.style.background = p.color;
           div.onclick = () => {
             currentP = p.id;
             currentS = null;
-            const hasSubs = (p.subprocesses || []).length > 0;
-            const hasSteps = (p.steps || []).length > 0;
-            if (!hasSubs && hasSteps) {
-              stepScope = { type: "process", id: p.id };
+            const hasSubs = (p.subprocesses||[]).length>0;
+            const hasSteps = (p.steps||[]).length>0;
+            if (!hasSubs && hasSteps){
+              stepScope = {type:"process",id:p.id};
               showSteps = true;
             } else {
-              stepScope = { type: "process", id: p.id };
+              stepScope = {type:"process",id:p.id};
               showSteps = false;
             }
             render();
           };
+
           const num = document.createElement("div");
           num.className = "proc-num";
-          num.textContent = idx + 1 + ".";
+          num.textContent = (idx+1)+".";
           div.appendChild(num);
 
           const flex = document.createElement("div");
@@ -424,32 +411,22 @@
           const inp = document.createElement("input");
           inp.className = "proc-input";
           inp.value = p.name;
-          inp.onclick = (ev) => ev.stopPropagation();
-          inp.oninput = (ev) => {
-            p.name = ev.target.value;
-            saveLocal();
-          };
+          inp.onclick = ev => ev.stopPropagation();
+          inp.oninput = ev => { p.name = ev.target.value; save(); };
           flex.appendChild(inp);
 
           const tgl = document.createElement("button");
           tgl.className = "proc-desc-toggle";
           tgl.textContent = p.showDesc ? "▲ Desc" : "▼ Desc";
-          tgl.onclick = (ev) => {
-            ev.stopPropagation();
-            p.showDesc = !p.showDesc;
-            render();
-          };
+          tgl.onclick = ev => { ev.stopPropagation(); p.showDesc=!p.showDesc; render(); };
           flex.appendChild(tgl);
 
-          if (p.showDesc) {
+          if (p.showDesc){
             const d = document.createElement("div");
             d.className = "proc-desc";
             const ta = document.createElement("textarea");
             ta.value = p.description || "";
-            ta.oninput = (ev) => {
-              p.description = ev.target.value;
-              saveLocal();
-            };
+            ta.oninput = ev => { p.description = ev.target.value; save(); };
             d.appendChild(ta);
             flex.appendChild(d);
           }
@@ -457,12 +434,12 @@
           div.appendChild(flex);
 
           const del = document.createElement("button");
-          del.className = "btn-round";
+          del.className = "del-btn";
+          del.type = "button";
           del.textContent = "−";
-          del.title = "Eliminar proceso";
-          del.onclick = (ev) => {
+          del.onclick = ev => {
             ev.stopPropagation();
-            delProcess(p.id);
+            deleteProcess(p.id);
           };
           div.appendChild(del);
 
@@ -470,57 +447,48 @@
         });
       }
 
-      function delProcess(id) {
-        data = data.filter((p) => p.id !== id);
-        if (currentP === id) {
+      function deleteProcess(id){
+        data = data.filter(p => p.id !== id);
+        if (currentP === id){
           currentP = data[0]?.id || null;
-          stepScope = { type: "process", id: currentP };
           currentS = null;
+          stepScope = {type:"process",id:currentP};
           showSteps = false;
         }
         render();
       }
 
-      function addProcess() {
-        const idx = data.length % pastel.length;
+      function addProcess(){
         const np = {
           id: uid(),
           name: "Nuevo proceso",
-          color: pastel[idx],
+          color: pastel[data.length % pastel.length],
           description: "",
           showDesc: false,
           subprocesses: [],
-          steps: [],
+          steps: []
         };
         data.push(np);
         currentP = np.id;
         currentS = null;
-        stepScope = { type: "process", id: np.id };
+        stepScope = {type:"process",id:np.id};
         showSteps = false;
         render();
       }
 
-      function quickAddSub() {
-        if (!currentP) {
-          alert("Selecciona un proceso");
-          return;
-        }
+      function quickAddSub(){
+        if (!currentP){ alert("Selecciona un proceso"); return; }
         addSub();
       }
 
-      function quickAddStep() {
-        if (stepScope.type === "process" && !currentP) {
-          alert("Selecciona un proceso");
-          return;
-        }
-        if (stepScope.type === "subprocess" && !currentS) {
-          alert("Selecciona un subproceso y pulsa Pasos");
-          return;
-        }
+      function quickAddStep(){
+        if (stepScope.type==="process" && !currentP){ alert("Selecciona un proceso"); return; }
+        if (stepScope.type==="subprocess" && !currentS){ alert("Selecciona un subproceso"); return; }
         addStep();
       }
 
-      function renderSub() {
+      /* -------- SUBPROCESOS -------- */
+      function renderSub(){
         const p = getCurrentP();
         const list = document.getElementById("subList");
         const subPanel = document.getElementById("sub");
@@ -528,59 +496,61 @@
         const stepsPanel = document.getElementById("steps");
         list.innerHTML = "";
 
-        if (p) {
-          subHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
+        if (p){
+          subHeader.style.background = "linear-gradient(90deg,#000,"+shade(p.color,-20)+")";
         }
 
-        if (!p) {
+        if (!p){
           subPanel.classList.remove("hidden-sub");
           stepsPanel.classList.remove("full-width");
-          list.innerHTML =
-            "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
+          list.innerHTML = "<p style='color:#888;text-align:center;margin-top:20px'>Selecciona un proceso</p>";
           return;
         }
 
         const subs = p.subprocesses || [];
         const procSteps = p.steps || [];
 
-        // caso: NO hay subprocesos y SÍ hay pasos -> ocultar central
-        if (subs.length === 0 && procSteps.length > 0) {
+        // si no hay subprocesos y sí hay pasos -> ocultar panel central
+        if (subs.length===0 && procSteps.length>0){
           subPanel.classList.add("hidden-sub");
-          stepsPanel.classList.add("full-width");
-          stepScope = { type: "process", id: p.id };
+          stepsPanel.style.display = "flex";
+          stepsPanel.style.flex = "1 1 0";
           showSteps = true;
+          stepScope = {type:"process",id:p.id};
           return;
         } else {
           subPanel.classList.remove("hidden-sub");
-          stepsPanel.classList.remove("full-width");
+          stepsPanel.style.display = "flex";
         }
 
-        // botón "Pasos →" del proceso
+        // barra superior con botón único de pasos
         const topActions = document.createElement("div");
         topActions.className = "sub-top-actions";
-        const btnPasosProc = document.createElement("button");
-        btnPasosProc.textContent = "Pasos →";
-        btnPasosProc.onclick = () => {
-          stepScope = { type: "process", id: p.id };
+        const btnPasos = document.createElement("button");
+        btnPasos.textContent = "Pasos →";
+        btnPasos.onclick = () => {
+          // si hay un subproceso seleccionado, muestra sus pasos
+          if (currentS){
+            stepScope = {type:"subprocess",id:currentS};
+          } else {
+            stepScope = {type:"process",id:p.id};
+          }
           showSteps = true;
           render();
         };
-        topActions.appendChild(btnPasosProc);
+        topActions.appendChild(btnPasos);
         list.appendChild(topActions);
 
-        if (subs.length === 0) {
-          list.innerHTML +=
-            "<div style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Este proceso no tiene subprocesos.</div>";
+        if (subs.length===0){
+          list.innerHTML += "<div style='color:#888;text-align:center;margin-top:15px'>Este proceso no tiene subprocesos.</div>";
           return;
         }
 
-        subs.forEach((s) => {
+        subs.forEach(s=>{
           const box = document.createElement("div");
-          box.className = "sub-box" + (s.id === currentS ? " active" : "");
-          box.style.background = hexToRgba(p.color, 0.35);
-          box.onclick = () => {
-            currentS = s.id;
-          };
+          box.className = "sub-box" + (s.id===currentS ? " active":"");
+          box.style.background = hexToRgba(p.color,0.35);
+          box.onclick = () => { currentS = s.id; renderSub(); };
 
           const head = document.createElement("div");
           head.className = "sub-header-inline";
@@ -588,86 +558,55 @@
           const name = document.createElement("input");
           name.className = "input";
           name.value = s.name;
-          name.oninput = (e) => {
-            s.name = e.target.value;
-            saveLocal();
-          };
+          name.oninput = e => { s.name = e.target.value; save(); };
           head.appendChild(name);
 
-          const actions = document.createElement("div");
-          actions.style.display = "flex";
-          actions.style.gap = "4px";
-
-          const btnPasos = document.createElement("button");
-          btnPasos.textContent = "Pasos";
-          btnPasos.style.fontSize = "11px";
-          btnPasos.onclick = (ev) => {
-            ev.stopPropagation();
-            currentS = s.id;
-            stepScope = { type: "subprocess", id: s.id };
-            showSteps = true;
-            render();
-          };
-          actions.appendChild(btnPasos);
-
           const del = document.createElement("button");
-          del.className = "btn-round";
+          del.className = "del-btn";
           del.textContent = "−";
-          del.title = "Eliminar subproceso";
-          del.onclick = (ev) => {
-            ev.stopPropagation();
-            delSub(s.id);
-          };
-          actions.appendChild(del);
+          del.onclick = ev => { ev.stopPropagation(); deleteSub(s.id); };
+          head.appendChild(del);
 
-          head.appendChild(actions);
           box.appendChild(head);
 
-          // origen
-          const origin = document.createElement("div");
-          origin.className = "label";
-          origin.textContent = "Proceso origen";
-          box.appendChild(origin);
-          const originVal = document.createElement("div");
-          originVal.style.fontSize = "11px";
-          originVal.textContent = p.name;
-          box.appendChild(originVal);
+          // Proceso origen
+          const lab0 = document.createElement("div");
+          lab0.className = "label";
+          lab0.textContent = "Proceso origen";
+          box.appendChild(lab0);
 
-          // descripción
-          const lab = document.createElement("div");
-          lab.className = "label";
-          lab.textContent = "Descripción";
-          box.appendChild(lab);
+          const pv = document.createElement("div");
+          pv.style.fontSize = "11px";
+          pv.textContent = p.name;
+          box.appendChild(pv);
+
+          // Descripción
+          const lab1 = document.createElement("div");
+          lab1.className = "label";
+          lab1.textContent = "Descripción";
+          box.appendChild(lab1);
           const ta = document.createElement("textarea");
           ta.className = "input";
           ta.value = s.description || "";
-          ta.oninput = (e) => {
-            s.description = e.target.value;
-            saveLocal();
-          };
+          ta.oninput = e => { s.description = e.target.value; save(); };
           box.appendChild(ta);
 
-          // responsable
+          // Responsable
           const lab2 = document.createElement("div");
           lab2.className = "label";
           lab2.textContent = "Persona responsable";
           box.appendChild(lab2);
           const sel = document.createElement("select");
           sel.className = "input";
-          responsables.forEach((r) => {
+          responsables.forEach(r=>{
             const opt = document.createElement("option");
-            opt.value = r;
-            opt.textContent = r;
-            sel.appendChild(opt);
+            opt.value = r; opt.textContent = r; sel.appendChild(opt);
           });
           sel.value = s.responsable || responsables[0];
-          sel.onchange = (e) => {
-            s.responsable = e.target.value;
-            saveLocal();
-          };
+          sel.onchange = e => { s.responsable = e.target.value; save(); };
           box.appendChild(sel);
 
-          // enlace
+          // Enlace
           const lab3 = document.createElement("div");
           lab3.className = "label";
           lab3.textContent = "Enlace";
@@ -675,13 +614,10 @@
           const link = document.createElement("input");
           link.className = "input";
           link.value = s.link || "";
-          link.oninput = (e) => {
-            s.link = e.target.value;
-            saveLocal();
-          };
+          link.oninput = e => { s.link = e.target.value; save(); };
           box.appendChild(link);
 
-          // documento
+          // Documento
           const lab4 = document.createElement("div");
           lab4.className = "label";
           lab4.textContent = "Documento";
@@ -689,17 +625,14 @@
           const doc = document.createElement("input");
           doc.className = "input";
           doc.value = s.document || "";
-          doc.oninput = (e) => {
-            s.document = e.target.value;
-            saveLocal();
-          };
+          doc.oninput = e => { s.document = e.target.value; save(); };
           box.appendChild(doc);
 
           list.appendChild(box);
         });
       }
 
-      function addSub() {
+      function addSub(){
         const p = getCurrentP();
         if (!p) return;
         const ns = {
@@ -709,84 +642,86 @@
           responsable: responsables[0],
           link: "",
           document: "",
-          steps: [],
+          steps: []
         };
-        p.subprocesses = p.subprocesses || [];
         p.subprocesses.push(ns);
         currentS = ns.id;
-        stepScope = { type: "subprocess", id: ns.id };
+        stepScope = {type:"subprocess",id:ns.id};
         showSteps = false;
         render();
       }
 
-      function delSub(id) {
+      function deleteSub(id){
         const p = getCurrentP();
         if (!p) return;
-        p.subprocesses = (p.subprocesses || []).filter((s) => s.id !== id);
-        if (stepScope.type === "subprocess" && stepScope.id === id) {
-          stepScope = { type: "process", id: p.id };
+        p.subprocesses = (p.subprocesses||[]).filter(s=>s.id!==id);
+        if (currentS === id){
+          currentS = null;
+          stepScope = {type:"process",id:p.id};
           showSteps = false;
         }
         render();
       }
 
-      function renderSteps() {
+      /* -------- PASOS -------- */
+      function renderSteps(){
         const list = document.getElementById("stepList");
         const stepHeader = document.getElementById("stepHeader");
         const p = getCurrentP();
-        if (p) {
-          stepHeader.style.background = "linear-gradient(90deg,#000," + shade(p.color, -20) + ")";
+        if (p){
+          stepHeader.style.background = "linear-gradient(90deg,#000,"+shade(p.color,-20)+")";
         }
         list.innerHTML = "";
-        if (!showSteps) {
-          list.innerHTML =
-            "<p style='color:#888;font-size:13px;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
+        if (!showSteps){
+          list.innerHTML = "<p style='color:#888;text-align:center;margin-top:20px'>Pulsa “Pasos →”</p>";
           return;
         }
+
         let steps = [];
-        let originTitle = "";
-        if (stepScope.type === "process") {
-          const proc = data.find((x) => x.id === stepScope.id);
-          steps = proc ? proc.steps || [] : [];
-          originTitle = "Proceso origen: " + (proc ? proc.name : "");
+        let origin = "";
+        if (stepScope.type === "process"){
+          const pr = data.find(x=>x.id===stepScope.id);
+          steps = pr ? (pr.steps||[]) : [];
+          origin = "Proceso origen: " + (pr ? pr.name : "");
         } else {
           const sp = getCurrentS();
-          steps = sp ? sp.steps || [] : [];
-          originTitle = "Subproceso origen: " + (sp ? sp.name : "");
+          steps = sp ? (sp.steps||[]) : [];
+          origin = "Subproceso origen: " + (sp ? sp.name : "");
         }
-        const originEl = document.createElement("div");
-        originEl.className = "origin";
-        originEl.textContent = originTitle;
-        list.appendChild(originEl);
-        if (!steps || steps.length === 0) {
-          list.innerHTML +=
-            "<div style='color:#888;font-size:13px;text-align:center;margin-top:10px'>No hay pasos aún.</div>";
+
+        const org = document.createElement("div");
+        org.className = "origin";
+        org.textContent = origin;
+        list.appendChild(org);
+
+        if (!steps.length){
+          list.innerHTML += "<div style='color:#888;text-align:center;margin-top:10px'>No hay pasos aún.</div>";
         }
-        steps.forEach((st, idx) => {
+
+        steps.forEach((st,idx)=>{
+          // aseguramos arrays
+          st.extraLinks = st.extraLinks || [];
+          st.extraDocs = st.extraDocs || [];
+
           const box = document.createElement("div");
           box.className = "step";
-          const num = document.createElement("div");
-          num.className = "step-num";
-          num.textContent = "Paso " + (idx + 1);
-          box.appendChild(num);
 
           const del = document.createElement("button");
           del.className = "step-del";
           del.textContent = "−";
-          del.title = "Eliminar paso";
-          del.onclick = () => {
-            delStep(st.id);
-          };
+          del.onclick = () => { deleteStep(st.id); };
           box.appendChild(del);
+
+          const num = document.createElement("div");
+          num.className = "step-num";
+          num.textContent = "Paso " + (idx+1);
+          box.appendChild(num);
 
           const name = document.createElement("input");
           name.className = "input";
           name.value = st.name || "";
           name.placeholder = "Título del paso";
-          name.oninput = (e) => {
-            st.name = e.target.value;
-            saveLocal();
-          };
+          name.oninput = e => { st.name = e.target.value; save(); };
           box.appendChild(name);
 
           const lab1 = document.createElement("div");
@@ -796,105 +731,120 @@
           const ta = document.createElement("textarea");
           ta.className = "input";
           ta.value = st.description || "";
-          ta.oninput = (e) => {
-            st.description = e.target.value;
-            saveLocal();
-          };
+          ta.oninput = e => { st.description = e.target.value; save(); };
           box.appendChild(ta);
 
           const lab2 = document.createElement("div");
           lab2.className = "label";
-          lab2.textContent = "Enlace";
+          lab2.textContent = "Enlace / documento";
           box.appendChild(lab2);
-          const lin = document.createElement("input");
-          lin.className = "input";
-          lin.value = st.link || "";
-          lin.oninput = (e) => {
-            st.link = e.target.value;
-            saveLocal();
-          };
-          box.appendChild(lin);
 
-          const lab3 = document.createElement("div");
-          lab3.className = "label";
-          lab3.textContent = "Documento/adjunto";
-          box.appendChild(lab3);
+          const link = document.createElement("input");
+          link.className = "input";
+          link.value = st.link || "";
+          link.placeholder = "Enlace / documento";
+          link.oninput = e => { st.link = e.target.value; save(); };
+          box.appendChild(link);
+
           const doc = document.createElement("input");
           doc.className = "input";
           doc.value = st.document || "";
-          doc.oninput = (e) => {
-            st.document = e.target.value;
-            saveLocal();
-          };
+          doc.placeholder = "Documento";
+          doc.oninput = e => { st.document = e.target.value; save(); };
           box.appendChild(doc);
+
+          // extras (iconos)
+          const extraBar = document.createElement("div");
+          extraBar.className = "extras";
+          const addLink = document.createElement("button");
+          addLink.textContent = "➕🔗";
+          addLink.title = "Añadir otro enlace";
+          addLink.onclick = () => {
+            st.extraLinks.push("");
+            renderSteps();
+          };
+          extraBar.appendChild(addLink);
+
+          const addDoc = document.createElement("button");
+          addDoc.textContent = "➕📄";
+          addDoc.title = "Añadir otro documento";
+          addDoc.onclick = () => {
+            st.extraDocs.push("");
+            renderSteps();
+          };
+          extraBar.appendChild(addDoc);
+          box.appendChild(extraBar);
+
+          // pintar extras
+          st.extraLinks.forEach((v,ix)=>{
+            const ef = document.createElement("input");
+            ef.className = "input extra-field";
+            ef.value = v;
+            ef.placeholder = "Enlace extra "+(ix+1);
+            ef.oninput = e => { st.extraLinks[ix] = e.target.value; save(); };
+            box.appendChild(ef);
+          });
+          st.extraDocs.forEach((v,ix)=>{
+            const ef = document.createElement("input");
+            ef.className = "input extra-field";
+            ef.value = v;
+            ef.placeholder = "Documento extra "+(ix+1);
+            ef.oninput = e => { st.extraDocs[ix] = e.target.value; save(); };
+            box.appendChild(ef);
+          });
 
           list.appendChild(box);
         });
       }
 
-      function addStep() {
-        if (stepScope.type === "process") {
-          const p = getCurrentP();
-          if (!p) {
-            alert("Selecciona un proceso");
-            return;
-          }
+      function addStep(){
+        if (stepScope.type === "process"){
+          const p = getCurrentP(); if (!p){ alert("Selecciona un proceso"); return; }
           p.steps = p.steps || [];
-          p.steps.push({ id: uid(), name: "Nuevo paso", description: "", link: "", document: "" });
-          showSteps = true;
+          p.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",extraLinks:[],extraDocs:[]});
         } else {
-          const s = getCurrentS();
-          if (!s) {
-            alert("Selecciona un subproceso y pulsa Pasos");
-            return;
-          }
+          const s = getCurrentS(); if (!s){ alert("Selecciona un subproceso"); return; }
           s.steps = s.steps || [];
-          s.steps.push({ id: uid(), name: "Nuevo paso", description: "", link: "", document: "" });
-          showSteps = true;
+          s.steps.push({id:uid(),name:"Nuevo paso",description:"",link:"",document:"",extraLinks:[],extraDocs:[]});
         }
+        showSteps = true;
         render();
       }
 
-      function delStep(id) {
-        if (stepScope.type === "process") {
-          const p = getCurrentP();
-          p.steps = (p.steps || []).filter((st) => st.id !== id);
+      function deleteStep(id){
+        if (stepScope.type === "process"){
+          const p = getCurrentP(); if (!p) return;
+          p.steps = (p.steps||[]).filter(st=>st.id!==id);
         } else {
-          const s = getCurrentS();
-          if (!s) return;
-          s.steps = (s.steps || []).filter((st) => st.id !== id);
+          const s = getCurrentS(); if (!s) return;
+          s.steps = (s.steps||[]).filter(st=>st.id!==id);
         }
-        renderSteps();
+        renderSteps(); // reenumera
       }
 
-      function hexToRgba(hex, alpha) {
-        if (!hex) return "rgba(255,255,255," + alpha + ")";
-        const h = hex.replace("#", "");
-        const r = parseInt(h.substring(0, 2), 16);
-        const g = parseInt(h.substring(2, 4), 16);
-        const b = parseInt(h.substring(4, 6), 16);
-        return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+      function shade(hex,percent){
+        if(!hex) return "#000";
+        const f=parseInt(hex.slice(1),16),
+              t=percent<0?0:255,
+              p=percent<0?percent*-1:percent,
+              R=f>>16,
+              G=f>>8&0x00FF,
+              B=f&0x0000FF;
+        return "#"+(0x1000000+
+          (Math.round((t-R)*p/100)+R)*0x10000+
+          (Math.round((t-G)*p/100)+G)*0x100+
+          (Math.round((t-B)*p/100)+B)
+        ).toString(16).slice(1);
       }
-      function shade(hex, percent) {
-        if (!hex) return "#000";
-        const f = parseInt(hex.slice(1), 16),
-          t = percent < 0 ? 0 : 255,
-          p = percent < 0 ? percent * -1 : percent;
-        const R = f >> 16,
-          G = (f >> 8) & 0x00ff,
-          B = f & 0x0000ff;
-        return (
-          "#" +
-          (0x1000000 +
-            (Math.round((t - R) * p / 100) + R) * 0x10000 +
-            (Math.round((t - G) * p / 100) + G) * 0x100 +
-            (Math.round((t - B) * p / 100) + B))
-            .toString(16)
-            .slice(1)
-        );
+      function hexToRgba(hex, alpha){
+        if(!hex) return "rgba(255,255,255,"+alpha+")";
+        const h=hex.replace("#","");
+        const r=parseInt(h.substring(0,2),16);
+        const g=parseInt(h.substring(2,4),16);
+        const b=parseInt(h.substring(4,6),16);
+        return "rgba("+r+","+g+","+b+","+alpha+")";
       }
 
-      // primera pinta
       render();
     </script>
   </body>
