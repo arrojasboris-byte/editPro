@@ -3,91 +3,78 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>PROCESOS</title>
+<title>PROCESOS — Plataforma</title>
 <style>
   :root{
-    --radius:16px;
-    --bg:#f4f5f7;
-    --ink:#111;
-    --hdr1:#000; --hdr2:#5a0000; /* cabecera rojo oscuro como al inicio */
-    --panelHead:#0b0b0b;         /* encabezados negros */
-    --chipShadow:0 3px 0 #cfd4da, 0 12px 26px rgba(0,0,0,.12);
+    --radius:16px; --bg:#f4f5f7; --ink:#111;
+    --hdr1:#000; --hdr2:#5a0000;  /* cabecera negro→rojo oscuro */
+    --head:#0b0b0b;              /* encabezados panel */
+    --chipShadow:0 3px 0 #cfd4da, 0 10px 22px rgba(0,0,0,.10);
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 
-  /* TOP BAR */
-  .top{display:flex;gap:8px;align-items:center;padding:10px 12px;
-       background:linear-gradient(90deg,var(--hdr1),var(--hdr2));color:#fff}
-  .top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:.3px}
-  .search{flex:1;border:none;border-radius:999px;background:rgba(255,255,255,.14);
-          padding:6px 12px;color:#fff}
-  .btn{border:none;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;
-       padding:6px 12px;font-size:12px;cursor:pointer}
+  /* TOP */
+  .top{display:flex;gap:8px;align-items:center;padding:10px 12px;background:linear-gradient(90deg,var(--hdr1),var(--hdr2));color:#fff}
+  .top h1{margin:0;font-size:20px;font-weight:900}
+  .search{flex:1;border:none;border-radius:999px;background:rgba(255,255,255,.14);padding:6px 12px;color:#fff}
+  .btn{border:none;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;padding:6px 12px;font-size:12px;cursor:pointer}
 
   /* LAYOUT 2 PANELES */
   .layout{display:grid;grid-template-columns:360px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 56px)}
   @media(max-width:1024px){.layout{grid-template-columns:1fr}}
   .panel{background:#fff;border-radius:var(--radius);box-shadow:0 10px 28px rgba(0,0,0,.08);display:flex;flex-direction:column;min-width:0}
-  .panel>header{padding:10px 12px;background:var(--panelHead);color:#fff;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:var(--radius);border-top-right-radius:var(--radius)}
+  .panel>header{padding:10px 12px;background:var(--head);color:#fff;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:var(--radius);border-top-right-radius:var(--radius)}
   .panel .body{padding:10px;overflow:auto;flex:1}
 
-  /* IZQUIERDA: PROCESOS (pastel) */
+  /* IZQUIERDA: PROCESOS */
   .p-card{border:1px solid #e8eaee;border-radius:14px;padding:8px;margin-bottom:8px;display:flex;gap:8px;align-items:flex-start;cursor:pointer}
   .p-card.active{outline:2px solid rgba(0,0,0,.12);background:#fff}
   .p-num{font-weight:800;font-size:11px;margin-top:2px}
   .p-main{flex:1}
   .p-name{border:none;background:transparent;font-weight:800;font-size:14px;width:100%}
-  .pill{font-size:11px;border:none;border-radius:999px;background:rgba(0,0,0,.1);padding:2px 8px;cursor:pointer}
-  .p-desc{margin-top:6px;display:none}
+  .pill{font-size:11px;border:none;border-radius:999px;background:rgba(0,0,0,.1);padding:2px 8px;cursor:pointer;margin-left:6px}
+  .p-desc{display:none;margin-top:6px}
   .p-desc textarea{width:100%;min-height:52px;border:1px solid #e6e6e6;border-radius:8px;padding:6px}
   .del{width:24px;height:24px;border:none;border-radius:999px;background:rgba(0,0,0,.12);color:#000;cursor:pointer}
 
-  /* DERECHA: CABECERA EN DEGRADADO (como original) */
+  /* DERECHA: HEADER DEGRADADO */
   #rHeader{background:linear-gradient(90deg,#000,#5a0000)}
 
-  /* SUBPROCESO */
-  .sub-card{border:1px solid #e8eaee;border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.08)}
-  .sub-head{display:flex;gap:8px;align-items:center;padding:10px 12px;background:linear-gradient(180deg,#0a0a0a,#1a1a1a);color:#fff}
-  .sub-title{flex:1;font-weight:800}
-  .toggle{cursor:pointer}
-  .resp{border:1px solid #e5e7eb;border-radius:8px;padding:4px 6px}
-  .sub-body{padding:10px 12px;display:none;background:#fff}
-  .sub-card.open .sub-body{display:block}
-  .label{font-size:11px;opacity:.75;margin:6px 0 4px}
-  .input,.select{width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px}
-  textarea.input{min-height:60px;resize:vertical}
+  /* SECCIONES DERECHA */
+  .section{margin-bottom:14px}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .sec-head h3{margin:0;font-size:14px}
+  .sec-btn{border:none;border-radius:10px;background:#eef0f3;padding:6px 10px;cursor:pointer}
 
-  /* PASOS - chips 3D encadenados con flechas */
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-  .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);cursor:pointer}
-  .chip .n{font-weight:900;font-size:12px;background:#000;color:#fff;border-radius:999px;padding:2px 7px}
-  .arrow{opacity:.35}
-  .s-body{border:1px solid #e8eaee;border-radius:14px;padding:10px;margin:10px 0;display:none;background:#fff}
-  .s-body.open{display:block}
+  /* LISTA COMPAC TA (COLAPSADA) */
+  .row{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:8px;align-items:center;border:1px solid #e8eaee;background:#fff;border-radius:12px;padding:8px 10px;margin-bottom:6px}
+  .idx{font-weight:800;font-size:12px}
+  .ro-name{font-weight:700;min-width:0}
+  .ro-name input{width:100%;border:none;background:transparent;font-weight:700}
+  .icon{border:none;background:#f1f2f4;border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .select{border:1px solid #e5e7eb;border-radius:999px;padding:4px 8px}
+  .toggle{border:none;background:#f1f2f4;border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+  /* DETALLE (OCULTO) */
+  .detail{display:none;border:1px dashed #e5e7eb;border-radius:12px;padding:10px;margin:-2px 0 8px 32px;background:#fff}
+  .label{font-size:11px;opacity:.75;margin:6px 0 4px}
+  .input{width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px}
+  textarea.input{min-height:60px;resize:vertical}
   .toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
   .tool{border:none;border-radius:999px;background:#eef0f3;padding:6px 10px;cursor:pointer}
   .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;color:#111;background:#eef0f3}
-  .save{margin-top:8px;padding:8px 12px;border:none;border-radius:10px;font-weight:800;color:#fff;cursor:pointer;background:#5a0000}
 
-  /* PIN overlay */
-  .gate{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999}
-  .gate>div{background:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);min-width:280px}
-  .gate h3{margin:0 0 8px}
-  .gate input,.gate button{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd}
-  .gate button{background:#5a0000;color:#fff;font-weight:800;margin-top:8px;border:none}
+  /* CHIPS DE PASOS (encadenados arriba) */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow)}
+  .chip .n{font-weight:900;font-size:12px;background:#000;color:#fff;border-radius:999px;padding:2px 7px}
+  .arrow{opacity:.35}
+
+  .save{margin-top:8px;padding:8px 12px;border:none;border-radius:10px;font-weight:800;color:#fff;cursor:pointer;background:#5a0000}
 </style>
 </head>
 <body>
-  <!-- PIN -->
-  <div class="gate" id="gate">
-    <div>
-      <h3>Acceso</h3>
-      <input id="pin" type="password" placeholder="PIN"/>
-      <button onclick="unlock()">Entrar</button>
-    </div>
-  </div>
-
   <div class="top">
     <h1>PROCESOS</h1>
     <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"/>
@@ -119,8 +106,7 @@
 
 <script>
 /* ===== CONFIG ===== */
-const PIN='AR4321';
-const LS='PROC_2P_THEME';
+const LS='PROC_CLEAN_V1';
 const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
 const ROLES=['Audiólogo','Responsable','Otros'];
 
@@ -132,209 +118,214 @@ let data = JSON.parse(localStorage.getItem(LS) || 'null') || [
 let selPid = data[0]?.id || null;
 let q='';
 
-/* ===== PIN ===== */
-function unlock(){
-  const v=document.getElementById('pin').value.trim();
-  if(v===PIN){ sessionStorage.setItem('UNLOCK','1'); document.getElementById('gate').style.display='none'; }
-  else alert('PIN incorrecto');
-}
-if(sessionStorage.getItem('UNLOCK')==='1'){ document.getElementById('gate').style.display='none'; }
-function isUnlocked(){ return sessionStorage.getItem('UNLOCK')==='1'; }
-
 /* ===== UTIL ===== */
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function save(){ localStorage.setItem(LS, JSON.stringify(data)); }
 function lighten(hex,f=.86){const c=hex.replace('#',''); const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f); return `rgb(${nr},${ng},${nb})`; }
+function doSearch(v){ q=v.toLowerCase(); render(); }
 
 /* ===== RENDER ROOT ===== */
 function render(){ renderLeft(); renderRight(); save(); }
-function doSearch(v){ q=v.toLowerCase(); render(); }
 
-/* ===== LEFT ===== */
+/* ===== IZQUIERDA ===== */
 function renderLeft(){
   const box=document.getElementById('procList'); box.innerHTML='';
   let list=data.slice();
   if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q));
-  list.sort((a,b)=>(b.sub.length>0)-(a.sub.length>0));
+  list.sort((a,b)=>(b.sub.length>0)-(a.sub.length>0)); // primero con subprocesos
 
   list.forEach((p,i)=>{
-    const row=document.createElement('div');
-    row.className='p-card'+(p.id===selPid?' active':'');
-    row.style.background=lighten(p.color,.9);
-    row.style.borderColor=p.color;
+    const row=document.createElement('div'); row.className='p-card'+(p.id===selPid?' active':'');
+    row.style.background=lighten(p.color,.9); row.style.borderColor=p.color;
     row.onclick=()=>{ selPid=p.id; renderRight(); };
 
     const num=document.createElement('div'); num.className='p-num'; num.textContent=(i+1)+'.';
-    const main=document.createElement('div'); main.className='p-main';
 
+    const main=document.createElement('div'); main.className='p-main';
     const name=document.createElement('input'); name.className='p-name'; name.value=p.name;
     name.onclick=e=>e.stopPropagation(); name.oninput=e=>{ p.name=e.target.value; if(p.id===selPid) document.getElementById('rTitle').textContent=p.name; save(); };
 
-    const descDiv=document.createElement('div'); descDiv.className='p-desc';
-    const ta=document.createElement('textarea'); ta.value=p.desc||''; ta.oninput=e=>{ p.desc=e.target.value; save(); };
-    descDiv.appendChild(ta);
-
     const pill=document.createElement('button'); pill.className='pill'; pill.textContent='▼ Desc';
-    pill.onclick=(ev)=>{ ev.stopPropagation(); const open=descDiv.style.display!=='block'; descDiv.style.display=open?'block':'none'; pill.textContent = open ? '▲ Desc' : '▼ Desc'; };
+    const dWrap=document.createElement('div'); dWrap.className='p-desc';
+    const ta=document.createElement('textarea'); ta.value=p.desc||''; ta.oninput=e=>{ p.desc=e.target.value; save(); };
+    dWrap.appendChild(ta);
+    pill.onclick=(ev)=>{ ev.stopPropagation(); const open=dWrap.style.display!=='block'; dWrap.style.display=open?'block':'none'; pill.textContent = open ? '▲ Desc' : '▼ Desc'; };
 
     const del=document.createElement('button'); del.className='del'; del.textContent='−';
-    del.onclick=(ev)=>{ ev.stopPropagation(); if(!isUnlocked()) return alert('Bloqueado'); if(confirm('¿Eliminar proceso?')){ data=data.filter(x=>x.id!==p.id); if(selPid===p.id) selPid=data[0]?.id||null; render(); } };
+    del.onclick=(ev)=>{ ev.stopPropagation(); if(confirm('¿Eliminar proceso?')){ data=data.filter(x=>x.id!==p.id); if(selPid===p.id) selPid=data[0]?.id||null; render(); } };
 
     main.appendChild(name); main.appendChild(pill);
-    row.appendChild(num); row.appendChild(main); row.appendChild(del); row.appendChild(descDiv);
+    row.appendChild(num); row.appendChild(main); row.appendChild(del); row.appendChild(dWrap);
     box.appendChild(row);
   });
 }
 
-/* ===== RIGHT ===== */
+/* ===== DERECHA ===== */
 function renderRight(){
-  const body=document.getElementById('rightBody'); const hdr=document.getElementById('rHeader'); const title=document.getElementById('rTitle');
+  const body=document.getElementById('rightBody'); const title=document.getElementById('rTitle');
   body.innerHTML='';
   const p=data.find(x=>x.id===selPid);
-  if(!p){ title.textContent='Selecciona un proceso'; hdr.style.background='linear-gradient(90deg,#000,#5a0000)'; return; }
+  if(!p){ title.textContent='Selecciona un proceso'; return; }
   title.textContent=p.name;
-  hdr.style.background=`linear-gradient(90deg,#000,${lighten(p.color,.55)})`;
 
-  /* PASOS DEL PROCESO */
-  body.appendChild(sectionSteps({
-    owner:p, steps:p.steps, color:p.color,
-    onAdd:addStepProcess,
-    onChange:(id,patch)=>{ Object.assign(p.steps.find(s=>s.id===id),patch); save(); },
-    onDelete:(id)=>{ p.steps=p.steps.filter(s=>s.id!==id); renderRight(); },
-  }));
+  /* SUBPROCESOS (lista compacta + detalle oculto) */
+  body.appendChild(subprocessSection(p));
 
-  /* SUBPROCESOS */
-  p.sub.forEach((s,idx)=> body.appendChild(renderSubCard(p,s,idx)));
+  /* PASOS DEL PROCESO (lista compacta + detalle oculto + chips encadenados) */
+  body.appendChild(stepsSection(p));
 }
 
-/* ===== SUBPROCESO CARD ===== */
-function renderSubCard(proc, sp, idx){
-  const card=document.createElement('div'); card.className='sub-card'; card.style.borderColor=proc.color;
+/* ===== SECCIÓN SUBPROCESOS ===== */
+function subprocessSection(proc){
+  const wrap=document.createElement('div'); wrap.className='section';
+  const head=document.createElement('div'); head.className='sec-head';
+  const h=document.createElement('h3'); h.textContent='Subprocesos';
+  const add=document.createElement('button'); add.className='sec-btn'; add.textContent='+ Subproceso'; add.onclick=addSub;
+  head.appendChild(h); head.appendChild(add); wrap.appendChild(head);
 
-  const head=document.createElement('div'); head.className='sub-head';
-  const tgl=document.createElement('span'); tgl.className='toggle'; tgl.textContent=sp.open?'▼':'►'; tgl.onclick=()=>{ sp.open=!sp.open; save(); renderRight(); };
-  const ttl=document.createElement('div'); ttl.className='sub-title'; ttl.textContent=`${idx+1}. ${sp.title||'Subproceso'}`;
-  const sel=document.createElement('select'); sel.className='resp'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r;o.textContent=r; sel.appendChild(o); }); sel.value=sp.resp||ROLES[0]; sel.onchange=e=>{ sp.resp=e.target.value; save(); };
-  const del=document.createElement('button'); del.className='del'; del.textContent='−'; del.onclick=()=>{ if(!isUnlocked()) return alert('Bloqueado'); if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==sp); renderRight(); } };
-  head.appendChild(tgl); head.appendChild(ttl); head.appendChild(sel); head.appendChild(del);
+  if(!proc.sub.length){
+    const emp=document.createElement('div'); emp.style.opacity=.6; emp.style.fontSize='12px';
+    emp.textContent='Sin subprocesos. Puedes empezar directamente por pasos.'; wrap.appendChild(emp);
+  }
 
-  const body=document.createElement('div'); body.className='sub-body';
-  const l1=document.createElement('div'); l1.className='label'; l1.textContent='Nombre';
-  const inName=document.createElement('input'); inName.className='input'; inName.value=sp.title||''; inName.oninput=e=>{ sp.title=e.target.value; ttl.textContent=`${idx+1}. ${sp.title||'Subproceso'}`; save(); };
-  const l2=document.createElement('div'); l2.className='label'; l2.textContent='Descripción';
-  const ta=document.createElement('textarea'); ta.className='input'; ta.value=sp.desc||''; ta.oninput=e=>{ sp.desc=e.target.value; save(); };
+  proc.sub.forEach((s,idx)=>{
+    // ROW compacta
+    const row=document.createElement('div'); row.className='row';
+    const idxEl=document.createElement('div'); idxEl.className='idx'; idxEl.textContent=(idx+1)+'.';
+    const name=document.createElement('div'); name.className='ro-name';
+    const nameIn=document.createElement('input'); nameIn.value=s.title||'Subproceso'; nameIn.oninput=e=>{ s.title=e.target.value; save(); };
+    name.appendChild(nameIn);
 
-  body.appendChild(l1); body.appendChild(inName);
-  body.appendChild(l2); body.appendChild(ta);
+    const edit=document.createElement('button'); edit.className='icon'; edit.title='Editar'; edit.textContent='🖉'; // nombre ya editable, se mantiene por estándar
+    edit.onclick=()=>{ nameIn.focus(); nameIn.select(); };
 
-  body.appendChild(sectionSteps({
-    owner:sp, steps:sp.steps, color:proc.color,
-    onAdd:()=>addStepSub(proc,sp),
-    onChange:(id,patch)=>{ Object.assign(sp.steps.find(s=>s.id===id),patch); save(); },
-    onDelete:(id)=>{ sp.steps=sp.steps.filter(s=>s.id!==id); renderRight(); },
-  }));
+    const del=document.createElement('button'); del.className='icon'; del.title='Eliminar'; del.textContent='−';
+    del.onclick=()=>{ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==s); renderRight(); } };
 
-  card.appendChild(head); card.appendChild(body);
-  if(sp.open) card.classList.add('open');
-  return card;
-}
+    const sel=document.createElement('select'); sel.className='select'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=s.resp||ROLES[0]; sel.onchange=e=>{ s.resp=e.target.value; save(); };
 
-/* ===== SECCIÓN DE PASOS ===== */
-function sectionSteps({owner, steps, color, onAdd, onChange, onDelete}){
-  const wrap=document.createElement('div');
+    const tgl=document.createElement('button'); tgl.className='toggle'; tgl.title='Ver detalle'; tgl.textContent='▶';
+    // detalle
+    const det=document.createElement('div'); det.className='detail';
 
-  /* Chips encadenados */
-  const chips=document.createElement('div'); chips.className='chips';
-  steps.forEach((st,i)=>{
-    const chip=document.createElement('div'); chip.className='chip';
-    const n=document.createElement('span'); n.className='n'; n.textContent=i+1;
-    const txt=document.createElement('span'); txt.textContent=st.name||'Paso';
-    chip.appendChild(n); chip.appendChild(txt);
-    if(i===steps.length-1) chip.appendChild(document.createTextNode(' 🏁'));
-    chip.onclick=()=>{ st.open=!st.open; save(); renderRight(); };
-    chips.appendChild(chip);
-    if(i<steps.length-1){ const arrow=document.createElement('span'); arrow.className='arrow'; arrow.textContent='➔'; chips.appendChild(arrow); }
+    tgl.onclick=()=>{ const open=det.style.display!=='block'; det.style.display=open?'block':'none'; tgl.textContent=open?'▼':'▶'; };
+
+    row.appendChild(idxEl); row.appendChild(name); row.appendChild(edit); row.appendChild(del); row.appendChild(sel); row.appendChild(tgl);
+    wrap.appendChild(row);
+
+    // DETALLE: descripción + acciones con iconos
+    const lab1=document.createElement('div'); lab1.className='label'; lab1.textContent='Descripción';
+    const ta=document.createElement('textarea'); ta.className='input'; ta.value=s.desc||''; ta.oninput=e=>{ s.desc=e.target.value; save(); };
+
+    const tools=document.createElement('div'); tools.className='toolbar';
+    // 🔗 enlace subproceso
+    const bLink=document.createElement('button'); bLink.className='tool'; bLink.textContent='🔗 Enlace';
+    bLink.onclick=()=>{ const u=prompt('Pega el enlace', s.link||''); if(u!==null){ s.link=u; save(); renderRight(); } };
+    // 📎 documento (nombre)
+    const file=document.createElement('input'); file.type='file'; file.style.display='none'; file.onchange=e=>{ const f=e.target.files?.[0]; if(f){ s.doc=f.name; save(); renderRight(); } };
+    const bDoc=document.createElement('button'); bDoc.className='tool'; bDoc.textContent='📎 Documento'; bDoc.onclick=()=>file.click();
+
+    tools.appendChild(bLink); tools.appendChild(bDoc); tools.appendChild(file);
+    if(s.link){ const t=document.createElement('span'); t.className='tag'; t.textContent='🔗 '+s.link; tools.appendChild(t); }
+    if(s.doc){ const t=document.createElement('span'); t.className='tag'; t.textContent='📄 '+s.doc; tools.appendChild(t); }
+
+    det.appendChild(lab1); det.appendChild(ta); det.appendChild(tools);
+    wrap.appendChild(det);
   });
-  const addTop=document.createElement('button'); addTop.className='btn'; addTop.textContent='+ Paso'; addTop.onclick=onAdd;
-  chips.appendChild(addTop);
-  wrap.appendChild(chips);
-
-  /* Acordeones de paso */
-  steps.forEach((st,i)=> wrap.appendChild(stepDetail({step:st, idx:i, color, onChange, onDelete})));
-
-  const addBottom=document.createElement('button'); addBottom.className='btn'; addBottom.textContent='+ Paso'; addBottom.onclick=onAdd;
-  wrap.appendChild(addBottom);
-
-  const saveBtn=document.createElement('button'); saveBtn.className='save'; saveBtn.textContent='Guardar';
-  saveBtn.onclick=()=>{ steps.forEach((s,k)=> s.meta=(k===steps.length-1)); save(); renderRight(); };
-  wrap.appendChild(saveBtn);
 
   return wrap;
 }
 
-function stepDetail({step, idx, color, onChange, onDelete}){
-  const box=document.createElement('div'); box.className='s-body'+(step.open?' open':''); box.style.borderColor=color;
+/* ===== SECCIÓN PASOS (del proceso) ===== */
+function stepsSection(proc){
+  const wrap=document.createElement('div'); wrap.className='section';
+  const head=document.createElement('div'); head.className='sec-head';
+  const h=document.createElement('h3'); h.textContent='Pasos del proceso';
+  const add=document.createElement('button'); add.className='sec-btn'; add.textContent='+ Paso'; add.onclick=addStepProcess;
+  head.appendChild(h); head.appendChild(add); wrap.appendChild(head);
 
-  const l0=document.createElement('div'); l0.className='label'; l0.textContent=`Paso ${idx+1} · Título`;
-  const t0=document.createElement('input'); t0.className='input'; t0.value=step.name||''; t0.oninput=e=>onChange(step.id,{name:e.target.value});
-  const l1=document.createElement('div'); l1.className='label'; l1.textContent='Descripción';
-  const ta=document.createElement('textarea'); ta.className='input'; ta.value=step.desc||''; ta.oninput=e=>onChange(step.id,{desc:e.target.value});
-  const lR=document.createElement('div'); lR.className='label'; lR.textContent='Persona responsable';
-  const sel=document.createElement('select'); sel.className='select'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r;o.textContent=r; sel.appendChild(o); }); sel.value=step.resp||ROLES[0]; sel.onchange=e=>onChange(step.id,{resp:e.target.value});
+  /* Chips encadenados (arriba) */
+  const chips=document.createElement('div'); chips.className='chips';
+  proc.steps.forEach((st,i)=>{
+    const chip=document.createElement('div'); chip.className='chip';
+    const n=document.createElement('span'); n.className='n'; n.textContent=i+1;
+    const txt=document.createElement('span'); txt.textContent=st.name||'Paso';
+    chip.appendChild(n); chip.appendChild(txt);
+    if(i===proc.steps.length-1 && st.meta){ chip.appendChild(document.createTextNode(' 🏁')); }
+    chips.appendChild(chip);
+    if(i<proc.steps.length-1){ const arr=document.createElement('span'); arr.className='arrow'; arr.textContent='➔'; chips.appendChild(arr); }
+  });
+  wrap.appendChild(chips);
 
-  const bar=document.createElement('div'); bar.className='toolbar';
+  /* Lista compacta de pasos (cada fila + detalle oculto) */
+  proc.steps.forEach((st,i)=>{
+    const row=document.createElement('div'); row.className='row';
+    const idxEl=document.createElement('div'); idxEl.className='idx'; idxEl.textContent=(i+1)+'.';
+    const name=document.createElement('div'); name.className='ro-name';
+    const nameIn=document.createElement('input'); nameIn.value=st.name||'Paso'; nameIn.oninput=e=>{ st.name=e.target.value; save(); };
+    name.appendChild(nameIn);
 
-  const bLink=document.createElement('button'); bLink.className='tool'; bLink.textContent='🔗 Enlace';
-  bLink.onclick=()=>{ const u=prompt('Pega el enlace', step.link||''); if(u!==null) onChange(step.id,{link:u}); };
+    const edit=document.createElement('button'); edit.className='icon'; edit.title='Editar'; edit.textContent='🖉';
+    edit.onclick=()=>{ nameIn.focus(); nameIn.select(); };
 
-  const file=document.createElement('input'); file.type='file'; file.style.display='none';
-  file.onchange=e=>{ const f=e.target.files?.[0]; if(f) onChange(step.id,{doc:f.name}); };
-  const bDoc=document.createElement('button'); bDoc.className='tool'; bDoc.textContent='📎 Documento';
-  bDoc.onclick=()=>file.click();
+    const del=document.createElement('button'); del.className='icon'; del.title='Eliminar'; del.textContent='−';
+    del.onclick=()=>{ if(confirm('¿Eliminar paso?')){ proc.steps=proc.steps.filter(x=>x!==st); renderRight(); } };
 
-  const bNext=document.createElement('button'); bNext.className='tool'; bNext.textContent='🔁 Vincular proceso';
-  bNext.onclick=()=>linkToProcess(step, onChange);
+    const sel=document.createElement('select'); sel.className='select'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=st.resp||ROLES[0]; sel.onchange=e=>{ st.resp=e.target.value; save(); };
 
-  const bDel=document.createElement('button'); bDel.className='tool'; bDel.textContent='− Borrar paso';
-  bDel.onclick=()=>{ if(!isUnlocked()) return alert('Bloqueado'); if(confirm('¿Eliminar paso?')) onDelete(step.id); };
+    const tgl=document.createElement('button'); tgl.className='toggle'; tgl.title='Ver detalle'; tgl.textContent='▶';
+    const det=document.createElement('div'); det.className='detail';
 
-  bar.appendChild(bLink); bar.appendChild(bDoc); bar.appendChild(file); bar.appendChild(bNext); bar.appendChild(bDel);
+    tgl.onclick=()=>{ const open=det.style.display!=='block'; det.style.display=open?'block':'none'; tgl.textContent=open?'▼':'▶'; };
 
-  if(step.link){ const t=document.createElement('span'); t.className='tag'; t.textContent='🔗 '+step.link; bar.appendChild(t); }
-  if(step.doc){ const t=document.createElement('span'); t.className='tag'; t.textContent='📄 '+step.doc; bar.appendChild(t); }
-  if(step.nextPid){ const tgt=data.find(p=>p.id===step.nextPid); if(tgt){ const t=document.createElement('span'); t.className='tag'; t.style.background=lighten(tgt.color,.55); t.textContent='→ Ir al siguiente proceso: '+tgt.name; bar.appendChild(t); } }
-  if(step.meta){ const t=document.createElement('span'); t.className='tag'; t.textContent='🏁 Meta'; bar.appendChild(t); }
+    row.appendChild(idxEl); row.appendChild(name); row.appendChild(edit); row.appendChild(del); row.appendChild(sel); row.appendChild(tgl);
+    wrap.appendChild(row);
 
-  box.appendChild(l0); box.appendChild(t0);
-  box.appendChild(l1); box.appendChild(ta);
-  box.appendChild(lR); box.appendChild(sel);
-  box.appendChild(bar);
-  return box;
+    // DETALLE: descripción + acciones con iconos (enlace/doc/vincular)
+    const lab1=document.createElement('div'); lab1.className='label'; lab1.textContent='Descripción';
+    const ta=document.createElement('textarea'); ta.className='input'; ta.value=st.desc||''; ta.oninput=e=>{ st.desc=e.target.value; save(); };
+
+    const tools=document.createElement('div'); tools.className='toolbar';
+    // 🔗 enlace
+    const bLink=document.createElement('button'); bLink.className='tool'; bLink.textContent='🔗 Enlace';
+    bLink.onclick=()=>{ const u=prompt('Pega el enlace', st.link||''); if(u!==null){ st.link=u; save(); renderRight(); } };
+    // 📎 documento (nombre)
+    const file=document.createElement('input'); file.type='file'; file.style.display='none';
+    file.onchange=e=>{ const f=e.target.files?.[0]; if(f){ st.doc=f.name; save(); renderRight(); } };
+    const bDoc=document.createElement('button'); bDoc.className='tool'; bDoc.textContent='📎 Documento'; bDoc.onclick=()=>file.click();
+    // 🔁 vincular proceso
+    const bNext=document.createElement('button'); bNext.className='tool'; bNext.textContent='🔁 Vincular proceso';
+    bNext.onclick=()=>{ openProcessPicker(st); };
+
+    tools.appendChild(bLink); tools.appendChild(bDoc); tools.appendChild(file); tools.appendChild(bNext);
+
+    if(st.link){ const t=document.createElement('span'); t.className='tag'; t.textContent='🔗 '+st.link; tools.appendChild(t); }
+    if(st.doc){ const t=document.createElement('span'); t.className='tag'; t.textContent='📄 '+st.doc; tools.appendChild(t); }
+    if(st.nextPid){ const tgt=data.find(p=>p.id===st.nextPid); if(tgt){ const t=document.createElement('span'); t.className='tag'; t.style.background=lighten(tgt.color,.55); t.textContent='→ Ir al siguiente proceso: '+tgt.name; tools.appendChild(t); } }
+
+    if(i===proc.steps.length-1 && st.meta){
+      const t=document.createElement('span'); t.className='tag'; t.textContent='🏁 Meta'; tools.appendChild(t);
+    }
+
+    det.appendChild(lab1); det.appendChild(ta); det.appendChild(tools);
+    wrap.appendChild(det);
+  });
+
+  /* Controles + Guardar */
+  const actions=document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.style.flexWrap='wrap'; actions.style.marginTop='8px';
+  const addB=document.createElement('button'); addB.className='sec-btn'; addB.textContent='+ Paso'; addB.onclick=addStepProcess;
+  const saveBtn=document.createElement('button'); saveBtn.className='save'; saveBtn.textContent='Guardar';
+  saveBtn.onclick=()=>{ proc.steps.forEach((s,k)=> s.meta=(k===proc.steps.length-1)); save(); renderRight(); };
+  actions.appendChild(addB); actions.appendChild(saveBtn);
+  wrap.appendChild(actions);
+
+  return wrap;
 }
 
-/* ===== ACTIONS ===== */
-function addProcess(){
-  const p={id:uid(), name:'Nuevo proceso', color:PASTEL[data.length%PASTEL.length], desc:'', sub:[], steps:[]};
-  data.push(p); selPid=p.id; render();
-}
-function addSub(){
-  const p=data.find(x=>x.id===selPid); if(!p) return;
-  p.sub.unshift({id:uid(), title:'Nuevo subproceso', desc:'', resp:ROLES[0], open:true, steps:[]});
-  renderRight();
-}
-function addStepProcess(){
-  const p=data.find(x=>x.id===selPid); if(!p) return;
-  p.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], open:true});
-  renderRight();
-}
-function addStepSub(proc, sp){ sp.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], open:true}); renderRight(); }
-
-/* Vincular a otro proceso con selector */
-function linkToProcess(step, onChange){
-  const others=data.filter(p=>p.id!==selPid);
-  if(!others.length){ alert('No hay otros procesos'); return; }
-
-  // pequeño modal con select
+/* ===== Picker de procesos destino ===== */
+function openProcessPicker(step){
+  const others=data; // puede vincular a cualquiera (incluido actual)
+  if(!others.length){ alert('No hay procesos'); return; }
   const overlay=document.createElement('div');
   Object.assign(overlay.style,{position:'fixed',inset:'0',background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990});
   const card=document.createElement('div');
@@ -348,17 +339,33 @@ function linkToProcess(step, onChange){
   const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='10px';
   const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='tool'; cancel.onclick=()=>document.body.removeChild(overlay);
   const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='tool'; ok.style.background='#5a0000'; ok.style.color='#fff';
-  ok.onclick=()=>{ onChange(step.id,{nextPid:sel.value}); document.body.removeChild(overlay); };
+  ok.onclick=()=>{ step.nextPid=sel.value; save(); document.body.removeChild(overlay); renderRight(); };
 
   bar.appendChild(cancel); bar.appendChild(ok);
   card.appendChild(h); card.appendChild(sel); card.appendChild(bar);
   overlay.appendChild(card); document.body.appendChild(overlay);
 }
 
+/* ===== ACTIONS ===== */
+function addProcess(){
+  const p={id:uid(), name:'Nuevo proceso', color:PASTEL[data.length%PASTEL.length], desc:'', sub:[], steps:[]};
+  data.push(p); selPid=p.id; render();
+}
+function addSub(){
+  const p=data.find(x=>x.id===selPid); if(!p) return;
+  p.sub.push({id:uid(), title:'Nuevo subproceso', desc:'', resp:ROLES[0]});
+  renderRight();
+}
+function addStepProcess(){
+  const p=data.find(x=>x.id===selPid); if(!p) return;
+  p.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0]});
+  renderRight();
+}
+
 /* ===== INIT ===== */
 render();
 
-/* Evitar submit con Enter en inputs/textarea */
+/* ENTER = confirmar edición */
 window.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     const a=document.activeElement;
