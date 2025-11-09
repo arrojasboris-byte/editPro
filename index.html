@@ -8,7 +8,7 @@
   :root{
     --radius:16px; --bg:#f4f5f7; --ink:#111;
     --hdr1:#000; --hdr2:#5a0000;   /* cabecera negro→rojo oscuro */
-    --head:#0b0b0b;                /* encabezados de panel */
+    --head:#0b0b0b;                /* encabezados panel */
     --chipShadow:0 3px 0 #cfd4da, 0 10px 22px rgba(0,0,0,.10);
   }
   *{box-sizing:border-box}
@@ -53,17 +53,22 @@
   .sec-btn{border:none;border-radius:10px;background:#eef0f3;padding:6px 10px;cursor:pointer}
 
   /* FILA PASO/SUBPROCESO (2 mitades) */
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;border:1px solid #e8eaee;background:#fff;border-radius:12px;padding:8px 10px;margin-bottom:6px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;border:1px solid #f3cbd1;background:#fff;border-radius:12px;padding:8px 10px;margin-bottom:6px}
   .leftPart{display:flex;align-items:center;gap:8px;min-width:0}
   .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);min-width:0;flex:1}
   .n{font-weight:900;font-size:12px;background:#000;color:#fff;border-radius:999px;padding:2px 7px;flex:0 0 auto}
   .title{border:none;background:transparent;font-weight:700;width:100%;min-width:0}
+  .icon{border:none;background:#f1f2f4;border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .toggle{border:none;background:#f1f2f4;border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-  .rightPart{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-  .select{border:1px solid #e5e7eb;border-radius:999px;padding:4px 8px}
-  .icon{border:none;background:#f1f2f4;border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;color:#111;background:#eef0f3}
+  .rightPart{display:grid;grid-template-columns:64px 1fr;align-items:start;gap:8px}
+  .yn{display:flex;flex-direction:column;gap:10px}
+  .pillYN{border:1px solid #ddd;border-radius:12px;padding:4px 10px;background:#fff;font-weight:700;width:fit-content}
+  .colYN{border-left:2px dashed #ddd;padding-left:10px}
+  .ynRow{display:flex;align-items:flex-start;gap:6px;margin:6px 0}
+  .ynText{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;min-height:38px}
+  .ynAdd{border:1px dashed #bbb;background:#fff;border-radius:10px;padding:6px 8px;cursor:pointer}
+  .ynDel{border:none;background:#f1f2f4;border-radius:999px;width:26px;height:26px;cursor:pointer}
 
   /* DETALLE (siempre oculto por defecto) */
   .detail{display:none;border:1px dashed #e5e7eb;border-radius:12px;padding:10px;margin:-2px 0 8px 10px;background:#fff}
@@ -74,10 +79,11 @@
   /* Flecha vertical entre pasos */
   .arrowV{opacity:.35;text-align:center;margin:-4px 0 8px}
 
-  /* chips resumidos (opcional en modo ambos) */
+  /* chips resumidos (opcional) */
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
   .chipMini{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow)}
   .chipMini .n{padding:1px 6px}
+  .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;color:#111;background:#eef0f3}
 </style>
 </head>
 <body>
@@ -118,14 +124,14 @@
 
 <script>
 /* ===== CONFIG ===== */
-const LS='PROC_ICONS_TOP_V1';
+const LS='PROC_SI_NO_V1';
 const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
 const ROLES=['Audiólogo','Responsable','Otros'];
 
 /* ===== STATE ===== */
 let data = JSON.parse(localStorage.getItem(LS) || 'null') || [
-  {id:uid(), name:'REPARACIONES', color:PASTEL[0], desc:'', sub:[], steps:[]},
-  {id:uid(), name:'AJUSTE REMOTO', color:PASTEL[1], desc:'', sub:[], steps:[]},
+  {id:uid(), name:'Reparaciones', color:PASTEL[0], desc:'', sub:[], steps:[]},
+  {id:uid(), name:'Ajuste remoto', color:PASTEL[1], desc:'', sub:[], steps:[]},
 ];
 let selPid = data[0]?.id || null;
 let q=''; let viewMode=localStorage.getItem(LS+'_view') || 'both';
@@ -135,15 +141,16 @@ function uid(){ return Math.random().toString(36).slice(2,9); }
 function save(){ localStorage.setItem(LS, JSON.stringify(data)); }
 function doSearch(v){ q=v.toLowerCase(); render(); }
 function lighten(hex,f=.86){const c=hex.replace('#',''); const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f); return `rgb(${nr},${ng},${nb})`; }
-function setView(m){ viewMode=m; localStorage.setItem(LS+'_view',m); document.getElementById('btnBoth').classList.toggle('active',m==='both'); document.getElementById('btnSteps').classList.toggle('active',m==='steps'); renderRight(); }
+function setView(m){ viewMode=m; localStorage.setItem(LS+'_view',m); btn('btnBoth').classList.toggle('active',m==='both'); btn('btnSteps').classList.toggle('active',m==='steps'); renderRight(); }
+const btn=id=>document.getElementById(id);
 
 /* ===== RENDER ROOT ===== */
 function render(){ renderLeft(); renderRight(); save(); }
 
 /* ===== IZQUIERDA ===== */
 function renderLeft(){
-  document.getElementById('btnBoth').classList.toggle('active',viewMode==='both');
-  document.getElementById('btnSteps').classList.toggle('active',viewMode==='steps');
+  btn('btnBoth').classList.toggle('active',viewMode==='both');
+  btn('btnSteps').classList.toggle('active',viewMode==='steps');
 
   const box=document.getElementById('procList'); box.innerHTML='';
   let list=data.slice();
@@ -185,13 +192,13 @@ function renderRight(){
 
   if(viewMode==='both'){
     body.appendChild(subprocessList(p));
-    body.appendChild(stepsList(p,false));
-  } else {
-    body.appendChild(stepsList(p,true)); // solo pasos, vertical
+    body.appendChild(stepsList(p,true)); // true = pinta flechas verticales también
+  }else{
+    body.appendChild(stepsList(p,true));
   }
 }
 
-/* ===== SUBPROCESOS (misma lógica de filas con iconos) ===== */
+/* ===== SUBPROCESOS ===== */
 function subprocessList(proc){
   const wrap=document.createElement('div'); wrap.className='section';
   const head=document.createElement('div'); head.className='sec-head';
@@ -199,126 +206,172 @@ function subprocessList(proc){
   const add=document.createElement('button'); add.className='sec-btn'; add.textContent='+ Subproceso'; add.onclick=addSub;
   head.appendChild(h); head.appendChild(add); wrap.appendChild(head);
 
-  if(!proc.sub.length){
-    const emp=document.createElement('div'); emp.style.opacity=.6; emp.style.fontSize='12px';
-    emp.textContent='Sin subprocesos. Puedes empezar directamente por pasos.'; wrap.appendChild(emp);
-  }
-
   proc.sub.forEach((s,idx)=>{
-    const row=document.createElement('div'); row.className='row';
-    // mitad izquierda: chip con nombre (editable con 🖉) + flecha detalle
-    const left=document.createElement('div'); left.className='leftPart';
-    const chip=document.createElement('div'); chip.className='chip';
-    const n=document.createElement('span'); n.className='n'; n.textContent=idx+1;
-    const title=document.createElement('input'); title.className='title'; title.value=s.title||'Subproceso'; title.oninput=e=>{ s.title=e.target.value; save(); };
-    chip.appendChild(n); chip.appendChild(title);
-    const tgl=document.createElement('button'); tgl.className='toggle'; tgl.textContent='▶';
-    left.appendChild(chip); left.appendChild(tgl);
-
-    // mitad derecha: responsable + iconos
-    const right=document.createElement('div'); right.className='rightPart';
-    const sel=document.createElement('select'); sel.className='select'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=s.resp||ROLES[0]; sel.onchange=e=>{ s.resp=e.target.value; save(); };
-    const del=document.createElement('button'); del.className='icon'; del.title='Eliminar'; del.textContent='−'; del.onclick=()=>{ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==s); renderRight(); } };
-    const edit=document.createElement('button'); edit.className='icon'; edit.title='Editar'; edit.textContent='🖉'; edit.onclick=()=>{ title.focus(); title.select(); };
-    const linkBtn=document.createElement('button'); linkBtn.className='icon'; linkBtn.title='Adjuntar enlace'; linkBtn.textContent='🔗'; linkBtn.onclick=()=>{ const u=prompt('Pega el enlace', s.link||''); if(u!==null){ s.link=u; save(); renderRight(); } };
-    const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.style.display='none'; fileInput.onchange=e=>{ const f=e.target.files?.[0]; if(f){ s.doc=f.name; save(); renderRight(); } };
-    const docBtn=document.createElement('button'); docBtn.className='icon'; docBtn.title='Adjuntar documento'; docBtn.textContent='📎'; docBtn.onclick=()=>fileInput.click();
-
-    right.appendChild(sel); right.appendChild(del); right.appendChild(edit); right.appendChild(linkBtn); right.appendChild(docBtn); right.appendChild(fileInput);
-
-    row.appendChild(left); row.appendChild(right); wrap.appendChild(row);
-
-    // detalle oculto
-    const det=document.createElement('div'); det.className='detail';
-    const l1=document.createElement('div'); l1.className='label'; l1.textContent='Descripción';
-    const ta=document.createElement('textarea'); ta.className='input'; ta.value=s.desc||''; ta.oninput=e=>{ s.desc=e.target.value; save(); };
-    det.appendChild(l1); det.appendChild(ta);
-    if(s.link){ const t=document.createElement('span'); t.className='tag'; t.textContent='🔗 '+s.link; det.appendChild(t); }
-    if(s.doc){ const t=document.createElement('span'); t.className='tag'; t.textContent='📄 '+s.doc; det.appendChild(t); }
-    wrap.appendChild(det);
-
-    tgl.onclick=()=>{ const open=det.style.display!=='block'; det.style.display=open?'block':'none'; tgl.textContent=open?'▼':'▶'; };
+    wrap.appendChild(stepRow({
+      idx: idx+1,
+      title: s.title || 'Subproceso',
+      onTitle: v=>{ s.title=v; save(); },
+      resp: s.resp || ROLES[0],
+      onResp: v=>{ s.resp=v; save(); },
+      link: s.link, doc: s.doc, nextPid: s.nextPid,
+      onLink: v=>{ s.link=v; save(); renderRight(); },
+      onDoc: v=>{ s.doc=v; save(); renderRight(); },
+      onNext: v=>{ s.nextPid=v; save(); renderRight(); },
+      onDelete: ()=>{ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==s); renderRight(); } },
+      desc: s.desc||'',
+      onDesc: v=>{ s.desc=v; save(); },
+      yes: s.yes||[], no: s.no||[],
+      onAddYes: ()=>{ (s.yes||(s.yes=[])).push({id:uid(),text:''}); renderRight(); },
+      onAddNo : ()=>{ (s.no ||(s.no =[])).push({id:uid(),text:''}); renderRight(); },
+      onYesChange: (id,v)=>{ const it=s.yes.find(x=>x.id===id); if(it){ it.text=v; save(); } },
+      onNoChange : (id,v)=>{ const it=s.no .find(x=>x.id===id); if(it){ it.text=v; save(); } },
+      onYesDel   : (id)=>{ s.yes=s.yes.filter(x=>x.id!==id); renderRight(); },
+      onNoDel    : (id)=>{ s.no =s.no .filter(x=>x.id!==id); renderRight(); },
+      color: proc.color
+    }));
   });
 
   return wrap;
 }
 
-/* ===== PASOS (vertical, flechas, iconos al lado del nombre) ===== */
-function stepsList(proc, onlySteps){
+/* ===== PASOS ===== */
+function stepsList(proc, drawArrows){
   const wrap=document.createElement('div'); wrap.className='section';
   const head=document.createElement('div'); head.className='sec-head';
-  const h=document.createElement('h3'); h.textContent= onlySteps ? 'Solo Pasos' : 'Pasos del proceso';
+  const h=document.createElement('h3'); h.textContent='Pasos del proceso';
   const add=document.createElement('button'); add.className='sec-btn'; add.textContent='+ Paso'; add.onclick=addStepProcess;
   head.appendChild(h); head.appendChild(add); wrap.appendChild(head);
 
   proc.steps.forEach((st,i)=>{
-    const row=document.createElement('div'); row.className='row';
+    wrap.appendChild(stepRow({
+      idx:i+1,
+      title: st.name||'Paso',
+      onTitle: v=>{ st.name=v; save(); },
+      resp: st.resp||ROLES[0],
+      onResp: v=>{ st.resp=v; save(); },
+      link: st.link, doc: st.doc, nextPid: st.nextPid,
+      onLink: v=>{ st.link=v; save(); renderRight(); },
+      onDoc: v=>{ st.doc=v; save(); renderRight(); },
+      onNext: v=>{ st.nextPid=v; save(); renderRight(); },
+      onDelete: ()=>{ if(confirm('¿Eliminar paso?')){ proc.steps=proc.steps.filter(x=>x!==st); renderRight(); } },
+      desc: st.desc||'',
+      onDesc: v=>{ st.desc=v; save(); },
+      yes: st.yes||[], no: st.no||[],
+      onAddYes: ()=>{ (st.yes||(st.yes=[])).push({id:uid(),text:''}); renderRight(); },
+      onAddNo : ()=>{ (st.no ||(st.no =[])).push({id:uid(),text:''}); renderRight(); },
+      onYesChange: (id,v)=>{ const it=st.yes.find(x=>x.id===id); if(it){ it.text=v; save(); } },
+      onNoChange : (id,v)=>{ const it=st.no .find(x=>x.id===id); if(it){ it.text=v; save(); } },
+      onYesDel   : (id)=>{ st.yes=st.yes.filter(x=>x.id!==id); renderRight(); },
+      onNoDel    : (id)=>{ st.no =st.no .filter(x=>x.id!==id); renderRight(); },
+      color: proc.color,
+      isLast: (i===proc.steps.length-1) && st.meta
+    }));
 
-    // MITAD IZQUIERDA: chip nombre + flecha detalle
-    const left=document.createElement('div'); left.className='leftPart';
-    const chip=document.createElement('div'); chip.className='chip';
-    const n=document.createElement('span'); n.className='n'; n.textContent=i+1;
-    const title=document.createElement('input'); title.className='title'; title.value=st.name||'Paso'; title.oninput=e=>{ st.name=e.target.value; save(); };
-    chip.appendChild(n); chip.appendChild(title);
-    const tgl=document.createElement('button'); tgl.className='toggle'; tgl.title='Detalle'; tgl.textContent='▶';
-
-    left.appendChild(chip); left.appendChild(tgl);
-
-    // MITAD DERECHA: responsable + iconos
-    const right=document.createElement('div'); right.className='rightPart';
-    const sel=document.createElement('select'); sel.className='select'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=st.resp||ROLES[0]; sel.onchange=e=>{ st.resp=e.target.value; save(); };
-
-    const del=document.createElement('button'); del.className='icon'; del.title='Eliminar'; del.textContent='−';
-    del.onclick=()=>{ if(confirm('¿Eliminar paso?')){ proc.steps=proc.steps.filter(x=>x!==st); renderRight(); } };
-
-    const edit=document.createElement('button'); edit.className='icon'; edit.title='Editar'; edit.textContent='🖉'; edit.onclick=()=>{ title.focus(); title.select(); };
-
-    const linkBtn=document.createElement('button'); linkBtn.className='icon'; linkBtn.title='Adjuntar enlace'; linkBtn.textContent='🔗';
-    linkBtn.onclick=()=>{ const u=prompt('Pega el enlace', st.link||''); if(u!==null){ st.link=u; save(); renderRight(); } };
-
-    const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.style.display='none';
-    fileInput.onchange=e=>{ const f=e.target.files?.[0]; if(f){ st.doc=f.name; save(); renderRight(); } };
-    const docBtn=document.createElement('button'); docBtn.className='icon'; docBtn.title='Adjuntar documento'; docBtn.textContent='📎'; docBtn.onclick=()=>fileInput.click();
-
-    const flagBtn=document.createElement('button'); flagBtn.className='icon'; flagBtn.title='Próximo proceso'; flagBtn.textContent='🚩';
-    flagBtn.onclick=()=>openProcessPicker(st);
-
-    // etiquetas visibles (destino + meta) junto a iconos
-    const labels=document.createElement('span');
-    if(st.nextPid){ const tgt=data.find(p=>p.id===st.nextPid); if(tgt){ const tag=document.createElement('span'); tag.className='tag'; tag.style.background=lighten(tgt.color,.55); tag.textContent='→ '+tgt.name; labels.appendChild(tag); } }
-    if(st.meta){ const tag=document.createElement('span'); tag.className='tag'; tag.textContent='🏁 Meta'; labels.appendChild(tag); }
-
-    right.appendChild(sel); right.appendChild(del); right.appendChild(edit); right.appendChild(linkBtn); right.appendChild(docBtn); right.appendChild(flagBtn); right.appendChild(fileInput); right.appendChild(labels);
-
-    row.appendChild(left); row.appendChild(right); wrap.appendChild(row);
-
-    // DETALLE (oculto por defecto)
-    const det=document.createElement('div'); det.className='detail';
-    const l1=document.createElement('div'); l1.className='label'; l1.textContent='Descripción';
-    const ta=document.createElement('textarea'); ta.className='input'; ta.value=st.desc||''; ta.oninput=e=>{ st.desc=e.target.value; save(); };
-    if(st.link){ const t=document.createElement('span'); t.className='tag'; t.textContent='🔗 '+st.link; det.appendChild(t); }
-    if(st.doc){ const t=document.createElement('span'); t.className='tag'; t.textContent='📄 '+st.doc; det.appendChild(t); }
-    det.appendChild(l1); det.appendChild(ta);
-    wrap.appendChild(det);
-
-    tgl.onclick=()=>{ const open=det.style.display!=='block'; det.style.display=open?'block':'none'; tgl.textContent=open?'▼':'▶'; };
-
-    // flecha vertical entre pasos
-    if(i < proc.steps.length-1){
+    if(drawArrows && i<proc.steps.length-1){
       const a=document.createElement('div'); a.className='arrowV'; a.textContent='⬇'; wrap.appendChild(a);
     }
   });
 
-  // Controles inferiores
-  const actions=document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.style.flexWrap='wrap'; actions.style.marginTop='8px';
-  const addB=document.createElement('button'); addB.className='sec-btn'; addB.textContent='+ Paso'; addB.onclick=addStepProcess;
-  actions.appendChild(addB); wrap.appendChild(actions);
+  return wrap;
+}
 
+/* ===== ROW BUILDER (común a subproceso/paso) ===== */
+function stepRow(cfg){
+  const row=document.createElement('div'); row.className='row';
+  /* MITAD IZQUIERDA */
+  const left=document.createElement('div'); left.className='leftPart';
+  const chip=document.createElement('div'); chip.className='chip';
+  const n=document.createElement('span'); n.className='n'; n.textContent=cfg.idx;
+  const title=document.createElement('input'); title.className='title'; title.value=cfg.title; title.oninput=e=>cfg.onTitle(e.target.value);
+  chip.appendChild(n); chip.appendChild(title);
+
+  // iconos alineados junto al nombre
+  const edit=document.createElement('button'); edit.className='icon'; edit.title='Editar'; edit.textContent='🖉'; edit.onclick=()=>{ title.focus(); title.select(); };
+  const del=document.createElement('button'); del.className='icon'; del.title='Eliminar'; del.textContent='−'; del.onclick=cfg.onDelete;
+
+  const linkBtn=document.createElement('button'); linkBtn.className='icon'; linkBtn.title='Adjuntar enlace'; linkBtn.textContent='🔗';
+  linkBtn.onclick=()=>{ const u=prompt('Pega el enlace', cfg.link||''); if(u!==null){ cfg.onLink(u); } };
+
+  const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.style.display='none';
+  fileInput.onchange=e=>{ const f=e.target.files?.[0]; if(f){ cfg.onDoc(f.name); } };
+  const docBtn=document.createElement('button'); docBtn.className='icon'; docBtn.title='Adjuntar documento'; docBtn.textContent='📎'; docBtn.onclick=()=>fileInput.click();
+
+  const flagBtn=document.createElement('button'); flagBtn.className='icon'; flagBtn.title='Próximo proceso'; flagBtn.textContent='🚩';
+  flagBtn.onclick=()=>openProcessPicker(cfg.nextPid,(val)=>cfg.onNext(val));
+
+  // detalle oculto (flecha)
+  const tgl=document.createElement('button'); tgl.className='toggle'; tgl.title='Detalle'; tgl.textContent='▶';
+
+  left.appendChild(chip); left.appendChild(edit); left.appendChild(linkBtn); left.appendChild(docBtn); left.appendChild(flagBtn); left.appendChild(del); left.appendChild(tgl); left.appendChild(fileInput);
+
+  /* MITAD DERECHA: Responsable + Sí/No */
+  const right=document.createElement('div'); right.className='rightPart';
+
+  const sideYN=document.createElement('div'); sideYN.className='yn';
+  const noP=document.createElement('div'); noP.className='pillYN'; noP.textContent='No';
+  const siP=document.createElement('div'); siP.className='pillYN'; siP.textContent='Sí';
+  sideYN.appendChild(noP); sideYN.appendChild(siP);
+
+  const col=document.createElement('div'); col.className='colYN';
+
+  // fila NO (lista + +)
+  const noBlock=document.createElement('div');
+  const addNo=document.createElement('button'); addNo.className='ynAdd'; addNo.textContent='+';
+  addNo.onclick=cfg.onAddNo;
+  noBlock.appendChild(addNo);
+  (cfg.no||[]).forEach(item=>{
+    const r=document.createElement('div'); r.className='ynRow';
+    const tx=document.createElement('textarea'); tx.className='ynText'; tx.placeholder='Si NO…'; tx.value=item.text||''; tx.oninput=e=>cfg.onNoChange(item.id,e.target.value);
+    const rm=document.createElement('button'); rm.className='ynDel'; rm.textContent='−'; rm.onclick=()=>cfg.onNoDel(item.id);
+    r.appendChild(tx); r.appendChild(rm); noBlock.appendChild(r);
+  });
+
+  // fila SI (lista + +)
+  const siBlock=document.createElement('div'); siBlock.style.marginTop='8px';
+  const addSi=document.createElement('button'); addSi.className='ynAdd'; addSi.textContent='+';
+  addSi.onclick=cfg.onAddYes;
+  siBlock.appendChild(addSi);
+  (cfg.yes||[]).forEach(item=>{
+    const r=document.createElement('div'); r.className='ynRow';
+    const tx=document.createElement('textarea'); tx.className='ynText'; tx.placeholder='Si SÍ…'; tx.value=item.text||''; tx.oninput=e=>cfg.onYesChange(item.id,e.target.value);
+    const rm=document.createElement('button'); rm.className='ynDel'; rm.textContent='−'; rm.onclick=()=>cfg.onYesDel(item.id);
+    r.appendChild(tx); r.appendChild(rm); siBlock.appendChild(r);
+  });
+
+  col.appendChild(noBlock); col.appendChild(siBlock);
+
+  // selector responsable en la parte superior derecha del bloque
+  const sel=document.createElement('select'); sel.className='select'; sel.style.position='absolute'; sel.style.transform='translateY(-40px)'; sel.style.right='22px';
+  ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
+  sel.value=cfg.resp; sel.onchange=e=>cfg.onResp(e.target.value);
+
+  right.style.position='relative';
+  right.appendChild(sideYN); right.appendChild(col); right.appendChild(sel);
+
+  /* Añadir partes al row */
+  row.appendChild(left); row.appendChild(right);
+
+  /* DETALLE (siempre oculto) */
+  const det=document.createElement('div'); det.className='detail';
+  const l1=document.createElement('div'); l1.className='label'; l1.textContent='Descripción';
+  const ta=document.createElement('textarea'); ta.className='input'; ta.value=cfg.desc||''; ta.oninput=e=>cfg.onDesc(e.target.value);
+  det.appendChild(l1); det.appendChild(ta);
+
+  if(cfg.link){ const t=document.createElement('span'); t.className='tag'; t.textContent='🔗 '+cfg.link; det.appendChild(t); }
+  if(cfg.doc ){ const t=document.createElement('span'); t.className='tag'; t.textContent='📄 '+cfg.doc ; det.appendChild(t); }
+  if(cfg.nextPid){ const tgt=data.find(p=>p.id===cfg.nextPid); if(tgt){ const t=document.createElement('span'); t.className='tag'; t.style.background=lighten(tgt.color,.55); t.textContent='→ '+tgt.name; det.appendChild(t); } }
+  if(cfg.isLast){ const t=document.createElement('span'); t.className='tag'; t.textContent='🏁 Meta'; det.appendChild(t); }
+
+  // toggle detalle
+  tgl.onclick=()=>{ const open=det.style.display!=='block'; det.style.display=open?'block':'none'; tgl.textContent=open?'▼':'▶'; };
+
+  const wrap=document.createElement('div');
+  wrap.appendChild(row); wrap.appendChild(det);
   return wrap;
 }
 
 /* ===== Picker de procesos destino (🚩) ===== */
-function openProcessPicker(step){
+function openProcessPicker(current, onPick){
   const overlay=document.createElement('div');
   Object.assign(overlay.style,{position:'fixed',inset:'0',background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990});
   const card=document.createElement('div');
@@ -327,12 +380,12 @@ function openProcessPicker(step){
 
   const sel=document.createElement('select'); sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px';
   data.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
-  sel.value=step.nextPid || data[0].id;
+  sel.value=current || data[0].id;
 
   const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='10px';
   const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='sec-btn'; cancel.onclick=()=>document.body.removeChild(overlay);
   const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='sec-btn'; ok.style.background='#5a0000'; ok.style.color='#fff';
-  ok.onclick=()=>{ step.nextPid=sel.value; save(); document.body.removeChild(overlay); renderRight(); };
+  ok.onclick=()=>{ onPick(sel.value); document.body.removeChild(overlay); };
 
   bar.appendChild(cancel); bar.appendChild(ok);
   card.appendChild(h); card.appendChild(sel); card.appendChild(bar);
@@ -342,23 +395,24 @@ function openProcessPicker(step){
 /* ===== ACTIONS ===== */
 function addSub(){
   const p=data.find(x=>x.id===selPid); if(!p) return;
-  p.sub.push({id:uid(), title:'Nuevo subproceso', desc:'', resp:ROLES[0]});
+  p.sub.push({id:uid(), title:'Nuevo subproceso', desc:'', resp:ROLES[0], yes:[], no:[]});
   renderRight();
 }
 function addStepProcess(){
   const p=data.find(x=>x.id===selPid); if(!p) return;
-  p.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0]});
+  p.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], yes:[], no:[]});
   renderRight();
 }
 function saveMeta(){
   const p=data.find(x=>x.id===selPid); if(!p) return;
-  p.steps.forEach((s,k)=> s.meta=(k===p.steps.length-1)); // último = meta
+  if(p.steps.length){ p.steps.forEach((s,k)=> s.meta=(k===p.steps.length-1)); }
   save(); renderRight();
 }
 
 /* ===== INIT ===== */
 render();
-/* Enter = guardar/blur sin abrir detalles */
+
+/* Enter = blur/guardar */
 window.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     const a=document.activeElement;
