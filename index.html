@@ -229,24 +229,18 @@
         padding: 6px 7px 9px;
         margin-bottom: 6px;
         background: #fff;
-        position: relative;
       }
-      .step-row {
+      .step-top {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 6px;
+        align-items: center;
       }
       .step-num {
         font-weight: 700;
         font-size: 11px;
       }
-      .step-actions {
-        display: flex;
-        gap: 4px;
-      }
       .icon-btn {
-        background: rgba(0, 0, 0, 0.04);
+        background: rgba(0,0,0,.05);
         border: none;
         border-radius: 999px;
         width: 22px;
@@ -255,13 +249,6 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 13px;
-      }
-      .origin {
-        font-size: 11px;
-        color: #555;
-        margin-bottom: 5px;
-        font-weight: 500;
       }
       .add-below {
         margin-top: 6px;
@@ -272,12 +259,20 @@
         font-size: 11px;
         cursor: pointer;
       }
+      .origin {
+        font-size: 11px;
+        color: #555;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
 
-      /* recursos panel */
+      /* bloque de recursos único */
       .resources-box {
-        border-top: 1px solid rgba(0,0,0,.06);
-        margin-top: 10px;
-        padding-top: 6px;
+        border: 1px solid rgba(0,0,0,.04);
+        border-radius: 12px;
+        padding: 6px 7px;
+        margin-top: 12px;
+        background: #fff;
       }
       .resource-tag {
         display: inline-flex;
@@ -344,7 +339,7 @@
     </div>
 
     <script>
-      const LS_KEY = "procesos_app_v5";
+      const LS_KEY = "procesos_app_v6";
       const pastel = ["#ffe4e1","#fff5cc","#e2f0ff","#e5ffe8","#f3e5ff","#ffeaf2","#e9fff9"];
       const responsables = ["Audiólogo","Responsable","Franquiciado"];
 
@@ -360,6 +355,7 @@
       let showSteps = false;
       let searchTerm = "";
 
+      // ENTER -> salir del campo
       window.addEventListener("keydown", e => {
         if (e.key === "Enter") {
           const a = document.activeElement;
@@ -407,6 +403,7 @@
             (p.description||"").toLowerCase().includes(searchTerm)
           );
         }
+        // primero los que tienen subprocesos
         list.sort((a,b)=>{
           const ah = (a.subprocesses||[]).length>0;
           const bh = (b.subprocesses||[]).length>0;
@@ -445,7 +442,7 @@
           inp.className = "proc-input";
           inp.value = p.name;
           inp.onclick = ev => ev.stopPropagation();
-          inp.oninput = ev => { p.name = ev.target.value; save(); };
+          inp.oninput = ev => { p.name = ev.target.value; save(); }; // NO render
           flex.appendChild(inp);
 
           const tgl = document.createElement("button");
@@ -628,55 +625,6 @@
           sel.onchange = e => { s.responsable = e.target.value; save(); };
           box.appendChild(sel);
 
-          const lab3 = document.createElement("div");
-          lab3.className = "label";
-          lab3.textContent = "Enlace";
-          box.appendChild(lab3);
-          const link = document.createElement("input");
-          link.className = "input";
-          link.value = s.link || "";
-          link.oninput = e => { s.link = e.target.value; save(); };
-          box.appendChild(link);
-
-          const lab4 = document.createElement("div");
-          lab4.className = "label";
-          lab4.textContent = "Documento";
-          box.appendChild(lab4);
-          const doc = document.createElement("input");
-          doc.className = "input";
-          doc.value = s.document || "";
-          doc.oninput = e => { s.document = e.target.value; save(); };
-          box.appendChild(doc);
-
-          const fileInput = document.createElement("input");
-          fileInput.type = "file";
-          fileInput.style.display = "none";
-          fileInput.onchange = e => {
-            const file = e.target.files[0];
-            if (file){
-              s.attachedName = file.name;
-              save();
-              renderSub();
-            }
-          };
-          box.appendChild(fileInput);
-
-          const attachBtn = document.createElement("button");
-          attachBtn.className = "file-btn";
-          attachBtn.textContent = "📎 Adjuntar doc";
-          attachBtn.onclick = ev => {
-            ev.stopPropagation();
-            fileInput.click();
-          };
-          box.appendChild(attachBtn);
-
-          if (s.attachedName){
-            const fn = document.createElement("div");
-            fn.className = "file-name";
-            fn.textContent = "Adjunto: " + s.attachedName;
-            box.appendChild(fn);
-          }
-
           list.appendChild(box);
         });
       }
@@ -688,9 +636,6 @@
           name: "Nuevo subproceso",
           description: "",
           responsable: responsables[0],
-          link: "",
-          document: "",
-          attachedName: "",
           steps: [],
           resources: {links:[],files:[]}
         };
@@ -728,7 +673,7 @@
 
         let steps = [];
         let origin = "";
-        let resourcesObj = null;
+        let resObj = null;
 
         if (stepScope.type === "process"){
           const pr = data.find(x=>x.id===stepScope.id);
@@ -736,7 +681,7 @@
           origin = "Proceso origen: " + (pr ? pr.name : "");
           if (pr){
             pr.resources = pr.resources || {links:[],files:[]};
-            resourcesObj = pr.resources;
+            resObj = pr.resources;
           }
         } else {
           const sp = getCurrentS();
@@ -744,7 +689,7 @@
           origin = "Subproceso origen: " + (sp ? sp.name : "");
           if (sp){
             sp.resources = sp.resources || {links:[],files:[]};
-            resourcesObj = sp.resources;
+            resObj = sp.resources;
           }
         }
 
@@ -762,21 +707,17 @@
           box.className = "step";
 
           const top = document.createElement("div");
-          top.className = "step-row";
+          top.className = "step-top";
           const num = document.createElement("div");
           num.className = "step-num";
           num.textContent = "Paso " + (idx+1);
           top.appendChild(num);
 
-          const acts = document.createElement("div");
-          acts.className = "step-actions";
           const del = document.createElement("button");
           del.className = "icon-btn";
           del.textContent = "−";
-          del.title = "Eliminar paso";
-          del.onclick = () => { deleteStep(st.id); };
-          acts.appendChild(del);
-          top.appendChild(acts);
+          del.onclick = () => deleteStep(st.id);
+          top.appendChild(del);
           box.appendChild(top);
 
           const title = document.createElement("input");
@@ -791,11 +732,11 @@
           lab.textContent = "Descripción";
           box.appendChild(lab);
 
-          const textarea = document.createElement("textarea");
-          textarea.className = "input";
-          textarea.value = st.description || "";
-          textarea.oninput = e => { st.description = e.target.value; save(); };
-          box.appendChild(textarea);
+          const ta = document.createElement("textarea");
+          ta.className = "input";
+          ta.value = st.description || "";
+          ta.oninput = e => { st.description = e.target.value; save(); };
+          box.appendChild(ta);
 
           const addBelow = document.createElement("button");
           addBelow.className = "add-below";
@@ -806,13 +747,14 @@
           list.appendChild(box);
         });
 
-        // una sola zona de recursos
+        // zona única de adjuntos / enlaces
         const res = document.createElement("div");
         res.className = "resources-box";
-        const titleRes = document.createElement("div");
-        titleRes.className = "label";
-        titleRes.textContent = "Recursos de este flujo";
-        res.appendChild(titleRes);
+
+        const labR = document.createElement("div");
+        labR.className = "label";
+        labR.textContent = "Recursos del proceso/subproceso";
+        res.appendChild(labR);
 
         const btnLink = document.createElement("button");
         btnLink.className = "file-btn";
@@ -820,7 +762,7 @@
         btnLink.onclick = () => {
           const u = prompt("Pega el enlace:");
           if (!u) return;
-          resourcesObj.links.push(u);
+          resObj.links.push(u);
           save();
           renderSteps();
         };
@@ -832,7 +774,7 @@
         fileInput.onchange = e => {
           const f = e.target.files[0];
           if (f){
-            resourcesObj.files.push(f.name);
+            resObj.files.push(f.name);
             save();
             renderSteps();
           }
@@ -841,32 +783,31 @@
 
         const btnFile = document.createElement("button");
         btnFile.className = "file-btn";
-        btnFile.textContent = "📎 Adjuntar archivo";
+        btnFile.textContent = "📎 Documento";
         btnFile.onclick = () => fileInput.click();
         res.appendChild(btnFile);
 
-        // listar recursos
-        if (resourcesObj.links.length || resourcesObj.files.length){
+        if (resObj.links.length || resObj.files.length){
           const wrap = document.createElement("div");
-          resourcesObj.links.forEach((lk,i)=>{
-            const tag = document.createElement("span");
-            tag.className = "resource-tag";
-            tag.textContent = "🔗 " + lk;
+          resObj.links.forEach((lk,i)=>{
+            const t = document.createElement("span");
+            t.className = "resource-tag";
+            t.textContent = "🔗 " + lk;
             const x = document.createElement("button");
             x.textContent = "x";
-            x.onclick = () => { resourcesObj.links.splice(i,1); save(); renderSteps(); };
-            tag.appendChild(x);
-            wrap.appendChild(tag);
+            x.onclick = () => { resObj.links.splice(i,1); save(); renderSteps(); };
+            t.appendChild(x);
+            wrap.appendChild(t);
           });
-          resourcesObj.files.forEach((fn,i)=>{
-            const tag = document.createElement("span");
-            tag.className = "resource-tag";
-            tag.textContent = "📄 " + fn;
+          resObj.files.forEach((fn,i)=>{
+            const t = document.createElement("span");
+            t.className = "resource-tag";
+            t.textContent = "📄 " + fn;
             const x = document.createElement("button");
             x.textContent = "x";
-            x.onclick = () => { resourcesObj.files.splice(i,1); save(); renderSteps(); };
-            tag.appendChild(x);
-            wrap.appendChild(tag);
+            x.onclick = () => { resObj.files.splice(i,1); save(); renderSteps(); };
+            t.appendChild(x);
+            wrap.appendChild(t);
           });
           res.appendChild(wrap);
         }
@@ -888,26 +829,24 @@
         render();
       }
 
-      function addStepAfter(index){
+      function addStepAfter(idx){
         if (stepScope.type === "process"){
           const p = getCurrentP(); if (!p) return;
-          p.steps = p.steps || [];
-          p.steps.splice(index+1,0,{id:uid(),name:"Nuevo paso",description:""});
+          p.steps.splice(idx+1,0,{id:uid(),name:"Nuevo paso",description:""});
         } else {
           const s = getCurrentS(); if (!s) return;
-          s.steps = s.steps || [];
-          s.steps.splice(index+1,0,{id:uid(),name:"Nuevo paso",description:""});
+          s.steps.splice(idx+1,0,{id:uid(),name:"Nuevo paso",description:""});
         }
-        render();
+        renderSteps();
       }
 
       function deleteStep(id){
         if (stepScope.type === "process"){
           const p = getCurrentP(); if (!p) return;
-          p.steps = (p.steps||[]).filter(st=>st.id!==id);
+          p.steps = p.steps.filter(st=>st.id!==id);
         } else {
           const s = getCurrentS(); if (!s) return;
-          s.steps = (s.steps||[]).filter(st=>st.id!==id);
+          s.steps = s.steps.filter(st=>st.id!==id);
         }
         renderSteps();
       }
