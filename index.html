@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>PROCESOS — Rollback Estable (drag+flags)</title>
+<title>PROCESOS — Estable (drag+flags+badges)</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -22,8 +22,8 @@
   .ticon,.btnTop{border:none;border-radius:10px;background:rgba(255,255,255,.18);color:#fff;padding:6px 9px;cursor:pointer}
   .btnTop{padding:6px 12px;border-radius:999px}
 
-  /* LAYOUT (más ancho para pasos) */
-  .layout{display:grid;grid-template-columns:300px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 56px)}
+  /* LAYOUT */
+  .layout{display:grid;grid-template-columns:320px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 56px)}
   @media(max-width:1100px){.layout{grid-template-columns:1fr}}
   .panel{background:#fff;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.08);display:flex;flex-direction:column;min-width:0}
   .panel>header{padding:10px 12px;background:#202020;color:#fff;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:16px;border-top-right-radius:16px}
@@ -37,11 +37,11 @@
   .p-card.active{outline:2px solid rgba(0,0,0,.12)}
   .p-head{display:flex;align-items:center;gap:6px}
   .p-name{border:none;background:transparent;font-weight:800;font-size:14px;width:100%}
-  .p-actions{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
-  .pill{font-size:11px;border:none;border-radius:999px;background:rgba(0,0,0,.08);padding:2px 8px;cursor:pointer}
+  .p-actions{display:flex;gap:4px;margin-top:6px;align-items:center;flex-wrap:wrap}
+  .icon{border:none;background:#eef0f3;border-radius:999px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px}
   .del{width:24px;height:24px;border:none;border-radius:999px;background:rgba(0,0,0,.12);color:#000;cursor:pointer}
   .p-desc{display:none;margin-top:6px}
-  .p-desc textarea{width:100%;min-height:52px;border:1px solid #e6e6e6;border-radius:8px;padding:6px;resize:none;overflow:hidden}
+  .p-desc textarea{width:100%;min-height:52px;border:1px solid #e6e6e6;border-radius:8px;padding:6px}
 
   /* DERECHA: CABECERA SOLO BOTONES */
   #rHeader{background:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e)}
@@ -56,21 +56,22 @@
   .card{border-radius:12px;border:1px solid #f0c5cd;background:var(--rose);padding:6px}
   .card.green{border-color:#bde6d8;background:var(--mint)}
 
-  /* PASOS COMPACTOS y MÁS ANCHO PARA TÍTULO */
-  .row{border:1px solid #edd6db;background:#fff;border-radius:12px;padding:6px 8px;margin:6px 0;cursor:grab;position:relative}
+  /* PASOS COMPACTOS (más anchos, iconos más pequeños) */
+  .row{border:1px solid #edd6db;background:#fff;border-radius:12px;padding:6px 8px;margin:4px 0;cursor:grab;position:relative}
   .row:active{cursor:grabbing}
-  .rowHead{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center}
-  .chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);width:100%}
+  .rowHead{display:grid;grid-template-columns:1fr auto auto;gap:4px;align-items:center}
+  .chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);
+        min-width:clamp(520px,76vw,1000px)}
   .bubble{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#000;color:#fff;font-weight:900;font-size:12px}
   .title{border:none;background:transparent;font-weight:800;width:100%;min-width:0;font-size:15px}
-  .icons{display:flex;align-items:center;gap:2px}
-  .icon{border:none;background:#eef0f3;border-radius:999px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .icons{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
   .icon.black{background:#111;color:#fff}
   .miniSel{border:1px solid #e5e7eb;border-radius:999px;padding:2px 6px;font-size:12px}
   .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 8px;font-size:12px;background:#eef0f3;margin-left:6px;white-space:nowrap}
+  .tagNext{display:inline-block;font-weight:800;padding:4px 10px;border-radius:999px;border:1px solid #bbb;background:#eef0f3;color:#111;max-width:clamp(200px,48vw,700px);white-space:normal;word-break:break-word;line-height:1.15}
 
   .detail{display:none;border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px}
-  .detail textarea{width:100%;min-height:56px;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;resize:none;overflow:hidden}
+  .detail textarea{width:100%;min-height:42px;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;overflow:hidden;resize:none}
 
   .condWrap{display:none;margin-top:6px;padding-top:4px;border-top:1px dashed #ddd}
   .condBlock{margin-bottom:6px}
@@ -78,7 +79,7 @@
   .condTitle{font-weight:800;font-size:13px}
   .adder{border:none;border-radius:999px;background:#111;color:#fff;width:24px;height:24px;cursor:pointer}
   .condItem{display:flex;gap:4px;margin:3px 0;align-items:center}
-  .condText{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;min-height:30px;font-size:13px;resize:none;overflow:hidden}
+  .condText{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;min-height:30px;font-size:13px;overflow:hidden;resize:none}
   .condDel{border:none;background:#eef0f3;border-radius:999px;width:24px;height:24px;cursor:pointer}
 
   .arrowV{opacity:.45;text-align:center;margin:0;font-size:14px}
@@ -86,7 +87,7 @@
 
   /* SUBPROCESO HEADER en contexto */
   .subHdr{display:flex;align-items:center;gap:8px;margin:8px 6px 6px}
-  .subChip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);width:100%}
+  .subChip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);min-width:clamp(520px,76vw,1000px)}
   .subTitle{border:none;background:transparent;font-weight:900;font-size:16px;width:100%}
 
   /* PRINT: SOLO #printDoc visible */
@@ -116,74 +117,4 @@
   <div class="layout">
     <!-- IZQUIERDA -->
     <div class="panel">
-      <header><span class="leftTitle">PROCESOS</span></header>
-      <div class="body" id="procList">
-        <button class="addInline" onclick="addProcess()">+ Proceso</button>
-      </div>
-    </div>
-
-    <!-- DERECHA -->
-    <div class="panel">
-      <header id="rHeader">
-        <span></span>
-        <div class="right-actions">
-          <button class="btnTop" onclick="addSub()">+ Subproceso</button>
-          <button class="btnTop" onclick="addStepProcess()">+ Paso</button>
-          <button class="btnTop" onclick="saveMeta()">💾 Guardar</button>
-        </div>
-      </header>
-      <div id="ctxBox" class="ctx" style="display:none">
-        <button class="crumb" onclick="clearSubCtx()">← Volver a pasos del proceso</button>
-        <span id="ctxTag" class="ctxTag"></span>
-      </div>
-      <div class="body" id="rightBody"></div>
-    </div>
-  </div>
-
-  <!-- Contenedor de impresión -->
-  <div id="printDoc" style="display:none"></div>
-
-<script>
-/* ====== BASE (drag+flags) ====== */
-const LS='PROC_ROLLBACK_STABLE_V10_FLAGS';
-const CLOUD_KEY=LS+'_CLOUD';
-const PIN_CODE='AR4321';
-const ROLES=['Audiólogo','Responsable','Otros'];
-const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
-
-// uid arriba (evita Cannot access 'uid' before initialization)
-function uid(){ return Math.random().toString(36).slice(2,9); }
-
-let data = safeLoad();
-let selPid = (data[0] && data[0].id) || null;
-let ctxSubId = null;
-let q='';
-let dragCtx=null;
-
-const byId=id=>document.getElementById(id);
-const save=()=>localStorage.setItem(LS, JSON.stringify(data));
-function doSearch(v){ q=(v||'').toLowerCase(); render(); }
-function lighten(hex,f=0.86){const c=hex.replace('#',''); const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f); return `rgb(${nr},${ng},${nb})`; }
-
-/* ===== autoGrow de textareas ===== */
-function autoGrow(el){ if(!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
-
-function safeLoad(){
-  try{
-    const raw=localStorage.getItem(LS);
-    if(!raw) return defaultData();
-    const obj=JSON.parse(raw);
-    if(!Array.isArray(obj)) throw new Error('store not array');
-    obj.forEach(p=>{ p.sub=p.sub||[]; p.steps=p.steps||[]; });
-    return obj;
-  }catch(e){ alert('Datos locales corruptos. Cargando plantilla limpia.'); return defaultData(true); }
-}
-function defaultData(seed){
-  const d=[
-    {id:uid(), name:'Reparaciones', color:PASTEL[0], desc:'', sub:[
-      {id:uid(), title:'Diagnóstico', desc:'', resp:ROLES[0], steps:[
-        {id:uid(), name:'Revisión inicial', desc:'Comprobar estado del equipo', resp:ROLES[0], yes:[], no:[]}
-      ]}
-    ], steps:[
-      {id:uid(), name:'Recepción', desc:'', resp:ROLES[0], yes:[], no:[]},
-      {id:uid(), name:'Nuevo
+      <h
