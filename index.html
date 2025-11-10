@@ -6,12 +6,12 @@
 <title>🎧 PROCESOS AUDIO</title>
 <style>
   :root{
-    --bg:#eceff3;           /* antes #f6f7f9 → más gris */
+    --bg:#eceff3;
     --ink:#0f1115;
     --mut:#6b7280;
     --grad:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e);
-    --panel:#f3f4f8;        /* antes blanco */
-    --card:#f7f8fb;         /* tarjetas suavemente grises */
+    --panel:#f3f4f8;
+    --card:#f7f8fb;
     --inset:#f5f7fb;
     --line:#cfcfd4;
     --sh-l1:0 1px 0 #fff inset, 0 1px 2px rgba(0,0,0,.08);
@@ -43,7 +43,7 @@
   #procList{padding-top:12px}
   .body{padding:6px;overflow:auto;flex:1;background:var(--panel);border-radius:12px;box-shadow:var(--sh-l2)}
 
-  /* PROCESOS IZQ (3D compact) */
+  /* PROCESOS IZQ */
   .procRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e0e4ec;border-radius:12px;background:linear-gradient(180deg,#fdfefe,#eef1f6);margin-bottom:9px;cursor:grab;box-shadow:var(--sh-l2);position:relative}
   .procRow:active{cursor:grabbing}
   .procRow.active{border-width:2px;box-shadow:0 0 0 2px rgba(0,0,0,.06), var(--sh-l2)}
@@ -52,9 +52,13 @@
   .ico{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:8px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
   .ico:active{transform:translateY(1px)}
   .ico:focus-visible{outline:2px solid #b63a3a}
-  .ico.del{display:none}
 
-  /* DERECHA (3D) */
+  /* Barra de edición del proceso (desplegada al pulsar editar) */
+  .editBar{margin:4px 0 6px;padding:6px;display:flex;gap:6px;align-items:center;border-radius:8px;border:1px solid #e0e4ec;box-shadow:var(--sh-l2)}
+  .editBar .danger{background:#fee2e2;border:1px solid #fecaca;color:#7c2d12;border-radius:10px;padding:6px 10px;cursor:pointer}
+  .editBar .ok{background:#e0f2fe;border:1px solid #bae6fd;color:#0c4a6e;border-radius:10px;padding:6px 10px;cursor:pointer}
+
+  /* DERECHA */
   #rHeader{background:transparent}
   .right-actions{display:flex;gap:6px;align-items:center}
 
@@ -62,7 +66,7 @@
   .card{border-radius:12px;border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
   .card.green{border-color:#cfe9df;background:linear-gradient(180deg,#ffffff,#eef7f5)}
 
-  /* PASOS (3D compact) */
+  /* PASOS */
   .row{border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#eef1f7);border-radius:10px;padding:3px 4px;margin:4px 0;cursor:grab;box-shadow:var(--sh-l2);position:relative}
   .row:active{cursor:grabbing}
   .rowSub{border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#eef1f7);border-radius:10px;padding:3px 4px;margin:4px 0;box-shadow:var(--sh-l2)}
@@ -94,7 +98,7 @@
   .branch-yes .condNum{color:#166534}
   .branch-no .condNum{color:#7c2d12}
 
-  /* Conectores: número a número */
+  /* Conectores */
   .flow .row .bubble{position:relative;z-index:2}
   .flow .row .bubble::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:100%;width:2px;height:var(--conn-len,22px);background:var(--line);border-radius:2px;pointer-events:none;z-index:0}
   .flow .row:last-child .bubble::after{content:none}
@@ -102,7 +106,8 @@
   /* LOCK UI */
   body.locked .editOnly,
   body.locked .adder,
-  body.locked .ico.del { display:none !important; }
+  body.locked .ico.del,
+  body.locked .editBar { display:none !important; }
   body.locked input.title,
   body.locked input.pTitle,
   body.locked textarea { pointer-events:none; background:linear-gradient(180deg,#f2f3f6,#e9ecf3); color:#555; }
@@ -111,7 +116,6 @@
   @media print{body *{visibility:hidden!important} #printDoc,#printDoc *{visibility:visible!important} #printDoc{position:absolute;inset:0;background:#fff;color:#000;padding:12px} .pbreak{page-break-after:always}}
   .procRow:hover{border-color:#b63a3a}
 
-  /* Mobile */
   @media(max-width:1024px){
     html,body{height:auto}
     .layout{grid-template-columns:1fr;min-height:auto}
@@ -277,18 +281,23 @@ function addProcess(){
   data.push({id:uid(),name:'Nuevo proceso',color:PASTEL[Math.floor(Math.random()*PASTEL.length)],desc:'',sub:[],steps:[]}); 
   selPid=data[data.length-1].id; ctxSubId=null; render(); 
 }
+function closeAllEditBars(exceptId){
+  document.querySelectorAll('.editBar').forEach(function(b){
+    if(!exceptId || b.dataset.pid!==exceptId) b.remove();
+  });
+}
 function renderLeft(){
   const box=byId('procList'); box.innerHTML='';
   let list=data.slice();
   if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q));
 
-  list.forEach(function(p,idxInList){
+  list.forEach(function(p){
     const row=document.createElement('div');
     row.className='procRow'+(p.id===selPid?' active':'');
     row.style.background='linear-gradient(180deg,#fdfefe,'+lighten(p.color,.9)+')';
     row.style.borderColor=p.color; row.style.borderLeft='6px solid '+p.color;
 
-    /* Drag & drop robusto con búsqueda: mapear a índices reales en data */
+    /* Drag reordenar por ID (robusto con búsqueda) */
     row.draggable=!(!canEdit());
     row.addEventListener('dragstart',function(e){ 
       if(!canEdit()){ e.preventDefault(); return; } 
@@ -315,29 +324,56 @@ function renderLeft(){
 
     const tiny=document.createElement('div'); tiny.className='tiny';
 
-    const editIco=ico('🖉','Editar',function(){ if(!canEdit()) return; title.focus(); title.select(); }, true);
+    /* Editar → despliega barra con Borrar */
+    const editIco=ico('🖉','Editar',function(){
+      if(!canEdit()) return alert('Modo lectura. Desbloquea con PIN.');
+      const existing=document.getElementById('opt_'+p.id);
+      if(existing){ existing.remove(); return; }
+      closeAllEditBars(p.id);
+      const opt=document.createElement('div');
+      opt.className='editBar editOnly';
+      opt.id='opt_'+p.id;
+      opt.dataset.pid=p.id;
+      opt.style.background=lighten(p.color,.95);
+      opt.style.borderColor=lighten(p.color,.80);
+
+      const info=document.createElement('span');
+      info.textContent='Edición del proceso';
+      info.style.fontWeight='800';
+
+      const okBtn=document.createElement('button');
+      okBtn.className='ok';
+      okBtn.textContent='✔ Guardar';
+      okBtn.addEventListener('click',function(ev){
+        ev.stopPropagation(); title.blur(); save(); closeAllEditBars();
+      });
+
+      const delBtn=document.createElement('button');
+      delBtn.className='danger';
+      delBtn.textContent='🗑️ Borrar proceso';
+      delBtn.addEventListener('click',function(ev){
+        ev.stopPropagation();
+        if(!canEdit()) return;
+        if(confirm('¿Eliminar proceso?')){
+          const idx = data.findIndex(function(pp){return pp.id===p.id});
+          if(idx>-1){
+            data.splice(idx,1);
+            selPid = data[0] ? data[0].id : null;
+            ctxSubId=null;
+            render();
+          }
+        }
+      });
+
+      opt.append(info, okBtn, delBtn);
+      box.appendChild(opt);
+      title.focus(); title.select();
+    }, true);
+
+    /* Detalle del proceso */
     const detailIco=ico('▾','Detalle',function(){ toggleDesc(p.id,'toggle'); }, false);
 
-    const delIco=ico('−','Eliminar',function(){
-      if(!canEdit()) return;
-      if(confirm('¿Eliminar proceso?')){
-        /* eliminación por id (robusta) */
-        const idx = data.findIndex(function(pp){return pp.id===p.id});
-        if(idx>-1){
-          data.splice(idx,1);
-          selPid = data[0] ? data[0].id : null;
-          ctxSubId=null;
-          render();
-        }
-      }
-    }, true);
-    delIco.classList.add('del');
-    delIco.style.display='none';
-
-    title.addEventListener('focus',function(){ if(canEdit()) delIco.style.display='inline-flex'; });
-    title.addEventListener('blur', function(){ setTimeout(function(){ delIco.style.display='none'; },120); });
-
-    tiny.append(editIco,detailIco,delIco);
+    tiny.append(editIco,detailIco);
     row.appendChild(tiny);
 
     row.onclick=function(){
@@ -347,6 +383,7 @@ function renderLeft(){
       document.querySelectorAll('[id^="d_"]').forEach(function(el){ el.style.display='none'; });
       const det=byId('d_'+p.id);
       if(det){ det.style.display='block'; const ta=det.querySelector('textarea'); autoGrow(ta); }
+      closeAllEditBars(); /* cerrar barras si se cambia de proceso */
     };
 
     box.appendChild(row);
@@ -400,19 +437,19 @@ function renderRight(){
     const role=miniSel(sub);
     right.append(iDetailSub,role);
     chip.append(tag,t,right); header.appendChild(chip); header.appendChild(detailSub);
-    const inlineAdd=document.createElement('button'); inlineAdd.className='adder editOnly'; inlineAdd.textContent='+'; inlineAdd.title='Añadir paso al subproceso'; inlineAdd.style.margin='4px 0 0 26px'; a11y(inlineAdd,function(){ if(!canEdit()) return; (sub.steps||(sub.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); save(); renderRight(); });
+    const inlineAdd=document.createElement('button'); inlineAdd.className='adder editOnly'; inlineAdd.textContent='+'; inlineAdd.title='Añadir paso al subproceso'; inlineAdd.style.margin='4px 0 0 26px';
+    inlineAdd.addEventListener('click',function(){ if(!canEdit()) return; (sub.steps||(sub.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); save(); renderRight(); });
     header.appendChild(inlineAdd);
     body.appendChild(header);
   }
 
   const card=document.createElement('div'); card.className='card flow'; card.style.padding='5px';
-  try{ card.style.setProperty('--line', '#c6c9d3'); }catch(_e){}
   card.style.background = 'linear-gradient(180deg,#ffffff, var(--card))'; 
   card.style.borderColor = '#dcdfe7';
   const list=sub ? (sub.steps||[]) : p.steps; list.forEach(function(st,i){ card.appendChild(stepRow(p,sub,st,i)); });
   const tail=document.createElement('div'); tail.style.display='flex'; tail.style.justifyContent='flex-end'; tail.style.margin='8px 0 2px';
   const btn=document.createElement('button'); btn.className='btnTop bigFinish editOnly'; btn.textContent='🎯 Cerrar caso'; btn.title='Marca meta y pliega detalles';
-  a11y(btn,function(){ if(!canEdit()) return; saveMeta(); body.querySelectorAll('.detail').forEach(function(d){d.style.display='none'}); updateLastSaved(); });
+  btn.addEventListener('click',function(){ if(!canEdit()) return; saveMeta(); body.querySelectorAll('.detail').forEach(function(d){d.style.display='none'}); updateLastSaved(); });
   tail.appendChild(btn); card.appendChild(tail); body.appendChild(card);
 
   if(!sub && p.sub.length){
@@ -459,7 +496,7 @@ function stepRow(proc,sub,st,i){
   const right=document.createElement('div'); right.className='rightPack';
 
   const iGoto=ico('🚩','Próximo proceso',function(){ if(!canEdit()) return; pick(st.nextPid,function(v){st.nextPid=v;save();renderRight();}); }, true);
-  const iSiNo=ico('❓','Si/No',function(){ /* despliegue sólo (permitido en lectura) */ }, false);
+  const iSiNo=ico('❓','Si/No',function(){ /* despliegue (permitido en lectura) */ }, false);
   const iDel=ico('−','Eliminar',function(){ if(!canEdit()) return; if(confirm('¿Eliminar paso?')){const pos=list.indexOf(st);list.splice(pos,1);renderRight();} }, true);
   right.append(iGoto,iDel,iSiNo);
   iDel.style.background='#fecaca'; iDel.style.color='#1f2937';
@@ -475,7 +512,7 @@ function stepRow(proc,sub,st,i){
   function ensureCondVisible(){ buildCond(); condWrap.style.display='block'; }
   const hasActive=((st.yes&&st.yes.length)>0)||((st.no&&st.no.length)>0);
   if(hasActive){ ensureCondVisible(); }
-  iSiNo.addEventListener('click',function(e){
+  iSiNo.addEventListener('click',function(){
     const active=((st.yes&&st.yes.length)>0)||((st.no&&st.no.length)>0);
     if(active){ ensureCondVisible(); return; }
     if(condWrap.style.display==='block'){ condWrap.style.display='none'; }
@@ -487,7 +524,7 @@ function stepRow(proc,sub,st,i){
   const tools=document.createElement('div'); tools.className='detailTools'; tools.style.display='flex'; tools.style.gap='6px'; tools.style.alignItems='center'; tools.style.marginTop='6px';
   const linkInput=document.createElement('input'); linkInput.type='url'; linkInput.placeholder='🔗 Enlace…'; linkInput.value=st.link||''; linkInput.style.flex='1'; linkInput.style.border='1px solid #dfe3ea'; linkInput.style.borderRadius='8px'; linkInput.style.padding='4px 6px'; linkInput.oninput=function(e){ if(!canEdit()) return; st.link=e.target.value; save(); };
   const up=document.createElement('input'); up.type='file'; up.style.display='none'; up.addEventListener('change',function(e){ if(!canEdit()) return; const f=e.target.files&&e.target.files[0]; if(f){ st.doc=f.name; save(); renderRight(); }});
-  const upBtn=document.createElement('button'); upBtn.className='btnTop editOnly'; upBtn.textContent='📎 Adjuntar'; a11y(upBtn,function(){ if(!canEdit()) return; up.click(); });
+  const upBtn=document.createElement('button'); upBtn.className='btnTop editOnly'; upBtn.textContent='📎 Adjuntar'; upBtn.onclick=function(){ if(!canEdit()) return; up.click(); };
   if(st.doc){ const docTag=document.createElement('span'); docTag.className='nextBadge'; docTag.textContent='Doc: '+st.doc; tools.appendChild(docTag); }
   tools.append(linkInput,upBtn); detail.appendChild(tools);
 
@@ -505,7 +542,13 @@ function ico(g,t,fn,editOnly){
   b.className='ico sm';
   if(editOnly) b.classList.add('editOnly');
   b.title=t;b.textContent=g;
-  a11y(b, fn || function(){});  /* reforzado: click + Enter/Espacio */
+  b.tabIndex=0;
+  if(fn){
+    b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();fn(ev);});
+    b.addEventListener('keydown',function(ev){
+      if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();ev.stopPropagation();fn(ev);}
+    });
+  }
   return b;
 }
 
@@ -524,7 +567,7 @@ function oneSide(title,branch,st,stepNum){
   const t=document.createElement('div'); t.className='condTitle'; t.textContent=title;
   const plus=document.createElement('button'); plus.className='adder editOnly'; plus.textContent='+'; plus.title='Añadir punto a '+title;
   const list=(st[branch]||(st[branch]=[]));
-  a11y(plus,function(){ if(!canEdit()) return; list.push({id:uid(),text:'',children:[]}); save(); renderRight(); });
+  plus.addEventListener('click',function(){ if(!canEdit()) return; list.push({id:uid(),text:'',children:[]}); save(); renderRight(); });
   hdr.append(t,plus); b.appendChild(hdr);
 
   function renderPoints(arr, base, container){
@@ -538,7 +581,10 @@ function oneSide(title,branch,st,stepNum){
       flagItem.style.background='#eef0f3'; flagItem.style.color='#1f2937';
       const addChild=ico('+','Añadir subpunto',function(){ if(!canEdit()) return; it.children.push({id:uid(),text:'',children:[]}); save(); renderRight(); }, true);
       const del=document.createElement('button'); del.className='condDel editOnly'; del.textContent='−';
-      a11y(del,function(){ if(!canEdit()) return; if(removePointFromStep(st, it.id)){ save(); renderRight(); } });
+      del.addEventListener('click',function(){
+        if(!canEdit()) return;
+        if(removePointFromStep(st, it.id)){ save(); renderRight(); }
+      });
       r.append(num,tx,flagItem,addChild,del);
       if(it.nextPid){ const bb=badge(it.nextPid,'IR AL PROCESO: '); if(bb) r.appendChild(bb); }
       container.appendChild(r);
@@ -565,7 +611,7 @@ function subMini(proc,s,idx){
   right.append(edit,del,role);
   chip.append(b,t,right); row.appendChild(chip);
   const add=document.createElement('button'); add.textContent='+ Paso'; add.className='adder editOnly'; add.style.margin='5px 0 0 26px';
-  a11y(add,function(){ if(!canEdit()) return; (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); ctxSubId=s.id; save(); renderRight(); });
+  add.addEventListener('click',function(){ if(!canEdit()) return; (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); ctxSubId=s.id; save(); renderRight(); });
   row.appendChild(add);
   chip.addEventListener('click',function(){ ctxSubId=s.id; renderRight(); });
   return row;
@@ -585,8 +631,8 @@ function pick(current,onPick){
   function updatePreview(){ const id=sel.value; const tgt=data.find(function(p){return p.id===id}) || data[0]; if(!tgt) return; dot.style.background=tgt.color; badgePreview.textContent='IR AL PROCESO: '+tgt.name; badgePreview.style.background=lighten(tgt.color,.55); badgePreview.style.border='1px solid '+lighten(tgt.color,.35); }
   sel.addEventListener('change',updatePreview); updatePreview(); preview.append(dot,badgePreview);
   const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='8px';
-  const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; a11y(cancel,function(){document.body.removeChild(o)});
-  const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; a11y(ok,function(){onPick(sel.value); document.body.removeChild(o);});
+  const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.addEventListener('click',function(){document.body.removeChild(o)});
+  const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; ok.addEventListener('click',function(){onPick(sel.value); document.body.removeChild(o);});
   bar.append(cancel,ok);
   card.append(h,sel,preview,bar); o.appendChild(card); document.body.appendChild(o);
 } 
