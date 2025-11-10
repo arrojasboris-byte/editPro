@@ -82,8 +82,8 @@
   /* Flow connectors */
   .flow .row{position:relative}
   .flow .row .bubble{position:relative}
-  .flow .row:not(:last-child) .bubble::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:22px;width:3px;height:calc(100% + 12px);background:var(--step-line,#cfcfd4);border-radius:2px;pointer-events:none;z-index:0}
-  .flow .row:not(:last-child)::after{content:"↓";position:absolute;left:12px;bottom:-10px;font-size:13px;opacity:.75;color:var(--step-line,#b63a3a);pointer-events:none;z-index:0}
+  .flow .row:not(:last-child)::before{content:"";position:absolute;left:var(--line-x,42px);top:12px;width:3px;height:calc(100% + 18px);background:var(--step-line,#cfcfd4);border-radius:2px;pointer-events:none;z-index:0}
+  .flow .row:not(:last-child)::after{content:"↓";position:absolute;left:calc(var(--line-x,42px) - 6px);bottom:-10px;font-size:13px;opacity:.75;color:var(--step-line,#b63a3a);pointer-events:none;z-index:0}
   @media print{body *{visibility:hidden!important} #printDoc,#printDoc *{visibility:visible!important} #printDoc{position:absolute;inset:0;background:#fff;color:#000;padding:12px} .pbreak{page-break-after:always}}
   .procRow:hover{border-color:#b63a3a}
   /* Mobile */
@@ -157,7 +157,19 @@ function seed(store){const d=[{id:uid(),name:'Revisión auditiva',color:PASTEL[0
 /* ======= Topbar ======= */
 function togglePin(){const ok=sessionStorage.getItem(LS+'_PIN')==='1';if(ok){sessionStorage.removeItem(LS+'_PIN');byId('pinBtn').textContent='🔒';return;}const p=prompt('Introduce PIN');if(p===PIN_CODE){sessionStorage.setItem(LS+'_PIN','1');byId('pinBtn').textContent='🔓';}else alert('PIN incorrecto');}
 const requirePin=()=>sessionStorage.getItem(LS+'_PIN')==='1';
-function downloadHTML(){const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='procesos.html';a.click();URL.revokeObjectURL(a.href);} 
+function downloadHTML(){
+  const html=document.documentElement.outerHTML;
+  const stamp=localStorage.getItem(LS+'_STAMP')||new Date().toISOString();
+  const payload=JSON.stringify(data);
+  const inject='<script>try{localStorage.setItem("'+LS+'", '+JSON.stringify(payload)+');localStorage.setItem("'+LS+'_STAMP","'+stamp.replace(/"/g,'\\"')+'");}catch(e){}</'+'script>';
+  const final=html.replace('<script>', inject+'<script>');
+  const blob=new Blob([final],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='procesos.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 function saveCloud(){if(!requirePin())return alert('PIN requerido');localStorage.setItem(CLOUD_KEY,JSON.stringify({ts:Date.now(),data}));alert('Guardado en nube (simulada).');}
 function loadCloud(){if(!requirePin())return alert('PIN requerido');const raw=localStorage.getItem(CLOUD_KEY);if(!raw)return alert('No hay copia');try{const obj=JSON.parse(raw);data=obj.data;selPid=data[0]?.id||null;ctxSubId=null;render();}catch{alert('Copia corrupta');}}
 /* ======= Procesos izquierda ======= */
@@ -204,7 +216,7 @@ function renderRight(){
 
   const card=document.createElement('div'); card.className='card flow'; card.style.padding='5px';
   // Color de línea vertical de pasos según color del proceso
-  try{ card.style.setProperty('--step-line', p.color); }catch(_e){}
+  try{ card.style.setProperty('--step-line', p.color); card.style.setProperty('--line-x','42px'); }catch(_e){}
   card.style.background = 'linear-gradient(180deg,'+lighten(p.color,.92)+', #f7f7f7)'; card.style.borderColor = lighten(p.color,.75);
   const list=sub ? (sub.steps||[]) : p.steps; list.forEach(function(st,i){ card.appendChild(stepRow(p,sub,st,i)); });
   const tail=document.createElement('div'); tail.style.display='flex'; tail.style.justifyContent='flex-end'; tail.style.margin='8px 0 2px';
@@ -268,7 +280,7 @@ function stepRow(proc,sub,st,i){
 
   chip.append(num,title,right); row.appendChild(chip);
 
-  /* Si/No + detalle */
+  /* Sin/No + detalle */
   st.yes=normalize(st.yes); st.no=normalize(st.no);
   const condWrap=document.createElement('div'); condWrap.className='condWrap'; row.appendChild(condWrap);
   function buildCond(){ if(condWrap.dataset.inited==='1') return; condWrap.innerHTML=''; condWrap.appendChild(condBlock(st, i+1)); condWrap.dataset.inited='1'; }
@@ -296,7 +308,8 @@ function miniSel(obj){const sel=document.createElement('select');sel.className='
 function ico(g,t,fn){const b=document.createElement('button');b.className='ico sm';b.title=t;b.textContent=g;if(fn){b.addEventListener('click',function(ev){ev.stopPropagation();fn(ev);});}return b;}
 /* Si/No */
 function condBlock(st, stepNum){
-  const wrap=document.createElement('div'); wrap.className='condWrap';
+  // IMPORTANTE: no usar clase 'condWrap' interna para evitar display:none heredado
+  const wrap=document.createElement('div'); wrap.className='condBox';
   wrap.append(oneSide('Si NO…','no',st,stepNum));
   wrap.append(oneSide('Si SÍ…','yes',st,stepNum));
   return wrap;
@@ -445,6 +458,7 @@ window.addEventListener('keydown',function(e){if(e.key==='Enter'){const a=docume
       const b2=document.querySelectorAll('#rightBody .condItem').length;
       if(newDel){ newDel.click(); const a2=document.querySelectorAll('#rightBody .condItem').length; ok('eliminar punto Si/No (robusto)', a2===b2-1); }
     }
+    ok('downloadHTML fn', typeof downloadHTML==='function');
   }catch(e){ console.error(e); }
 })();
 </script>
