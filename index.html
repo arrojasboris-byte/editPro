@@ -146,21 +146,56 @@ function updateLastSaved(){ const el=byId('lastSaved'); if(!el) return; const d=
 function doSearch(v){q=(v||'').toLowerCase();render();}
 function lighten(hex,f=0.86){const c=hex.replace('#','');const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f);return `rgb(${nr},${ng},${nb})`;}
 function autoGrow(el){if(!el)return;el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px';}
-function safeLoad(){try{const raw=localStorage.getItem(LS);if(!raw)return seed(true);const o=JSON.parse(raw);o.forEach(p=>{p.sub=p.sub||[];p.steps=p.steps||[]});return o;}catch{return seed(true);}}
+function safeLoad(){
+  try{
+    // Si hay datos precargados (export HTML), colócalos antes de leer
+    if(window.__PRELOAD_DATA__ && !localStorage.getItem(LS)){
+      try{
+        localStorage.setItem(LS, JSON.stringify(window.__PRELOAD_DATA__)===undefined?window.__PRELOAD_DATA__:window.__PRELOAD_DATA__);
+      }catch(_){
+        // Si __PRELOAD_DATA__ ya es objeto, guárdalo serializado
+        try{ localStorage.setItem(LS, JSON.stringify(window.__PRELOAD_DATA__)); }catch(e){}
+      }
+      if(window.__PRELOAD_STAMP__) localStorage.setItem(LS+'_STAMP', window.__PRELOAD_STAMP__);
+    }
+    const raw=localStorage.getItem(LS);
+    if(!raw) return seed(true);
+    const o=typeof raw==='string'?JSON.parse(raw):raw;
+    o.forEach(function(p){ p.sub=p.sub||[]; p.steps=p.steps||[]; });
+    return o;
+  }catch(e){
+    // Último intento: si hay PRELOAD en memoria úsalo
+    if(window.__PRELOAD_DATA__){
+      try{
+        const o = Array.isArray(window.__PRELOAD_DATA__)?window.__PRELOAD_DATA__:JSON.parse(window.__PRELOAD_DATA__);
+        localStorage.setItem(LS, JSON.stringify(o));
+        return o;
+      }catch(_e){}
+    }
+    return seed(true);
+  }
+});return o;}catch{return seed(true);}}
 function seed(store){const d=[{id:uid(),name:'Revisión auditiva',color:PASTEL[0],desc:'',sub:[],steps:[{id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]}]}];if(store)localStorage.setItem(LS,JSON.stringify(d));return d;}
 /* ======= Topbar ======= */
 function togglePin(){const ok=sessionStorage.getItem(LS+'_PIN')==='1';if(ok){sessionStorage.removeItem(LS+'_PIN');byId('pinBtn').textContent='🔒';return;}const p=prompt('Introduce PIN');if(p===PIN_CODE){sessionStorage.setItem(LS+'_PIN','1');byId('pinBtn').textContent='🔓';}else alert('PIN incorrecto');}
 const requirePin=()=>sessionStorage.getItem(LS+'_PIN')==='1';
 function downloadHTML(){
-  // SIN docWrite: inyecta datos actuales antes de </body>
+  // Exporta con PRELOAD para que los datos estén listos antes del primer render
   const html=document.documentElement.outerHTML;
   const stamp=localStorage.getItem(LS+'_STAMP')||new Date().toISOString();
   const payload=JSON.stringify(data);
-  const injector='<script>try{localStorage.setItem("'+LS+'",'+JSON.stringify(payload)+');localStorage.setItem("'+LS+'_STAMP","'+stamp.replace(/"/g,'\\"')+'");}catch(e){}</'+'script>';
+  const stampEsc=stamp.replace(/"/g,'\"');
+  // Inyectamos un script en <head> con los datos pre-cargados y también los guardamos en localStorage
+  const injector = '<script>try{'+
+    'window.__PRELOAD_DATA__='+payload+';'+
+    'window.__PRELOAD_STAMP__="'+stampEsc+'";'+
+    'localStorage.setItem("'+LS+'",'+payload+');'+
+    'localStorage.setItem("'+LS+'_STAMP","'+stampEsc+'");'+
+    '}catch(e){}<' + '/script>';
   let final;
-  if(html.includes('</body>')) final = html.replace('</body>', injector+'</body>');
-  else if(html.includes('<head>')) final = html.replace('<head>', '<head>'+injector);
-  else final = html + injector;
+  if(html.includes('<head>')) final = html.replace('<head>', '<head>'+injector);
+  else if(html.includes('</body>')) final = html.replace('</body>', injector+'</body>');
+  else final = injector + html;
   const blob = new Blob([final], {type:'text/html'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='procesos.html'; a.click(); URL.revokeObjectURL(a.href);
 }
