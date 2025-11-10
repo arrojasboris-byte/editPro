@@ -74,12 +74,14 @@
     .panel{min-height:auto}
     .body{overflow:visible;max-height:none}
   }
+  .last{margin:0 8px;font-size:12px;opacity:.85}
+  .condItem::before{content:"•";margin-right:6px;color:#6b7280;font-weight:900}
 </style>
 </head>
 <body>
   <div class="top">
     <h1>🎧 PROCESOS AUDIO</h1>
-    <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)">
+    <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"> <span id="lastSaved" class="last">Última actualización: —</span>
     <div class="iconbar">
       <button class="ticon" title="Descargar HTML" onclick="downloadHTML()">⬇️ HTML</button>
       <button class="ticon" title="Imprimir / PDF" onclick="printAll()">🖨️</button>
@@ -119,7 +121,8 @@ const ROLES=['Audiólogo','Responsable','Otros'];
 const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
 function uid(){return Math.random().toString(36).slice(2,9);} 
 let data=safeLoad(); let selPid=(data[0]&&data[0].id)||null; let ctxSubId=null; let q=''; let dragCtx=null;
-const byId=id=>document.getElementById(id); const save=()=>localStorage.setItem(LS,JSON.stringify(data));
+const byId=id=>document.getElementById(id); const save=()=>{ localStorage.setItem(LS,JSON.stringify(data)); updateLastSaved(); };
+function updateLastSaved(){ const el=byId('lastSaved'); if(!el) return; const d=new Date(); const pad=n=>String(n).padStart(2,'0'); const ts=`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; el.textContent='Última actualización: '+ts; localStorage.setItem(LS+'_STAMP', ts); }
 function doSearch(v){q=(v||'').toLowerCase();render();}
 function lighten(hex,f=0.86){const c=hex.replace('#','');const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f);return `rgb(${nr},${ng},${nb})`;}
 function autoGrow(el){if(!el)return;el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px';}
@@ -203,9 +206,10 @@ function renderRight(){
   card.style.background = 'linear-gradient(180deg,'+lighten(p.color,.92)+', #f7f7f7)';
   card.style.borderColor = lighten(p.color,.75);
   const list=sub ? (sub.steps||[]) : p.steps;
-  list.forEach((st,i)=>{
-    card.appendChild(stepRow(p,sub,st,i));
-  });
+  list.forEach((st,i)=>{ card.appendChild(stepRow(p,sub,st,i)); });
+  const tail=document.createElement('div'); tail.style.display='flex'; tail.style.justifyContent='flex-end'; tail.style.margin='6px 0 2px';
+  const btn=document.createElement('button'); btn.className='btnTop'; btn.textContent='Guardar'; btn.onclick=()=>{ saveMeta(); body.querySelectorAll('.detail').forEach(d=>d.style.display='none'); };
+  tail.appendChild(btn); card.appendChild(tail);
   body.appendChild(card);
 
   // Listado de subprocesos solo si NO hay uno seleccionado (evita duplicados)
@@ -240,7 +244,7 @@ function stepRow(proc,sub,st,i){const list=sub?(sub.steps||[]):proc.steps;const 
   iEdit.style.background='#bfdbfe'; iEdit.style.color='#1f2937';
   iLink.style.background='#ddd6fe'; iLink.style.color='#1f2937';
   iDoc.style.background='#e2e8f0'; iDoc.style.color='#1f2937';
-  iGoto.style.background='#fed7aa'; iGoto.style.color='#1f2937';
+  iGoto.style.background='#eef0f3'; iGoto.style.color='#1f2937';
   iDel.style.background='#fecaca'; iDel.style.color='#1f2937';
   const role=miniSel(st);right.append(role);
   if(st.nextPid){const b=badge(st.nextPid);if(b)right.append(b);} if(st.meta){const meta=ico('🎯','Meta cumplida');meta.style.background='#ffe3a6';right.append(meta);} 
@@ -446,6 +450,8 @@ function printStep(st,si){
 /* Render */
 function render(){renderLeft();renderRight();save();}
 render();
+// Cargar sello de última actualización si existe
+document.addEventListener('DOMContentLoaded',()=>{ const s=localStorage.getItem(LS+'_STAMP'); if(s){ const el=byId('lastSaved'); if(el) el.textContent='Última actualización: '+s; } });
 window.addEventListener('keydown',e=>{if(e.key==='Enter'){const a=document.activeElement;if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')){e.preventDefault();a.blur();save();}}});
 /* Tests mínimos */
 (function(){
