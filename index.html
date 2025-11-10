@@ -5,17 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>🎧 PROCESOS AUDIO</title>
 <style>
-  :root{--bg:#f6f7f9;--ink:#0f1115;--mut:#6b7280;--grad:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e);--rose:#ffe7ec;--mint:#dff7ef}
-  *{box-sizing:border-box} html,body{height:100%}
+  :root{
+    --bg:#f6f7f9;--ink:#0f1115;--mut:#6b7280;
+    --grad:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e);
+    --rose:#ffe7ec;--mint:#dff7ef;
+    --sh-l1:0 1px 0 #fff inset, 0 1px 2px rgba(0,0,0,.08);
+    --sh-l2:0 2px 0 #e8eaf0, 0 8px 16px rgba(0,0,0,.08);
+    --sh-in:0 2px 6px rgba(0,0,0,.06) inset;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
   /* TOPBAR */
-  .top{display:flex;gap:0;align-items:center;padding:8px 10px;background:var(--grad);background-attachment:fixed;background-size:100vw 100%;background-position:0 0;color:#fff}
-  .top h1{margin:0 8px 0 0;font-size:18px;font-weight:900}
-  .search{flex:1 1 420px;max-width:680px;border:none;border-radius:999px;background:rgba(255,255,255,.18);padding:6px 12px;color:#fff}
+  .top{display:flex;gap:0;align-items:center;padding:8px 10px;background:var(--grad);background-attachment:fixed;background-size:100vw 100%;background-position:0 0;color:#fff;box-shadow:var(--sh-l2)}
+  .top h1{margin:0 8px 0 0;font-size:20px;font-weight:900;text-shadow:0 1px 0 rgba(0,0,0,.35);display:flex;align-items:center;gap:8px}
+.top h1 .logo{font-size:36px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+.top h1 .title-text{letter-spacing:.2px}
+  .search{flex:1 1 420px;max-width:680px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.18);padding:6px 12px;color:#fff;box-shadow:var(--sh-l1)}
+  .last{margin:0 8px;font-size:12px;opacity:.85}
   .iconbar{display:flex;gap:6px;margin-left:auto}
-  .ticon,.btnTop{border:none;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;padding:6px 9px;cursor:pointer;line-height:1}
+  .ticon,.btnTop{border:1px solid rgba(255,255,255,.35);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.12));color:#fff;padding:6px 9px;cursor:pointer;line-height:1;box-shadow:var(--sh-l2)}
   .btnTop{padding:6px 12px}
-  .btnAccent{border:none;border-radius:999px;background:var(--grad);color:#fff;padding:6px 16px;font-weight:900;letter-spacing:.4px;box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .ticon:active,.btnTop:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.1)}
+  .btnAccent{border:1px solid rgba(0,0,0,.15);border-radius:12px;background:var(--grad);color:#fff;padding:6px 16px;font-weight:900;letter-spacing:.4px;box-shadow:var(--sh-l2)}
   /* LAYOUT */
   .layout{display:grid;grid-template-columns:1fr 2fr;gap:0;padding:0;min-height:calc(100vh - 48px);background:var(--grad);background-attachment:fixed;background-size:100% 100%;background-position:0 0}
   @media(max-width:1024px){.layout{grid-template-columns:1fr}}
@@ -23,64 +35,73 @@
   .panel>header{padding:6px 8px;background:transparent;color:#fff;border-radius:0;display:flex;justify-content:space-between;align-items:center;font-weight:800;min-height:44px}
   .leftHdr{min-height:44px;height:44px;background:transparent;padding:0;margin:0}
   #procList{padding-top:12px}
-  .body{padding:6px;overflow:auto;flex:1;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-  /* PROCESOS IZQ COMPACTO */
-  .procRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #ececf1;border-radius:12px;background:#fff;margin-bottom:9px;cursor:grab}
-  .procRow:active{cursor:grabbing} .procRow.active{border-width:2px;box-shadow:0 0 0 2px rgba(0,0,0,.06)}
-  .pTitle{border:none;background:transparent;font-weight:800;font-size:14px;flex:1 1 92%;min-width:0;line-height:1.2}
+  .body{padding:6px;overflow:auto;flex:1;background:#fff;border-radius:12px;box-shadow:var(--sh-l2)}
+  /* PROCESOS IZQ COMPACTO (3D) */
+  .procRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e0e4ec;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f6f7fa);margin-bottom:9px;cursor:grab;box-shadow:var(--sh-l2)}
+  .procRow:active{cursor:grabbing}
+  .procRow.active{border-width:2px;box-shadow:0 0 0 2px rgba(0,0,0,.06), var(--sh-l2)}
+  .pTitle{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;font-size:14px;flex:1 1 92%;min-width:0;line-height:1.2;border-radius:8px;padding:4px 6px}
   .tiny{display:flex;gap:2px}
-  .ico{border:none;background:#eef0f3;border-radius:999px;width:17px;height:17px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer}
-  /* DERECHA */
-  #rHeader{background:transparent} .right-actions{display:flex;gap:6px;align-items:center} .right-actions{display:flex;gap:6px;align-items:center}
+  .ico{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:8px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;box-shadow:var(--sh-l2)}
+  .ico:active{transform:translateY(1px)}
+  /* DERECHA (3D) */
+  #rHeader{background:transparent}
+  .right-actions{display:flex;gap:6px;align-items:center}
   /* TARJETAS */
-  .card{border-radius:10px;border:1px solid #f0c5cd;background:var(--rose);padding:5px}
-  .card.green{border-color:#bde6d8;background:var(--mint)}
-  /* PASOS COMPACTOS */
-  .row{border:1px solid #edd6db;background:#fff;border-radius:9px;padding:3px 4px;margin:4px 0;cursor:grab}
+  .card{border-radius:12px;border:1px solid #f0c5cd;background:linear-gradient(180deg,#fff,#fff5f7);padding:6px;box-shadow:var(--sh-l2)}
+  .card.green{border-color:#bde6d8;background:linear-gradient(180deg,#fff,#f5fffb)}
+  /* PASOS COMPACTOS (3D) */
+  .row{border:1px solid #e4d8db;background:linear-gradient(180deg,#ffffff,#f7f8fb);border-radius:10px;padding:3px 4px;margin:4px 0;cursor:grab;box-shadow:var(--sh-l2)}
   .row:active{cursor:grabbing}
-  .chip{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;padding:5px 6px;border:1px solid #e6e8ec;border-radius:9px;background:linear-gradient(180deg,#fff,#f3f4f6)}
-  .bubble{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:#000;color:#fff;font-weight:900;font-size:10px}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;color:#fff;font-weight:800;font-size:11px}
-  .title{border:none;background:transparent;font-weight:800;width:100%;min-width:0;font-size:13px}
-  /* Destacar nombre del Sub-proceso */
-  .subTitle{background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;border-radius:8px;padding:6px 8px;color:#fff}
+  .chip{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;padding:5px 6px;border:1px solid #e6e8ec;border-radius:10px;background:linear-gradient(180deg,#ffffff,#f3f4f6);box-shadow:var(--sh-l1)}
+  .bubble{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:linear-gradient(180deg,#1f2937,#0b1020);border:1px solid #0b0f18;color:#fff;font-weight:900;font-size:11px;box-shadow:var(--sh-l2)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;color:#fff;font-weight:800;font-size:11px;box-shadow:var(--sh-l2)}
+  .title{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;width:100%;min-width:0;font-size:13px;border-radius:8px;padding:4px 6px}
+  .subTitle{background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;border-radius:8px;padding:6px 8px;color:#fff;box-shadow:var(--sh-l2)}
   .subTitle:focus{outline:2px solid #444;box-shadow:0 0 0 2px #222 inset}
   .rightPack{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-self:end}
-  .ico.sm{width:19px;height:19px;font-size:11px}
-  .miniSel{border:1px solid #e5e7eb;border-radius:999px;padding:2px 6px;font-size:11px}
-  .nextBadge{font-weight:800;border-radius:999px;padding:2px 6px;border:1px solid #bbb;background:#eef0f3;color:#111;max-width:clamp(160px,50vw,640px);white-space:normal;word-break:break-word;line-height:1.1}
+  .ico.sm{width:20px;height:20px;font-size:11px}
+  .miniSel{border:1px solid #dfe3ea;border-radius:999px;padding:3px 8px;font-size:11px;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in)}
+  .nextBadge{font-weight:800;border-radius:999px;padding:2px 6px;border:1px solid #bbb;background:linear-gradient(180deg,#ffffff,#eef0f3);color:#111;max-width:clamp(160px,50vw,640px);white-space:normal;word-break:break-word;line-height:1.1;box-shadow:var(--sh-l1)}
   .detail{display:none;padding:4px 2px 2px}
-  .detail textarea{width:100%;min-height:40px;border:1px solid #e5e7eb;border-radius:8px;padding:6px 7px;overflow:hidden;resize:none;font-size:13px}
+  .detail textarea{width:100%;min-height:40px;border:1px solid #dfe3ea;border-radius:8px;padding:6px 7px;overflow:hidden;resize:none;font-size:13px;background:linear-gradient(180deg,#ffffff,#f5f7fb);box-shadow:var(--sh-in)}
+  /* Si/No */
   .condWrap{display:none;padding:5px 0 2px;border-top:1px dashed #e2e2e7;margin-top:3px}
   .condHdr{display:flex;align-items:center;gap:6px;margin-bottom:2px}
   .condTitle{font-weight:800;font-size:12px}
-  .adder{border:none;border-radius:999px;background:#111;color:#fff;width:20px;height:20px;cursor:pointer}
+  .adder{border:1px solid #111;border-radius:999px;background:linear-gradient(180deg,#1f2937,#0b1020);color:#fff;width:22px;height:22px;cursor:pointer;box-shadow:var(--sh-l2)}
   .condItem{display:flex;gap:4px;align-items:center;margin:3px 0}
-  .condText{flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:6px 7px;min-height:28px;font-size:12px;overflow:hidden;resize:none}
-  .condDel{border:none;background:#eef0f3;border-radius:999px;width:18px;height:18px;cursor:pointer}
-  .arrowV{opacity:.5;text-align:center;margin:2px 0;font-size:12px}
-  .arrowV::before{content:"";display:block;width:2px;background:#cfcfd4;height:6px;margin:0 auto 2px;border-radius:2px}
+  .condText{flex:1;border:1px solid #dfe3ea;border-radius:8px;padding:6px 7px;min-height:28px;font-size:12px;overflow:hidden;resize:none;background:linear-gradient(180deg,#ffffff,#f5f7fb);box-shadow:var(--sh-in)}
+  .condDel{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:999px;width:18px;height:18px;cursor:pointer;box-shadow:var(--sh-l2)}
+  .condNum{font-weight:900;margin-right:6px;color:#111}
+  .condChildren{margin-left:16px;border-left:2px dashed #c7ccd4;padding-left:10px}
+  .branch-yes .condChildren{border-left-color:#a7f3d0}
+  .branch-no .condChildren{border-left-color:#fecaca}
+  .branch-yes .condNum{color:#166534}
+  .branch-no .condNum{color:#7c2d12}
   /* Flow connectors */
   .flow .row{position:relative}
   .flow .row .bubble{position:relative}
-  .flow .row:not(:last-child) .bubble::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:20px;width:2px;height:calc(100% + 12px);background:#cfcfd4;border-radius:2px;pointer-events:none;z-index:0}
-  .flow .row:not(:last-child)::after{content:"↓";position:absolute;left:12px;bottom:-10px;font-size:12px;opacity:.6;color:#b63a3a;pointer-events:none;z-index:0}
+  .flow .row:not(:last-child) .bubble::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:22px;width:3px;height:calc(100% + 12px);background:var(--step-line,#cfcfd4);border-radius:2px;pointer-events:none;z-index:0}
+  .flow .row:not(:last-child)::after{content:"↓";position:absolute;left:12px;bottom:-10px;font-size:13px;opacity:.75;color:var(--step-line,#b63a3a);pointer-events:none;z-index:0}
   @media print{body *{visibility:hidden!important} #printDoc,#printDoc *{visibility:visible!important} #printDoc{position:absolute;inset:0;background:#fff;color:#000;padding:12px} .pbreak{page-break-after:always}}
   .procRow:hover{border-color:#b63a3a}
-  /* Mobile: 1 columna, scroll vertical de toda la página (sin scrolls internos) */
+  /* Mobile */
   @media(max-width:1024px){
     html,body{height:auto}
     .layout{grid-template-columns:1fr;min-height:auto}
     .panel{min-height:auto}
     .body{overflow:visible;max-height:none}
   }
-  .last{margin:0 8px;font-size:12px;opacity:.85}
-  .condItem::before{content:"•";margin-right:6px;color:#6b7280;font-weight:900}
+  .bigFinish{font-weight:900;padding:8px 16px}
+  /* Botón 3D específico */
+  .btn3d{background:linear-gradient(180deg,#b73c3c,#7c2727);border:1px solid #631d1d;color:#fff;box-shadow:0 2px 0 #4c1717, 0 10px 20px rgba(0,0,0,.12)}
+  .btn3d:active{transform:translateY(1px);box-shadow:0 1px 0 #4c1717}
 </style>
 </head>
 <body>
   <div class="top">
-    <h1>🎧 PROCESOS AUDIO</h1>
+    <h1><span class="logo" aria-hidden="true">🎧</span><span class="title-text">PROCESOS AUDIO</span></h1>
     <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"> <span id="lastSaved" class="last">Última actualización: —</span>
     <div class="iconbar">
       <button class="ticon" title="Descargar HTML" onclick="downloadHTML()">⬇️ HTML</button>
@@ -94,7 +115,12 @@
 
   <div class="layout">
     <div class="panel">
-      <header class="leftHdr"><div class="right-actions" style="justify-content:flex-end;width:100%"><button class="btnTop" onclick="addProcess()">+ PROCESOS</button></div></header>
+      <header class="leftHdr">
+        <div class="right-actions" style="justify-content:flex-end;width:100%">
+          <!-- Cambiado a +Procesos y con estilo 3D -->
+          <button class="btnTop" onclick="addProcess()">+Procesos</button>
+        </div>
+      </header>
       <div class="body" id="procList"></div>
     </div>
 
@@ -113,7 +139,7 @@
   <div id="printDoc" style="display:none"></div>
 
 <script>
-/* ======= Estado ======= */
+/* ======= Estado / (idéntico a la versión estable previa) ======= */
 const LS='PROC_COMPACT_PRO_V13_FIX';
 const CLOUD_KEY=LS+'_CLOUD';
 const PIN_CODE='AR4321';
@@ -140,332 +166,285 @@ function moveProcess(idx,delta){const to=idx+delta;if(to<0||to>=data.length)retu
 function renderLeft(){const box=byId('procList');box.innerHTML='';
   let list=data.slice();if(q)list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q));
   list.forEach((p,idx)=>{const row=document.createElement('div');row.className='procRow'+(p.id===selPid?' active':'');row.style.background='linear-gradient(180deg,#fff,'+lighten(p.color,.88)+')';row.style.borderColor=p.color;row.style.borderLeft='6px solid '+p.color;row.draggable=true;
-    row.addEventListener('dragstart',()=>{dragCtx={type:'process',index:idx};});row.addEventListener('dragover',e=>e.preventDefault());row.addEventListener('drop',e=>{e.preventDefault();if(dragCtx?.type==='process'&&dragCtx.index!==idx){const it=data.splice(dragCtx.index,1)[0];data.splice(idx,0,it);render();}});
-    const title=document.createElement('input');title.className='pTitle';title.value=p.name;title.oninput=e=>{p.name=e.target.value;save();};row.appendChild(title);
+    row.addEventListener('dragstart',function(){dragCtx={type:'process',index:idx};});row.addEventListener('dragover',function(e){e.preventDefault();});row.addEventListener('drop',function(e){e.preventDefault();if(dragCtx&&dragCtx.type==='process'&&dragCtx.index!==idx){const it=data.splice(dragCtx.index,1)[0];data.splice(idx,0,it);render();}});
+    const title=document.createElement('input');title.className='pTitle';title.value=p.name;title.oninput=function(e){p.name=e.target.value;save();};row.appendChild(title);
     const tiny=document.createElement('div');tiny.className='tiny';
-    tiny.append(ico('🖉','Editar',()=>{title.focus();title.select();}),ico('▾','Detalle',()=>{toggleDesc(p.id,'toggle');}),ico('−','Eliminar',()=>{if(confirm('¿Eliminar proceso?')){data=data.filter(x=>x.id!==p.id);selPid=data[0]?.id||null;render();}}),ico('↑','Arriba',()=>moveProcess(idx,-1)),ico('↓','Abajo',()=>moveProcess(idx,1)));
+    tiny.append(ico('🖉','Editar',function(){title.focus();title.select();}),ico('▾','Detalle',function(){toggleDesc(p.id,'toggle');}),ico('−','Eliminar',function(){if(confirm('¿Eliminar proceso?')){data=data.filter(function(x){return x.id!==p.id});selPid=data[0]?data[0].id:null;render();}}),ico('↑','Arriba',function(){moveProcess(idx,-1)}),ico('↓','Abajo',function(){moveProcess(idx,1)}));
     row.appendChild(tiny);
-    row.onclick=()=>{selPid=p.id;ctxSubId=null;renderRight();document.querySelectorAll('.procRow').forEach(el=>el.classList.remove('active'));row.classList.add('active');document.querySelectorAll('[id^="d_"]').forEach(el=>el.style.display='none');const det=byId('d_'+p.id);if(det){det.style.display='block';const ta=det.querySelector('textarea');autoGrow(ta);} };
+    row.onclick=function(){selPid=p.id;ctxSubId=null;renderRight();document.querySelectorAll('.procRow').forEach(function(el){el.classList.remove('active')});row.classList.add('active');document.querySelectorAll('[id^="d_"]').forEach(function(el){el.style.display='none'});const det=byId('d_'+p.id);if(det){det.style.display='block';const ta=det.querySelector('textarea');autoGrow(ta);} };
     box.appendChild(row);
-    const detail=document.createElement('div');detail.style.display=(p.id===selPid)?'block':'none';detail.style.margin='4px 0 6px';detail.style.background=lighten(p.color,.95);detail.style.border='1px solid '+lighten(p.color,.8);detail.style.borderRadius='8px';const ta=document.createElement('textarea');ta.style.width='100%';ta.style.minHeight='96px';ta.style.border='1px solid #e6e6e6';ta.style.borderRadius='8px';ta.style.padding='6px';ta.value=p.desc||'';ta.oninput=ev=>{p.desc=ev.target.value;autoGrow(ta);save();};autoGrow(ta);detail.appendChild(ta);box.appendChild(detail);row.dataset.detailId='d_'+p.id;detail.id='d_'+p.id; if(p.id===selPid){setTimeout(()=>autoGrow(ta),0);}
+    const detail=document.createElement('div');detail.id='d_'+p.id;detail.style.display=(p.id===selPid)?'block':'none';detail.style.margin='4px 0 6px';detail.style.background=lighten(p.color,.95);detail.style.border='1px solid '+lighten(p.color,.8);detail.style.borderRadius='8px';const ta=document.createElement('textarea');ta.style.width='100%';ta.style.minHeight='96px';ta.style.border='1px solid #e6e6e6';ta.style.borderRadius='8px';ta.style.padding='6px';ta.value=p.desc||'';ta.oninput=function(ev){p.desc=ev.target.value;autoGrow(ta);save();};autoGrow(ta);detail.appendChild(ta);box.appendChild(detail);
   });
 }
-// Abre/cierra detalle de proceso. Si no se indica modo, abre.
 function toggleDesc(pid,mode){const el=byId('d_'+pid);if(!el)return; if(mode==='toggle'){el.style.display=(el.style.display==='block')?'none':'block';} else if(mode==='close'){el.style.display='none';} else {el.style.display='block';} if(el.style.display==='block'){const ta=el.querySelector('textarea');autoGrow(ta);} }
 /* ======= Derecha ======= */
-function addSub(){const p=data.find(x=>x.id===selPid);if(!p)return alert('Selecciona un proceso');p.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]});ctxSubId=p.sub[p.sub.length-1].id;renderRight();}
-function addStepProcess(){const p=data.find(x=>x.id===selPid);if(!p)return alert('Selecciona un proceso');p.steps.push({id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]});ctxSubId=null;renderRight();}
+function addSub(){const p=data.find(function(x){return x.id===selPid});if(!p)return alert('Selecciona un proceso');p.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]});ctxSubId=p.sub[p.sub.length-1].id;renderRight();}
+function addStepProcess(){const p=data.find(function(x){return x.id===selPid});if(!p)return alert('Selecciona un proceso');p.steps.push({id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]});ctxSubId=null;renderRight();}
 function renderRight(){
-  const body=byId('rightBody');
-  body.innerHTML='';
-  const p=data.find(x=>x.id===selPid);
-  if(!p)return;
-  // Tinte sutil del proceso origen en el panel derecho
-  try{ body.style.background = 'linear-gradient(180deg,'+lighten(p.color,.985)+',#ffffff)'; body.style.borderLeft='4px solid '+lighten(p.color,.78); }catch{}
-  const sub=ctxSubId ? p.sub.find(s=>s.id===ctxSubId) : null;
+  const body=byId('rightBody'); body.innerHTML='';
+  const p=data.find(function(x){return x.id===selPid}); if(!p)return;
+  try{ body.style.background = 'linear-gradient(180deg,'+lighten(p.color,.985)+',#ffffff)'; body.style.borderLeft='4px solid '+lighten(p.color,.78); }catch(e){}
+  const sub=ctxSubId ? p.sub.find(function(s){return s.id===ctxSubId}) : null;
 
-  // Cabecera ANCLADA del subproceso seleccionado
   if(sub){
-    const header=document.createElement('div');
-    header.className='row';
-    const chip=document.createElement('div');
-    chip.className='chip';
-    const tag=document.createElement('span');
-    tag.className='tag';
-    tag.textContent='Sub‑proceso';
-    const t=document.createElement('input');
-    t.className='title subTitle';
-    t.value=sub.title||'Subproceso';
-    t.oninput=e=>{sub.title=e.target.value;save();};
-    const right=document.createElement('div');
-    right.className='rightPack';
+    const header=document.createElement('div'); header.className='row';
+    const chip=document.createElement('div'); chip.className='chip';
+    const tag=document.createElement('span'); tag.className='tag'; tag.textContent='Sub‑proceso';
+    const t=document.createElement('input'); t.className='title subTitle'; t.value=sub.title||'Subproceso'; t.oninput=function(e){sub.title=e.target.value;save();};
+    const right=document.createElement('div'); right.className='rightPack';
     const detailSub=document.createElement('div'); detailSub.className='detail';
-    const txSub=document.createElement('textarea'); txSub.value=sub.desc||''; txSub.oninput=e=>{sub.desc=e.target.value;autoGrow(txSub);save();}; autoGrow(txSub); detailSub.appendChild(txSub);
-    const iDetailSub=ico('▾','Detalle del subproceso',()=>{const open=detailSub.style.display!=='block';detailSub.style.display=open?'block':'none'; if(open){autoGrow(txSub);} }); iDetailSub.style.background='#6b7280'; iDetailSub.style.color='#fff';
+    const txSub=document.createElement('textarea'); txSub.value=sub.desc||''; txSub.oninput=function(e){sub.desc=e.target.value;autoGrow(txSub);save();}; autoGrow(txSub); detailSub.appendChild(txSub);
+    const iDetailSub=ico('▾','Detalle del subproceso',function(){const open=detailSub.style.display!=='block';detailSub.style.display=open?'block':'none'; if(open){autoGrow(txSub);} }); iDetailSub.style.background='#6b7280'; iDetailSub.style.color='#fff';
     const role=miniSel(sub);
     right.append(iDetailSub,role);
-    chip.append(tag,t,right);
-    header.appendChild(chip);
-    header.appendChild(detailSub);
-    // + Paso compacto pegado al título del subproceso
-    const inlineAdd=document.createElement('button');
-    inlineAdd.className='adder';
-    inlineAdd.textContent='+';
-    inlineAdd.title='Añadir paso al subproceso';
-    inlineAdd.style.margin='4px 0 0 26px';
-    inlineAdd.onclick=()=>{(sub.steps||(sub.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]});renderRight();};
-    header.appendChild(inlineAdd);
+    chip.append(tag,t,right); header.appendChild(chip); header.appendChild(detailSub);
+    const inlineAdd=document.createElement('button'); inlineAdd.className='adder'; inlineAdd.textContent='+'; inlineAdd.title='Añadir paso al subproceso'; inlineAdd.style.margin='4px 0 0 26px'; inlineAdd.addEventListener('click',function(){(sub.steps||(sub.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]});save();renderRight();}); header.appendChild(inlineAdd);
     body.appendChild(header);
   }
 
-  // PASOS: siempre debajo de la cabecera del subproceso (si existe)
-  const card=document.createElement('div');
-  card.className='card flow';
-  card.style.padding='5px';
-  // Fondo del contenedor de pasos con color del proceso + gris
-  card.style.background = 'linear-gradient(180deg,'+lighten(p.color,.92)+', #f7f7f7)';
-  card.style.borderColor = lighten(p.color,.75);
-  const list=sub ? (sub.steps||[]) : p.steps;
-  list.forEach((st,i)=>{ card.appendChild(stepRow(p,sub,st,i)); });
-  const tail=document.createElement('div'); tail.style.display='flex'; tail.style.justifyContent='flex-end'; tail.style.margin='6px 0 2px';
-  const btn=document.createElement('button'); btn.className='btnTop'; btn.textContent='Guardar'; btn.onclick=()=>{ saveMeta(); body.querySelectorAll('.detail').forEach(d=>d.style.display='none'); };
-  tail.appendChild(btn); card.appendChild(tail);
-  body.appendChild(card);
+  const card=document.createElement('div'); card.className='card flow'; card.style.padding='5px';
+  // Color de línea vertical de pasos según color del proceso
+  try{ card.style.setProperty('--step-line', p.color); }catch(_e){}
+  card.style.background = 'linear-gradient(180deg,'+lighten(p.color,.92)+', #f7f7f7)'; card.style.borderColor = lighten(p.color,.75);
+  const list=sub ? (sub.steps||[]) : p.steps; list.forEach(function(st,i){ card.appendChild(stepRow(p,sub,st,i)); });
+  const tail=document.createElement('div'); tail.style.display='flex'; tail.style.justifyContent='flex-end'; tail.style.margin='8px 0 2px';
+  const btn=document.createElement('button'); btn.className='btnTop bigFinish'; btn.textContent='🎯 Cerrar caso'; btn.title='Marca meta y pliega detalles';
+  btn.addEventListener('click',function(){ saveMeta(); body.querySelectorAll('.detail').forEach(function(d){d.style.display='none'}); updateLastSaved(); });
+  tail.appendChild(btn); card.appendChild(tail); body.appendChild(card);
 
-  // Listado de subprocesos solo si NO hay uno seleccionado (evita duplicados)
   if(!sub && p.sub.length){
-    const g=document.createElement('div');
-    g.className='card green';
-    g.style.marginTop='6px';
-    // Lista de subprocesos también con tinte del proceso
-    g.style.background = 'linear-gradient(180deg,'+lighten(p.color,.95)+', #f7f7f7)';
-    g.style.borderColor = lighten(p.color,.78);
-    p.sub.forEach((s,idx)=>g.appendChild(subMini(p,s,idx)));
+    const g=document.createElement('div'); g.className='card green'; g.style.marginTop='6px';
+    g.style.background = 'linear-gradient(180deg,'+lighten(p.color,.95)+', #f7f7f7)'; g.style.borderColor = lighten(p.color,.78);
+    p.sub.forEach(function(s,idx){g.appendChild(subMini(p,s,idx))});
     body.appendChild(g);
   }
 }
 /* ======= Paso ======= */
-function normalize(list){if(!Array.isArray(list))return [];return list.map(x=>typeof x==='string'?{id:uid(),text:x}:(x.id?x:{id:uid(),...x}));}
-function badge(pid,prefix='IR AL PROCESO: '){const tgt=data.find(p=>p.id===pid);if(!tgt)return null;const el=document.createElement('span');el.className='nextBadge';el.textContent=prefix+tgt.name;el.style.background=lighten(tgt.color,.55);el.style.border='1px solid '+lighten(tgt.color,.35);return el;}
-function stepRow(proc,sub,st,i){const list=sub?(sub.steps||[]):proc.steps;const row=document.createElement('div');row.className='row';row.draggable=true;row.style.borderColor=lighten(proc.color,.85);row.addEventListener('dragstart',()=>{dragCtx={type:'step',pid:proc.id,subId:sub?.id||null,index:i};});row.addEventListener('dragover',e=>e.preventDefault());row.addEventListener('drop',e=>{e.preventDefault();if(dragCtx?.type!=='step')return;const same=dragCtx.pid===proc.id&&(dragCtx.subId||null)===(sub?.id||null);if(!same)return;const from=dragCtx.index,to=i;if(from===to)return;const it=list.splice(from,1)[0];list.splice(to,0,it);renderRight();});
-  const chip=document.createElement('div');chip.className='chip';
-  // Sutileza del color del proceso en el chip
+function normalize(list){if(!Array.isArray(list))return [];return list.map(function(x){return typeof x==='string'?{id:uid(),text:x}:(x.id?x:{id:uid(),...x})});}
+function badge(pid,prefix){ prefix = (typeof prefix==='string'?prefix:'IR AL PROCESO: '); const tgt=data.find(function(p){return p.id===pid});if(!tgt)return null;const el=document.createElement('span');el.className='nextBadge';el.textContent=prefix+tgt.name;el.style.background=lighten(tgt.color,.55);el.style.border='1px solid '+lighten(tgt.color,.35);return el;}
+
+/* === Eliminación robusta de puntos Si/No (DFS por id) === */
+function removePointFromStep(step, targetId){
+  function rec(list){
+    if(!Array.isArray(list)) return false;
+    var i=list.findIndex(function(n){ return n && n.id===targetId; });
+    if(i>-1){ list.splice(i,1); return true; }
+    for(var k=0;k<list.length;k++){
+      var node=list[k];
+      if(node && node.children && rec(node.children)) return true;
+    }
+    return false;
+  }
+  return rec(step.yes)||rec(step.no);
+}
+
+function stepRow(proc,sub,st,i){
+  const list=sub?(sub.steps||[]):proc.steps;
+  const row=document.createElement('div'); row.className='row'; row.draggable=true; row.style.borderColor=lighten(proc.color,.85);
+  row.addEventListener('dragstart',function(){dragCtx={type:'step',pid:proc.id,subId:(sub?sub.id:null),index:i};});
+  row.addEventListener('dragover',function(e){e.preventDefault();});
+  row.addEventListener('drop',function(e){e.preventDefault();if(!dragCtx||dragCtx.type!=='step')return;const same=dragCtx.pid===proc.id&&(dragCtx.subId||null)===(sub?sub.id:null);if(!same)return;const from=dragCtx.index,to=i;if(from===to)return;const it=list.splice(from,1)[0];list.splice(to,0,it);renderRight();});
+
+  const chip=document.createElement('div'); chip.className='chip';
   chip.style.background = 'linear-gradient(180deg,#ffffff,'+lighten(proc.color,.97)+')';
-  const num=document.createElement('div');num.className='bubble';num.textContent=i+1;const title=document.createElement('input');title.className='title';title.value=st.name||'Paso';title.oninput=e=>{st.name=e.target.value;save();};
-  const right=document.createElement('div');right.className='rightPack';
-  const iEdit=ico('🖉','Editar',()=>{title.focus();title.select();});
-  const iLink=ico('🔗','Enlace',()=>{const u=prompt('Pega enlace',st.link||'');if(u!==null){st.link=u;save();renderRight();}});
-  const fin=document.createElement('input');fin.type='file';fin.style.display='none';fin.onchange=e=>{const f=e.target.files?.[0];if(f){st.doc=f.name;save();renderRight();}};
-  const iDoc=ico('📎','Documento',()=>fin.click());
-  const iGoto=ico('🚩','Próximo proceso',()=>{pick(st.nextPid,v=>{st.nextPid=v;save();renderRight();});});
-  const iSiNo=ico('❓','Si/No');iSiNo.style.background='#111';iSiNo.style.color='#fff';
-  const iDel=ico('−','Eliminar',()=>{if(confirm('¿Eliminar paso?')){const pos=list.indexOf(st);list.splice(pos,1);renderRight();}});
+  const num=document.createElement('div'); num.className='bubble'; num.textContent=i+1;
+  const title=document.createElement('input'); title.className='title'; title.value=st.name||'Paso'; title.oninput=function(e){st.name=e.target.value;save();};
+  const right=document.createElement('div'); right.className='rightPack';
+
+  const iEdit=ico('🖉','Editar',function(){title.focus();title.select();});
+  const iLink=ico('🔗','Enlace',function(){const u=prompt('Pega enlace',st.link||'');if(u!==null){st.link=u;save();renderRight();}});
+  const fin=document.createElement('input'); fin.type='file'; fin.style.display='none'; fin.addEventListener('change',function(e){const f=e.target.files&&e.target.files[0];if(f){st.doc=f.name;save();renderRight();}});
+  const iDoc=ico('📎','Documento',function(){fin.click()});
+  const iGoto=ico('🚩','Próximo proceso',function(){pick(st.nextPid,function(v){st.nextPid=v;save();renderRight();});}); iGoto.style.background='#eef0f3'; iGoto.style.color='#1f2937';
+  const iSiNo=ico('❓','Si/No'); iSiNo.style.background='#e5e7eb'; iSiNo.style.color='#1f2937';
+  const iDel=ico('−','Eliminar',function(){if(confirm('¿Eliminar paso?')){const pos=list.indexOf(st);list.splice(pos,1);renderRight();}});
   right.append(iEdit,iLink,iDoc,iGoto,iDel,iSiNo,fin);
   iEdit.style.background='#bfdbfe'; iEdit.style.color='#1f2937';
   iLink.style.background='#ddd6fe'; iLink.style.color='#1f2937';
   iDoc.style.background='#e2e8f0'; iDoc.style.color='#1f2937';
-  iGoto.style.background='#eef0f3'; iGoto.style.color='#1f2937';
   iDel.style.background='#fecaca'; iDel.style.color='#1f2937';
-  const role=miniSel(st);right.append(role);
-  if(st.nextPid){const b=badge(st.nextPid);if(b)right.append(b);} if(st.meta){const meta=ico('🎯','Meta cumplida');meta.style.background='#ffe3a6';right.append(meta);} 
-  chip.append(num,title,right);row.appendChild(chip);
+  const role=miniSel(st); right.append(role);
+  if(st.nextPid){const b=badge(st.nextPid); if(b) right.append(b);} if(st.meta){const meta=ico('🎯','Meta cumplida'); meta.style.background='#ffe3a6'; right.append(meta);} 
+
+  chip.append(num,title,right); row.appendChild(chip);
+
   /* Si/No + detalle */
-  st.yes=normalize(st.yes);st.no=normalize(st.no);
-  const cond=condBlock(st);
-  const hasActive=((st.yes&&st.yes.length)>0)||!!st.yesNextPid||((st.no&&st.no.length)>0)||!!st.noNextPid;
-  if(hasActive){ cond.style.display='block'; }
-  iSiNo.onclick=()=>{
-    const active=((st.yes&&st.yes.length)>0)||!!st.yesNextPid||((st.no&&st.no.length)>0)||!!st.noNextPid;
-    if(active){ cond.style.display='block'; return; }
-    cond.style.display = (cond.style.display==='block') ? 'none' : 'block';
-  };
-  row.appendChild(cond);
-  const detail=document.createElement('div');detail.className='detail';const tx=document.createElement('textarea');tx.value=st.desc||'';tx.oninput=e=>{st.desc=e.target.value;autoGrow(tx);save();};autoGrow(tx);detail.appendChild(tx);
-  const toggleDetail=()=>{const open=detail.style.display!=='block';detail.style.display=open?'block':'none';if(open)autoGrow(tx);};
+  st.yes=normalize(st.yes); st.no=normalize(st.no);
+  const condWrap=document.createElement('div'); condWrap.className='condWrap'; row.appendChild(condWrap);
+  function buildCond(){ if(condWrap.dataset.inited==='1') return; condWrap.innerHTML=''; condWrap.appendChild(condBlock(st, i+1)); condWrap.dataset.inited='1'; }
+  function ensureCondVisible(){ buildCond(); condWrap.style.display='block'; }
+  const hasActive=((st.yes&&st.yes.length)>0)||((st.no&&st.no.length)>0);
+  if(hasActive){ ensureCondVisible(); }
+  iSiNo.addEventListener('click',function(){
+    const active=((st.yes&&st.yes.length)>0)||((st.no&&st.no.length)>0);
+    if(active){ ensureCondVisible(); return; }
+    if(condWrap.style.display==='block'){ condWrap.style.display='none'; }
+    else { ensureCondVisible(); }
+  });
+
+  const detail=document.createElement('div'); detail.className='detail';
+  const tx=document.createElement('textarea'); tx.value=st.desc||''; tx.oninput=function(e){st.desc=e.target.value;autoGrow(tx);save();}; autoGrow(tx); detail.appendChild(tx);
+  function toggleDetail(){const open=detail.style.display!=='block'; detail.style.display=open?'block':'none'; if(open) autoGrow(tx); }
   const iDetail=ico('▾','Detalle',toggleDetail); iDetail.style.background='#6b7280'; iDetail.style.color='#fff'; right.prepend(iDetail);
-  // Despliegue accesible: click en chip (excepto inputs/selects/iconos), doble clic y número
-  chip.addEventListener('click',(e)=>{ if(e.target.closest('.ico')|| e.target.tagName==='SELECT' || e.target===title) return; toggleDetail(); });
+  chip.addEventListener('click',function(e){ if(e.target.closest('.ico')|| e.target.tagName==='SELECT' || e.target===title) return; toggleDetail(); });
   chip.addEventListener('dblclick',toggleDetail);
-  num.onclick=toggleDetail; title.ondblclick=toggleDetail;
+  num.addEventListener('click',toggleDetail); title.ondblclick=toggleDetail;
   row.appendChild(detail);
-  return row;}
-function miniSel(obj){const sel=document.createElement('select');sel.className='miniSel';ROLES.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});sel.value=obj.resp||ROLES[0];sel.onchange=e=>{obj.resp=e.target.value;save();};return sel;}
-function ico(g,t,fn){const b=document.createElement('button');b.className='ico sm';b.title=t;b.textContent=g;if(fn)b.onclick=(ev)=>{ev.stopPropagation();fn(ev);};return b;}
+  return row;
+}
+function miniSel(obj){const sel=document.createElement('select');sel.className='miniSel';ROLES.forEach(function(r){const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});sel.value=obj.resp||ROLES[0];sel.addEventListener('change',function(e){obj.resp=e.target.value;save();});return sel;}
+function ico(g,t,fn){const b=document.createElement('button');b.className='ico sm';b.title=t;b.textContent=g;if(fn){b.addEventListener('click',function(ev){ev.stopPropagation();fn(ev);});}return b;}
 /* Si/No */
-function condBlock(st){
-  const wrap=document.createElement('div');
-  wrap.className='condWrap';
-  wrap.append(oneSide('Si NO…','no',st));
-  wrap.append(oneSide('Si SÍ…','yes',st));
+function condBlock(st, stepNum){
+  const wrap=document.createElement('div'); wrap.className='condWrap';
+  wrap.append(oneSide('Si NO…','no',st,stepNum));
+  wrap.append(oneSide('Si SÍ…','yes',st,stepNum));
   return wrap;
 }
-function oneSide(title,branch,st){
+function oneSide(title,branch,st,stepNum){
   const b=document.createElement('div');
-  const hdr=document.createElement('div');
-  hdr.className='condHdr';
-  const t=document.createElement('div');
-  t.className='condTitle';
-  t.textContent=title;
+  b.classList.add(branch==='yes' ? 'branch-yes' : 'branch-no');
 
-  const key=branch+'NextPid';
-  // Bandera SOLO a nivel de rama (sin duplicar en ítems)
-  const hdrFlag=ico('🚩','Próximo proceso para '+title,()=>{
-    pick(st[key],v=>{ st[key]=v; save(); renderRight(); });
-  });
-  hdrFlag.style.color='#fff';
-  function applyFlagStyle(){
-    const on=!!st[key];
-    hdrFlag.style.background= on ? '#16a34a' : '#ea580c';
-  }
-  applyFlagStyle();
-
-  const plus=document.createElement('button');
-  plus.className='adder';
-  plus.textContent='+';
-  plus.title='Añadir condición a '+title;
+  const hdr=document.createElement('div'); hdr.className='condHdr';
+  const t=document.createElement('div'); t.className='condTitle'; t.textContent=title;
+  const plus=document.createElement('button'); plus.className='adder'; plus.textContent='+'; plus.title='Añadir punto a '+title;
   const list=(st[branch]||(st[branch]=[]));
-  plus.onclick=()=>{ list.push({id:uid(),text:''}); renderRight(); };
+  plus.addEventListener('click',function(){ list.push({id:uid(),text:'',children:[]}); save(); renderRight(); });
+  hdr.append(t,plus); b.appendChild(hdr);
 
-  hdr.append(t,hdrFlag,plus);
-  if(st[key]){ const bb=badge(st[key],'IR AL PROCESO: '); if(bb) hdr.appendChild(bb); }
-  b.appendChild(hdr);
-
-  // Ítems sin banderas (evitar duplicidad). Solo texto + eliminar
-  (list||[]).forEach(it=>{
-    const r=document.createElement('div');
-    r.className='condItem';
-    const tx=document.createElement('textarea');
-    tx.className='condText';
-    tx.placeholder='Escribe…';
-    tx.value=it.text||'';
-    tx.oninput=e=>{it.text=e.target.value;autoGrow(tx);save();};
-    autoGrow(tx);
-    const del=document.createElement('button');
-    del.className='condDel';
-    del.textContent='−';
-    del.onclick=()=>{ const idx=list.indexOf(it); if(idx>-1){ list.splice(idx,1); renderRight(); } };
-    r.append(tx,del);
-    b.appendChild(r);
-  });
+  function renderPoints(arr, base, container){
+    (arr||[]).forEach(function(it,idx){
+      it.children = it.children || [];
+      const numStr = base + '.' + (idx+1);
+      const r=document.createElement('div'); r.className='condItem';
+      const num=document.createElement('span'); num.className='condNum'; num.textContent=numStr;
+      const tx=document.createElement('textarea'); tx.className='condText'; tx.placeholder='Escribe…'; tx.value=it.text||''; tx.oninput=function(e){it.text=e.target.value;autoGrow(tx);save();}; autoGrow(tx);
+      const flagItem=ico('🚩','Próximo proceso de este punto',function(){ pick(it.nextPid, function(v){ it.nextPid=v; save(); renderRight(); }); });
+      flagItem.style.background='#eef0f3'; flagItem.style.color='#1f2937';
+      const addChild=ico('+','Añadir subpunto',function(){ it.children.push({id:uid(),text:'',children:[]}); save(); renderRight(); });
+      const del=document.createElement('button'); del.className='condDel'; del.textContent='−'; del.addEventListener('click',function(e){
+        // Borrado robusto por id, recorre ramas y niveles (sí y no)
+        if(removePointFromStep(st, it.id)){
+          save();
+          renderRight();
+        }
+      });
+      r.append(num,tx,flagItem,addChild,del);
+      if(it.nextPid){ const bb=badge(it.nextPid,'IR AL PROCESO: '); if(bb) r.appendChild(bb); }
+      container.appendChild(r);
+      if(it.children && it.children.length){ const kids=document.createElement('div'); kids.className='condChildren'; container.appendChild(kids); renderPoints(it.children, numStr, kids); }
+    });
+  }
+  renderPoints(list, String(stepNum), b);
   return b;
 }
 /* Subprocesos */
-function subMini(proc,s,idx){const row=document.createElement('div');row.className='row';row.draggable=true;row.addEventListener('dragstart',()=>{dragCtx={type:'sub',pid:proc.id,index:idx};});row.addEventListener('dragover',e=>e.preventDefault());row.addEventListener('drop',e=>{e.preventDefault();if(dragCtx?.type!=='sub'||dragCtx.pid!==proc.id)return;const it=proc.sub.splice(dragCtx.index,1)[0];proc.sub.splice(idx,0,it);renderRight();});const chip=document.createElement('div');chip.className='chip';const b=document.createElement('div');b.className='bubble';b.textContent=idx+1;const t=document.createElement('input');t.className='title subTitle';t.value=s.title||'Subproceso';t.oninput=e=>{s.title=e.target.value;save();};const right=document.createElement('div');right.className='rightPack';const edit=ico('🖉','Editar',()=>{t.focus();t.select();});const del=ico('−','Eliminar',()=>{if(confirm('¿Eliminar subproceso?')){proc.sub=proc.sub.filter(x=>x!==s);if(ctxSubId===s.id)ctxSubId=null;renderRight();}});const role=miniSel(s);right.append(edit,del,role);chip.append(b,t,right);row.appendChild(chip);const add=document.createElement('button');add.textContent='+ Paso';add.className='adder';add.style.margin='5px 0 0 26px';add.onclick=()=>{(s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]});ctxSubId=s.id;renderRight();};row.appendChild(add);chip.onclick=()=>{ctxSubId=s.id;renderRight();};return row;}
+function subMini(proc,s,idx){
+  const row=document.createElement('div'); row.className='row'; row.draggable=true;
+  row.addEventListener('dragstart',function(){dragCtx={type:'sub',pid:proc.id,index:idx};});
+  row.addEventListener('dragover',function(e){e.preventDefault();});
+  row.addEventListener('drop',function(e){e.preventDefault();if(!dragCtx||dragCtx.type!=='sub'||dragCtx.pid!==proc.id)return;const it=proc.sub.splice(dragCtx.index,1)[0];proc.sub.splice(idx,0,it);renderRight();});
+  const chip=document.createElement('div'); chip.className='chip';
+  const b=document.createElement('div'); b.className='bubble'; b.textContent=idx+1;
+  const t=document.createElement('input'); t.className='title subTitle'; t.value=s.title||'Subproceso'; t.oninput=function(e){s.title=e.target.value;save();};
+  const right=document.createElement('div'); right.className='rightPack';
+  const edit=ico('🖉','Editar',function(){t.focus();t.select();});
+  const del=ico('−','Eliminar',function(){if(confirm('¿Eliminar subproceso?')){proc.sub=proc.sub.filter(function(x){return x!==s});if(ctxSubId===s.id)ctxSubId=null;renderRight();}});
+  const role=miniSel(s);
+  right.append(edit,del,role);
+  chip.append(b,t,right); row.appendChild(chip);
+  const add=document.createElement('button'); add.textContent='+ Paso'; add.className='adder'; add.style.margin='5px 0 0 26px';
+  add.addEventListener('click',function(){(s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]});ctxSubId=s.id;save();renderRight();});
+  row.appendChild(add);
+  chip.addEventListener('click',function(){ctxSubId=s.id;renderRight();});
+  return row;
+}
 /* Picker */
 function pick(current,onPick){
-  const o=document.createElement('div');
-  Object.assign(o.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990});
-  const card=document.createElement('div');
-  Object.assign(card.style,{background:'#fff',padding:'12px',borderRadius:'10px',boxShadow:'0 14px 38px rgba(0,0,0,.2)',width:'min(92vw,420px)'});
-  const h=document.createElement('div');
-  h.textContent='Selecciona proceso de destino';
-  h.style.fontWeight='800';
-  h.style.marginBottom='6px';
-
-  const sel=document.createElement('select');
-  sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px';
-  data.forEach(p=>{const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; opt.dataset.color=p.color; sel.appendChild(opt);});
+  const o=document.createElement('div'); Object.assign(o.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990});
+  const card=document.createElement('div'); Object.assign(card.style,{background:'#fff',padding:'12px',borderRadius:'10px',boxShadow:'0 14px 38px rgba(0,0,0,.2)',width:'min(92vw,420px)'});
+  const h=document.createElement('div'); h.textContent='Selecciona proceso de destino'; h.style.fontWeight='800'; h.style.marginBottom='6px';
+  const sel=document.createElement('select'); sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px';
+  data.forEach(function(p){const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; opt.dataset.color=p.color; sel.appendChild(opt);});
   sel.value=current||data[0].id;
-
-  // Vista previa de color y etiqueta "IR AL PROCESO"
-  const preview=document.createElement('div');
-  preview.style.display='flex'; preview.style.alignItems='center'; preview.style.gap='8px'; preview.style.margin='8px 0 4px';
-  const dot=document.createElement('span');
-  Object.assign(dot.style,{display:'inline-block',width:'14px',height:'14px',borderRadius:'999px',border:'1px solid #bbb'});
-  const badgePreview=document.createElement('span');
-  badgePreview.className='nextBadge';
-
-  function updatePreview(){
-    const id=sel.value; const tgt=data.find(p=>p.id===id) || data[0];
-    if(!tgt) return;
-    dot.style.background=tgt.color;
-    badgePreview.textContent='IR AL PROCESO: '+tgt.name;
-    badgePreview.style.background=lighten(tgt.color,.55);
-    badgePreview.style.border='1px solid '+lighten(tgt.color,.35);
-  }
-  sel.addEventListener('change',updatePreview);
-  updatePreview();
-  preview.append(dot,badgePreview);
-
-  const bar=document.createElement('div');
-  bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='8px';
-  const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.onclick=()=>document.body.removeChild(o);
-  const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; ok.onclick=()=>{onPick(sel.value); document.body.removeChild(o);};
+  const preview=document.createElement('div'); preview.style.display='flex'; preview.style.alignItems='center'; preview.style.gap='8px'; preview.style.margin='8px 0 4px';
+  const dot=document.createElement('span'); Object.assign(dot.style,{display:'inline-block',width:'14px',height:'14px',borderRadius:'999px',border:'1px solid #bbb'});
+  const badgePreview=document.createElement('span'); badgePreview.className='nextBadge';
+  function updatePreview(){ const id=sel.value; const tgt=data.find(function(p){return p.id===id}) || data[0]; if(!tgt) return; dot.style.background=tgt.color; badgePreview.textContent='IR AL PROCESO: '+tgt.name; badgePreview.style.background=lighten(tgt.color,.55); badgePreview.style.border='1px solid '+lighten(tgt.color,.35); }
+  sel.addEventListener('change',updatePreview); updatePreview(); preview.append(dot,badgePreview);
+  const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='8px';
+  const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.addEventListener('click',function(){document.body.removeChild(o)});
+  const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; ok.addEventListener('click',function(){onPick(sel.value); document.body.removeChild(o);});
   bar.append(cancel,ok);
-
   card.append(h,sel,preview,bar); o.appendChild(card); document.body.appendChild(o);
 } 
 /* Meta */
-function saveMeta(){const p=data.find(x=>x.id===selPid);if(!p)return;const list=ctxSubId?((p.sub.find(s=>s.id===ctxSubId)||{}).steps||[]):p.steps;if(list.length){list.forEach((s,k)=>s.meta=(k===list.length-1));}save();renderRight();}
+function saveMeta(){const p=data.find(function(x){return x.id===selPid});if(!p)return;const list=ctxSubId?((p.sub.find(function(s){return s.id===ctxSubId})||{}).steps||[]):p.steps;if(list.length){list.forEach(function(s,k){s.meta=(k===list.length-1)});}save();renderRight();}
 /* Print */
 function printAll(){
-  const wrap=byId('printDoc');
-  wrap.innerHTML='';
-  const root=document.createElement('div');
-  data.forEach((proc,pi)=>{
+  const wrap=byId('printDoc'); wrap.innerHTML=''; const root=document.createElement('div');
+  data.forEach(function(proc,pi){
     const pBox=document.createElement('div');
-    const h2=document.createElement('h2');
-    h2.textContent=(pi+1)+'. '+proc.name;
-    h2.style.margin='0 0 6px';
-    h2.style.borderBottom='2px solid #000';
-    pBox.appendChild(h2);
-    if(proc.desc){
-      const d=document.createElement('p');
-      d.textContent='Descripción: '+proc.desc; pBox.appendChild(d);
-    }
-    if(proc.steps.length){
-      const h=document.createElement('h3'); h.textContent='Pasos'; pBox.appendChild(h);
-      proc.steps.forEach((st,si)=>pBox.appendChild(printStep(st,si)));
-    }
-    if(proc.sub.length){
-      const h=document.createElement('h3'); h.textContent='Subprocesos'; pBox.appendChild(h);
-      proc.sub.forEach((sp,qi)=>{
-        const sb=document.createElement('div');
-        const sh=document.createElement('h4'); sh.textContent=(pi+1)+'.S'+(qi+1)+' '+sp.title; sb.appendChild(sh);
-        (sp.steps||[]).forEach((st,si)=>sb.appendChild(printStep(st,si)));
-        pBox.appendChild(sb);
-      });
-    }
-    if(pi < data.length-1){
-      const cut=document.createElement('div'); cut.className='pbreak'; pBox.appendChild(cut);
-    }
+    const h2=document.createElement('h2'); h2.textContent=(pi+1)+'. '+proc.name; h2.style.margin='0 0 6px'; h2.style.borderBottom='2px solid #000'; pBox.appendChild(h2);
+    if(proc.desc){ const d=document.createElement('p'); d.textContent='Descripción: '+proc.desc; pBox.appendChild(d); }
+    if(proc.steps.length){ const h=document.createElement('h3'); h.textContent='Pasos'; pBox.appendChild(h); proc.steps.forEach(function(st,si){pBox.appendChild(printStep(st,si))}); }
+    if(proc.sub.length){ const h=document.createElement('h3'); h.textContent='Subprocesos'; pBox.appendChild(h); proc.sub.forEach(function(sp,qi){ const sb=document.createElement('div'); const sh=document.createElement('h4'); sh.textContent=(pi+1)+'.S'+(qi+1)+' '+sp.title; sb.appendChild(sh); (sp.steps||[]).forEach(function(st,si){sb.appendChild(printStep(st,si))}); pBox.appendChild(sb); }); }
+    if(pi < data.length-1){ const cut=document.createElement('div'); cut.className='pbreak'; pBox.appendChild(cut); }
     root.appendChild(pBox);
   });
-  wrap.appendChild(root);
-  wrap.style.display='block';
-  setTimeout(()=>{ window.print(); wrap.style.display='none'; wrap.innerHTML=''; },40);
+  wrap.appendChild(root); wrap.style.display='block'; setTimeout(function(){ window.print(); wrap.style.display='none'; wrap.innerHTML=''; },40);
 }
 function printStep(st,si){
-  const box=document.createElement('div');
-  box.style.border='1px solid #ddd';
-  box.style.borderRadius='8px';
-  box.style.padding='6px 8px';
-  box.style.margin='4px 0';
-  const h=document.createElement('div');
-  h.style.fontWeight='800';
-  h.textContent='Paso '+(si+1)+': '+(st.name||'');
-  box.appendChild(h);
-  const r=document.createElement('div');
-  r.textContent='Responsable: '+(st.resp||'—');
-  r.style.fontSize='12px';
-  r.style.opacity='.85';
-  box.appendChild(r);
+  const box=document.createElement('div'); box.style.border='1px solid #ddd'; box.style.borderRadius='8px'; box.style.padding='6px 8px'; box.style.margin='4px 0';
+  const h=document.createElement('div'); h.style.fontWeight='800'; h.textContent='Paso '+(si+1)+': '+(st.name||''); box.appendChild(h);
+  const r=document.createElement('div'); r.textContent='Responsable: '+(st.resp||'—'); r.style.fontSize='12px'; r.style.opacity='.85'; box.appendChild(r);
   if(st.desc){const d=document.createElement('div');d.textContent='Descripción: '+st.desc;box.appendChild(d);} 
   if(st.link){const l=document.createElement('div');l.textContent='Enlace: '+st.link;box.appendChild(l);} 
   if(st.doc){const d2=document.createElement('div');d2.textContent='Documento: '+st.doc;box.appendChild(d2);} 
   if(st.nextPid){const b=badge(st.nextPid); if(b){const w=document.createElement('div');w.appendChild(b);box.appendChild(w);}}
-  if(st.no && st.no.length){
-    const t=document.createElement('div'); t.textContent='Si NO:'; box.appendChild(t);
-    st.no.forEach(i=>{ const li=document.createElement('div'); li.textContent='- '+i.text; box.appendChild(li); });
-    if(st.noNextPid){ const bb=badge(st.noNextPid,'IR AL PROCESO: '); if(bb){ const w=document.createElement('div'); w.appendChild(bb); box.appendChild(w);} }
-  }
-  if(st.yes && st.yes.length){
-    const t2=document.createElement('div'); t2.textContent='Si SÍ:'; box.appendChild(t2);
-    st.yes.forEach(i=>{ const li2=document.createElement('div'); li2.textContent='- '+i.text; box.appendChild(li2); });
-    if(st.yesNextPid){ const bb2=badge(st.yesNextPid,'IR AL PROCESO: '); if(bb2){ const w2=document.createElement('div'); w2.appendChild(bb2); box.appendChild(w2);} }
-  }
-  if(st.meta){const m=document.createElement('span');m.textContent='  🎯';h.appendChild(m);} 
-  return box;
+  if(st.no && st.no.length){ const t=document.createElement('div'); t.textContent='Si NO:'; box.appendChild(t); st.no.forEach(function(i){ const li=document.createElement('div'); li.textContent='- '+i.text; box.appendChild(li); }); }
+  if(st.yes && st.yes.length){ const t2=document.createElement('div'); t2.textContent='Si SÍ:'; box.appendChild(t2); st.yes.forEach(function(i){ const li2=document.createElement('div'); li2.textContent='- '+i.text; box.appendChild(li2); }); }
+  if(st.meta){const m=document.createElement('span');m.textContent='  🎯';h.appendChild(m);} return box;
 }
 /* Render */
 function render(){renderLeft();renderRight();save();}
 render();
-// Cargar sello de última actualización si existe
-document.addEventListener('DOMContentLoaded',()=>{ const s=localStorage.getItem(LS+'_STAMP'); if(s){ const el=byId('lastSaved'); if(el) el.textContent='Última actualización: '+s; } });
-window.addEventListener('keydown',e=>{if(e.key==='Enter'){const a=document.activeElement;if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')){e.preventDefault();a.blur();save();}}});
+// sello última actualización
+document.addEventListener('DOMContentLoaded',function(){ const s=localStorage.getItem(LS+'_STAMP'); if(s){ const el=byId('lastSaved'); if(el) el.textContent='Última actualización: '+s; } });
+window.addEventListener('keydown',function(e){if(e.key==='Enter'){const a=document.activeElement;if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')){e.preventDefault();a.blur();save();}}});
 /* Tests mínimos */
 (function(){
-  const ok=(n,b)=>console[b?'log':'error']('TEST '+(b?'✔':'✖')+' '+n);
+  function ok(n,b){console[b?'log':'error']('TEST '+(b?'✔':'✖')+' '+n);} 
   try{
     ok('uid',typeof uid==='function');
     const prev=data.length; addProcess(); ok('addProcess',data.length===prev+1); data.pop(); selPid=data[0].id; render();
-    // Test: detalle de proceso abre (forzar abrir)
     const pid=data[0].id; toggleDesc(pid); const pd=document.getElementById('d_'+pid); ok('detalle proceso abre', pd && pd.style.display==='block');
-    // Test adicional: detalle de proceso cierra con modo toggle
     toggleDesc(pid,'toggle'); const pd2=document.getElementById('d_'+pid); ok('detalle proceso cierra', pd2 && pd2.style.display==='none');
-    // Test: detalle de paso abre
     renderRight();
-    const btn=document.querySelector('#rightBody .row .ico[title="Detalle"]'); if(btn) { btn.click(); const det=document.querySelector('#rightBody .row .detail'); ok('detalle paso abre', det && det.style.display==='block'); }
+    const btnDet=document.querySelector('#rightBody .row .ico[title="Detalle"]'); if(btnDet){ btnDet.click(); const det=document.querySelector('#rightBody .row .detail'); ok('detalle paso abre', det && det.style.display==='block'); }
+    const sinoBtn=document.querySelector('#rightBody .row .ico[title="Si/No"]');
+    if(sinoBtn){
+      sinoBtn.click();
+      const hdrs=[].slice.call(document.querySelectorAll('#rightBody .condHdr .adder'));
+      ok('hay dos cabeceras', hdrs.length===2);
+      if(hdrs[0]) hdrs[0].click();
+      if(hdrs[1]) hdrs[1].click();
+      const yesWrap=document.querySelector('#rightBody .branch-yes');
+      const noWrap=document.querySelector('#rightBody .branch-no');
+      ok('rama yes presente', !!yesWrap);
+      ok('rama no presente', !!noWrap);
+      const num = document.querySelector('#rightBody .condItem .condNum');
+      ok('numeración base x.1', !!num && num.textContent.trim().includes('.1'));
+      const flag=document.querySelector('#rightBody .condItem .ico[title="Próximo proceso de este punto"]'); ok('bandera por punto', !!flag);
+      const before=document.querySelectorAll('#rightBody .condItem').length;
+      const delBtn=document.querySelector('#rightBody .condItem .condDel');
+      if (delBtn) { delBtn.click(); const after=document.querySelectorAll('#rightBody .condItem').length; ok('eliminar punto Si/No', after===before-1); }
+      // Test extra: elimina anidado
+      const addYes=document.querySelector('#rightBody .branch-yes .adder'); if(addYes){ addYes.click(); }
+      const newDel=document.querySelector('#rightBody .branch-yes .condItem .condDel');
+      const b2=document.querySelectorAll('#rightBody .condItem').length;
+      if(newDel){ newDel.click(); const a2=document.querySelectorAll('#rightBody .condItem').length; ok('eliminar punto Si/No (robusto)', a2===b2-1); }
+    }
   }catch(e){ console.error(e); }
 })();
 </script>
