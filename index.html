@@ -22,6 +22,11 @@
   .ticon,.btnTop{border:none;border-radius:10px;background:rgba(255,255,255,.18);color:#fff;padding:6px 9px;cursor:pointer}
   .btnTop{padding:6px 12px;border-radius:999px}
 
+  /* Toggle Admin / Público */
+  .modeSeg{display:flex;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden}
+  .seg{border:none;color:#fff;background:transparent;padding:6px 10px;cursor:pointer}
+  .seg.on{background:#ffffff30;color:#fff;font-weight:700}
+
   /* LAYOUT */
   .layout{display:grid;grid-template-columns:320px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 56px)}
   @media(max-width:1100px){.layout{grid-template-columns:1fr}}
@@ -92,6 +97,14 @@
   .condDel.ro{display:none}
 
   .arrowV{opacity:.35;text-align:center;margin:-2px 0 0;font-size:12px}
+
+  /* PRINT: mostramos SOLO #printDoc */
+  @media print{
+    body *{ visibility:hidden !important; }
+    #printDoc, #printDoc *{ visibility:visible !important; }
+    #printDoc{ position:absolute; inset:0; background:#fff; color:#000; padding:16px; }
+    .pbreak{ page-break-after:always; }
+  }
 </style>
 </head>
 <body>
@@ -99,9 +112,14 @@
   <div class="top">
     <h1>PROCESOS</h1>
     <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"/>
+    <!-- Toggle Admin / Público -->
+    <div class="modeSeg" id="modeSeg">
+      <button id="mAdmin" class="seg" onclick="setMode('edit')">Admin</button>
+      <button id="mPublic" class="seg" onclick="setMode('view')">Público</button>
+    </div>
     <div class="iconbar">
       <button class="ticon" title="Descargar HTML" onclick="downloadHTML()">⬇️ HTML</button>
-      <button class="ticon" title="Imprimir / PDF" onclick="window.print()">🖨️</button>
+      <button class="ticon" title="Imprimir / PDF" onclick="printAll()">🖨️</button>
       <button class="ticon" title="Guardar en nube" onclick="saveCloud()">☁️⬆️</button>
       <button class="ticon" title="Actualizar desde nube" onclick="loadCloud()">☁️🔄</button>
       <button id="pinBtn" class="ticon" title="PIN" onclick="togglePin()">🔒</button>
@@ -136,18 +154,25 @@
     </div>
   </div>
 
+  <!-- Contenedor de impresión -->
+  <div id="printDoc" style="display:none"></div>
+
 <script>
-/* ===== BASE + MODO LECTURA ===== */
-const LS='PROC_TAG_META_DND_V1';
+/* ===== BASE + MODO ===== */
+const LS='PROC_TOGGLE_MODE_V1';
 const CLOUD_KEY=LS+'_CLOUD';
 const PIN_CODE='AR4321';
 const ROLES=['Audiólogo','Responsable','Otros'];
 const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
-const READONLY = new URLSearchParams(location.search).get('mode') === 'view';
+const URLMODE = new URLSearchParams(location.search).get('mode');
+let MODE = URLMODE || localStorage.getItem(LS+'_MODE') || 'edit';
+let READONLY = MODE==='view';
 
 let data = JSON.parse(localStorage.getItem(LS) || 'null') || [
   {id:uid(), name:'Reparaciones', color:PASTEL[0], desc:'', sub:[
-    {id:uid(), title:'Diagnóstico', desc:'', resp:ROLES[0], steps:[]}
+    {id:uid(), title:'Diagnóstico', desc:'', resp:ROLES[0], steps:[
+      {id:uid(), name:'Revisión inicial', desc:'Comprobar estado del equipo', resp:ROLES[0], yes:[], no:[]}
+    ]}
   ], steps:[
     {id:uid(), name:'N', desc:'', resp:ROLES[0], yes:[], no:[]},
     {id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], yes:[], no:[]}
@@ -164,6 +189,19 @@ function uid(){ return Math.random().toString(36).slice(2,9); }
 function save(){ localStorage.setItem(LS, JSON.stringify(data)); }
 function doSearch(v){ q=v.toLowerCase(); render(); }
 function lighten(hex,f=.86){const c=hex.replace('#',''); const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f); return `rgb(${nr},${ng},${nb})`; }
+
+/* ===== TOGGLE MODE ===== */
+function setMode(m){
+  MODE=m; READONLY=(m==='view');
+  localStorage.setItem(LS+'_MODE',MODE);
+  updateModeToggle();
+  render();
+}
+function updateModeToggle(){
+  byId('mAdmin').classList.toggle('on', MODE==='edit');
+  byId('mPublic').classList.toggle('on', MODE==='view');
+  byId('saveBtn').style.display = READONLY ? 'none' : '';
+}
 
 /* ===== TOPBAR ===== */
 function togglePin(){
@@ -210,11 +248,16 @@ function renderLeft(){
     card.style.borderColor=p.color; card.style.background='linear-gradient(180deg,#fff,'+lighten(p.color,.92)+')';
     card.onclick=()=>{ selPid=p.id; ctxSubId=null; renderRight(); document.querySelectorAll('.p-card').forEach(el=>el.classList.remove('active')); card.classList.add('active'); };
 
-    // drag
-    if(!READONLY){ card.draggable=true;
-      card.addEventListener('dragstart',e=>{ dragCtx={type:'process',index:idx}; });
+    if(!READONLY){
+      card.draggable=true;
+      card.addEventListener('dragstart',()=>{ dragCtx={type:'process',index:idx}; });
       card.addEventListener('dragover',e=>e.preventDefault());
-      card.addEventListener('drop',e=>{ e.preventDefault(); if(dragCtx?.type==='process' && dragCtx.index!==idx){ const it=data.splice(dragCtx.index,1)[0]; data.splice(idx,0,it); render(); }});
+      card.addEventListener('drop',e=>{
+        e.preventDefault();
+        if(dragCtx?.type==='process' && dragCtx.index!==idx){
+          const it=data.splice(dragCtx.index,1)[0]; data.splice(idx,0,it); render();
+        }
+      });
     }
 
     const name=document.createElement('input'); name.className='p-name'; name.value=p.name; name.oninput=e=>{ p.name=e.target.value; save(); };
@@ -251,7 +294,6 @@ function renderRight(){
   ctxBox.style.display = sub ? 'flex' : 'none';
   ctxTag.textContent = sub ? ('Subproceso: '+(sub.title||'—')) : '';
 
-  // PASOS
   const card=document.createElement('div'); card.className='card';
   const list = sub ? (sub.steps||[]) : p.steps;
   list.forEach((st,i)=> card.appendChild(stepRow(p, sub, st, i)));
@@ -261,18 +303,15 @@ function renderRight(){
   card.appendChild(add);
   body.appendChild(card);
 
-  // SUBPROCESOS (mini lista para entrar en contexto + drag)
   if(p.sub.length){
     const g=document.createElement('div'); g.className='card green'; g.style.marginTop='8px';
     p.sub.forEach((s,idx)=> g.appendChild(subMini(p,s,idx)));
     body.appendChild(g);
   }
 
-  // Bloqueo UI si modo consulta
   if(READONLY){
     document.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=true);
     byId('addProcBtn')?.classList.add('ro');
-    byId('saveBtn').style.display='none';
   }
 }
 
@@ -313,7 +352,6 @@ function stepRow(proc, sub, st, i){
   const goto=icon('🚩','Próximo proceso',()=>{ if(READONLY) return; openProcessPicker(st.nextPid,(v)=>{ st.nextPid=v; save(); renderRight(); }); });
   const del =icon('−','Eliminar',()=>{ if(READONLY) return; if(confirm('¿Eliminar paso?')){ const idx=list.indexOf(st); list.splice(idx,1); renderRight(); } });
   const qBtn=icon('❓','Si/No'); qBtn.classList.add('black');
-  if(READONLY){ edit.classList.add('ro'); del.classList.add('ro'); qBtn.classList.add('ro'); goto.classList.add('ro'); doc.classList.add('ro'); link.classList.add('ro'); }
   icons.append(edit,link,doc,goto,del,qBtn,fileIn);
 
   /* Pegatina de próximo proceso SIEMPRE visible junto a iconos */
@@ -331,11 +369,12 @@ function stepRow(proc, sub, st, i){
   /* 🎯 meta si es último paso (se marca al Guardar) */
   if(st.meta){ const meta=icon('🎯','Meta cumplida'); meta.style.background='#ffe3a6'; icons.appendChild(meta); }
 
+  if(READONLY){ edit.classList.add('ro'); del.classList.add('ro'); goto.classList.add('ro'); doc.classList.add('ro'); link.classList.add('ro'); }
+
   const rightToys=document.createElement('div'); rightToys.className='icons';
   const sel=document.createElement('select'); sel.className='miniSel'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=st.resp||ROLES[0]; sel.onchange=e=>{ st.resp=e.target.value; save(); };
   if(READONLY) sel.disabled=true;
-  const detBtn=icon('▶','Detalle'); if(READONLY) detBtn.classList.add('ro');
-  rightToys.append(sel,detBtn);
+  const detBtn=icon('▶','Detalle'); rightToys.append(sel,detBtn);
 
   head.append(chip,icons,rightToys);
   wrap.appendChild(head);
@@ -360,7 +399,7 @@ function buildCond(st){
   const wrap=document.createElement('div'); wrap.className='condWrap';
   wrap.append(block('Si NO…', st.no||[], ()=>{ (st.no||(st.no=[])).push({id:uid(),text:''}); renderRight(); }, it=>{ st.no=st.no.filter(x=>x!==it); renderRight(); })));
   wrap.append(block('Si SÍ…', st.yes||[],()=>{ (st.yes||(st.yes=[])).push({id:uid(),text:''}); renderRight(); }, it=>{ st.yes=st.yes.filter(x=>x!==it); renderRight(); })));
-  if(READONLY){ wrap.querySelectorAll('.adder,.condDel,textarea').forEach(el=>{ if(el.tagName==='TEXTAREA') el.disabled=true; else el.classList.add('ro'); }); }
+  if(READONLY){ wrap.querySelectorAll('.adder,.condDel,textarea').forEach(el=>{ if(el.tagName==='TEXTAREA') el.disabled=true; }); }
   return wrap;
 }
 function block(title, list, onAdd, onDel){
@@ -426,7 +465,6 @@ function subMini(proc, s, idx){
 
 /* ===== helpers ===== */
 function icon(g,t,fn){ const b=document.createElement('button'); b.className='icon'; b.title=t||''; b.textContent=g; if(fn) b.onclick=fn; return b; }
-function lighten(hex,f=.86){const c=hex.replace('#',''); const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f); return `rgb(${nr},${ng},${nb})`; }
 function tag(txt){ const el=document.createElement('span'); el.className='tag'; el.textContent=txt; return el; }
 function clearSubCtx(){ ctxSubId=null; renderRight(); }
 
@@ -451,25 +489,7 @@ function openProcessPicker(current, onPick){
   card.append(h,sel,bar); overlay.appendChild(card); document.body.appendChild(overlay);
 }
 
-/* ===== ACTIONS ===== */
-function addSub(){
-  if(!selPid || READONLY) return;
-  const p=data.find(x=>x.id===selPid);
-  p.sub.push({id:uid(), title:'Nuevo subproceso', desc:'', resp:ROLES[0], steps:[]});
-  ctxSubId=null; renderRight();
-}
-function addStepProcess(){
-  if(!selPid || READONLY) return;
-  const p=data.find(x=>x.id===selPid);
-  if(ctxSubId){
-    const s=p.sub.find(x=>x.id===ctxSubId);
-    (s.steps||(s.steps=[])).push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], yes:[], no:[]});
-  }else{
-    p.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], yes:[], no:[]});
-  }
-  renderRight();
-}
-/* Marca meta 🎯 en último paso de la lista actual */
+/* ===== Marca meta (🎯) ===== */
 function saveMeta(){
   const p=data.find(x=>x.id===selPid); if(!p) return;
   const list = ctxSubId ? (p.sub.find(s=>s.id===ctxSubId).steps||[]) : p.steps;
@@ -477,7 +497,60 @@ function saveMeta(){
   save(); renderRight();
 }
 
+/* ===== PRINT: documento completo expandido ===== */
+function printAll(){
+  const wrap=byId('printDoc'); wrap.innerHTML='';
+  const root=document.createElement('div');
+
+  data.forEach((proc,pi)=>{
+    const pBox=document.createElement('div'); pBox.style.margin='0 0 18px';
+    const title=document.createElement('h2'); title.textContent=(pi+1)+'. '+proc.name; title.style.margin='0 0 8px'; title.style.borderBottom='2px solid #000';
+    pBox.appendChild(title);
+
+    if(proc.desc){ const d=document.createElement('p'); d.textContent='Descripción: '+proc.desc; pBox.appendChild(d); }
+
+    if(proc.steps.length){
+      const h=document.createElement('h3'); h.textContent='Pasos'; h.style.margin='10px 0 6px'; pBox.appendChild(h);
+      proc.steps.forEach((st,si)=>{ pBox.appendChild(printStep(st, si, proc)); });
+    }
+
+    if(proc.sub.length){
+      const h=document.createElement('h3'); h.textContent='Subprocesos'; h.style.margin='12px 0 6px'; pBox.appendChild(h);
+      proc.sub.forEach((sp,qi)=>{
+        const sb=document.createElement('div'); sb.style.margin='8px 0 10px'; 
+        const sh=document.createElement('h4'); sh.textContent=(pi+1)+'.S'+(qi+1)+' '+sp.title; sh.style.margin='0 0 6px'; sb.appendChild(sh);
+        if(sp.desc){ const p=document.createElement('p'); p.textContent='Descripción: '+sp.desc; sb.appendChild(p); }
+        if(sp.steps?.length){ sp.steps.forEach((st,si)=> sb.appendChild(printStep(st, si, proc))); }
+        pBox.appendChild(sb);
+      });
+    }
+
+    const cut=document.createElement('div'); cut.className='pbreak';
+    pBox.appendChild(cut);
+    root.appendChild(pBox);
+  });
+
+  wrap.appendChild(root);
+  wrap.style.display='block';
+  setTimeout(()=>{ window.print(); wrap.style.display='none'; wrap.innerHTML=''; }, 50);
+}
+function printStep(st, si, proc){
+  const box=document.createElement('div'); box.style.border='1px solid #ddd'; box.style.borderRadius='10px'; box.style.padding='8px 10px'; box.style.margin='4px 0';
+  const h=document.createElement('div'); h.style.fontWeight='800'; h.textContent='Paso '+(si+1)+': '+(st.name||'');
+  box.appendChild(h);
+  const meta=st.meta?'  🎯':''; if(meta){ const s=document.createElement('span'); s.textContent=meta; s.style.marginLeft='6px'; h.appendChild(s); }
+  const resp=document.createElement('div'); resp.textContent='Responsable: '+(st.resp||'—'); resp.style.fontSize='13px'; resp.style.opacity='.85'; box.appendChild(resp);
+  if(st.desc){ const d=document.createElement('div'); d.textContent='Descripción: '+st.desc; d.style.marginTop='4px'; box.appendChild(d); }
+  if(st.link){ const l=document.createElement('div'); l.textContent='Enlace: '+st.link; box.appendChild(l); }
+  if(st.doc){ const d=document.createElement('div'); d.textContent='Documento/Adjunto: '+st.doc; box.appendChild(d); }
+  if(st.nextPid){ const tgt=data.find(p=>p.id===st.nextPid); if(tgt){ const n=document.createElement('div'); n.textContent='→ Próximo proceso: '+tgt.name; box.appendChild(n); } }
+  if(st.no?.length){ const t=document.createElement('div'); t.textContent='Si NO:'; t.style.marginTop='4px'; box.appendChild(t); st.no.forEach(i=>{ const li=document.createElement('div'); li.textContent='- '+i.text; li.style.fontSize='13px'; box.appendChild(li); }); }
+  if(st.yes?.length){ const t=document.createElement('div'); t.textContent='Si SÍ:'; t.style.marginTop='4px'; box.appendChild(t); st.yes.forEach(i=>{ const li=document.createElement('div'); li.textContent='- '+i.text; li.style.fontSize='13px'; box.appendChild(li); }); }
+  return box;
+}
+
 /* ===== INIT ===== */
+updateModeToggle();
 render();
 function render(){ renderLeft(); renderRight(); save(); }
 
@@ -491,3 +564,4 @@ window.addEventListener('keydown',e=>{
 </script>
 </body>
 </html>
+
