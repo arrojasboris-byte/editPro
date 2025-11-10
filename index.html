@@ -45,11 +45,12 @@
   .pTitle{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;font-size:14px;flex:1 1 92%;min-width:0;line-height:1.2;border-radius:8px;padding:4px 6px}
   .tiny{display:flex;gap:4px}
   .ico{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:8px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
-  .editBar{margin:4px 0 6px;padding:6px;display:flex;gap:6px;align-items:center;border-radius:8px;border:1px solid #e0e4ec;box-shadow:var(--sh-l2)}
-  .editBar .danger{background:#fee2e2;border:1px solid #fecaca;color:#7c2d12;border-radius:10px;padding:6px 10px}
-  .editBar .ok{background:#e0f2fe;border:1px solid #bae6fd;color:#0c4a6e;border-radius:10px;padding:6px 10px}
+  .ico.xs{min-width:18px;height:18px;font-size:10px}
+  .ico.trash{background:#fee2e2;border-color:#fecaca;color:#7c2d12}
+  .ico:active{transform:translateY(1px)}
+  .ico:focus-visible{outline:2px solid #b63a3a}
 
-  /* DERECHA */
+  /* DERECHA / TARJETAS */
   .card{border-radius:12px;border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
   .card.green{border-color:#cfe9df;background:linear-gradient(180deg,#ffffff,#eef7f5)}
 
@@ -95,7 +96,7 @@
   body.locked input.title, body.locked input.pTitle, body.locked textarea { pointer-events:none; background:linear-gradient(180deg,#f2f3f6,#e9ecf3); color:#555; }
   body.locked select.miniSel { pointer-events:none; opacity:.6; }
 
-  /* Error overlay */
+  /* Error overlay (fallback) */
   #errOverlay{position:fixed;inset:0;background:rgba(0,0,0,.65);color:#fff;display:none;z-index:99999}
   #errCard{max-width:880px;margin:8vh auto;background:#1f1f28;border:1px solid #444;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);padding:16px}
   #errCard h2{margin:0 0 8px}
@@ -105,10 +106,6 @@
 </style>
 </head>
 <body>
-  <noscript style="display:block;padding:12px;background:#fee2e2;color:#7c2d12;text-align:center;font-weight:800">
-    Esta página necesita JavaScript activado.
-  </noscript>
-
   <div class="top">
     <h1><span class="logo" aria-hidden="true">🎧</span><span class="title-text">PROCESOS AUDIO</span></h1>
     <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"> <span id="lastSaved" class="last">Última actualización: —</span>
@@ -146,15 +143,11 @@
 
   <div id="printDoc" style="display:none"></div>
 
-  <!-- Overlay errores -->
   <div id="errOverlay">
     <div id="errCard">
       <h2>⚠️ No se pudo cargar correctamente</h2>
       <div id="errMsg"></div>
       <pre id="errStack"></pre>
-      <p style="margin:6px 0 0;font-size:13px;opacity:.9">
-        Sugerencias: <b>Ctrl+Shift+R</b> (recarga dura), cierra extensiones, o abre con <code>#reset</code> para limpiar datos locales.
-      </p>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
         <button class="btnTop" onclick="location.reload()">🔄 Recargar</button>
         <button class="btnTop" onclick="resetAndReload()">🧹 Reset + Recargar</button>
@@ -164,7 +157,7 @@
 
 <script>
 /* ========= Safe boot ========= */
-window.__APP_VERSION__='V17';
+window.__APP_VERSION__='V18';
 (function harden(){
   const showErr=(title,stack)=>{
     const o=document.getElementById('errOverlay');
@@ -191,12 +184,10 @@ if (location.hash.replace('#','').toLowerCase()==='reset'){
 }
 
 /* ======= Estado / Constantes ======= */
-const LS='PROC_COMPACT_PRO_V17_SOLID'; /* versión nueva */
+const LS='PROC_COMPACT_PRO_V18_SOLID';
 const CLOUD_KEY=LS+'_CLOUD';
 const PIN_CODE='AR4321';
 const ROLES=['Audiólogo','Responsable','Otros'];
-
-/* Paleta amplia y no repetida */
 const PASTEL=['#ffc6b3','#ffd1dc','#ffb3b3','#caffb7','#b56576','#c6e2ff','#b3e5ff','#ffdb58','#c8b3ff','#d6b3ff','#ffe8b3','#b3ffd9','#ffd3b6','#e6b3ff','#b3c7ff','#ffd6a5','#a0e7e5','#c0f7a6','#f6c1ff','#fcd5ce'];
 
 function uid(){return Math.random().toString(36).slice(2,9);} 
@@ -316,9 +307,6 @@ function addProcess(){
   data.push({id:uid(),name:'Nuevo proceso',color:nextColor(),desc:'',sub:[],steps:[]}); 
   selPid=data[data.length-1].id; ctxSubId=null; render(); 
 }
-function closeAllEditBars(exceptId){
-  document.querySelectorAll('.editBar').forEach(function(b){ if(!exceptId || b.dataset.pid!==exceptId) b.remove(); });
-}
 function renderLeft(){
   const box=byId('procList'); box.innerHTML='';
   let list=data.slice();
@@ -352,50 +340,38 @@ function renderLeft(){
     row.appendChild(title);
 
     const tiny=document.createElement('div'); tiny.className='tiny';
-    const editIco=ico('🖉','Editar',function(){
+    /* Lápiz: edición inline (enfoca título) */
+    const editIco=ico('🖉','Editar nombre',function(){
       if(!canEdit()) return alert('Modo lectura. Desbloquea con PIN.');
-      const existing=document.getElementById('opt_'+p.id);
-      if(existing){ existing.remove(); return; }
-      closeAllEditBars(p.id);
-      const opt=document.createElement('div');
-      opt.className='editBar editOnly';
-      opt.id='opt_'+p.id;
-      opt.dataset.pid=p.id;
-      opt.style.background=lighten(p.color,.95);
-      opt.style.borderColor=lighten(p.color,.80);
-
-      const info=document.createElement('span'); info.textContent='Edición del proceso'; info.style.fontWeight='800';
-      const okBtn=document.createElement('button'); okBtn.className='ok'; okBtn.textContent='✔ Guardar';
-      okBtn.addEventListener('click',function(ev){ ev.stopPropagation(); title.blur(); save(); closeAllEditBars(); });
-      const delBtn=document.createElement('button'); delBtn.className='danger'; delBtn.textContent='🗑️ Borrar proceso';
-      delBtn.addEventListener('click',function(ev){
-        ev.stopPropagation();
-        if(!canEdit()) return;
-        if(confirm('¿Eliminar proceso?')){
-          const idx=data.findIndex(function(pp){return pp.id===p.id});
-          if(idx>-1){
-            data.splice(idx,1);
-            selPid=data[0]?data[0].id:null; ctxSubId=null; render();
-          }
-        }
-      });
-
-      opt.append(info,okBtn,delBtn);
-      box.appendChild(opt);
       title.focus(); title.select();
     }, true);
+    /* Cesto: borrar proceso, muy pequeño */
+    const delIco=ico('🗑️','Borrar proceso',function(){
+      if(!canEdit()) return;
+      if(confirm('¿Eliminar proceso?')){
+        const idx=data.findIndex(function(pp){return pp.id===p.id});
+        if(idx>-1){
+          data.splice(idx,1);
+          selPid=data[0]?data[0].id:null; ctxSubId=null;
+          render();
+        }
+      }
+    }, true);
+    delIco.classList.add('xs','trash');
+    /* Plegado de detalle */
     const detailIco=ico('▾','Detalle',function(){ toggleDesc(p.id,'toggle'); }, false);
-    tiny.append(editIco,detailIco);
+
+    tiny.append(editIco,delIco,detailIco);
     row.appendChild(tiny);
 
-    row.onclick=function(){
+    row.onclick=function(e){
+      if(e.target.closest('.ico')) return; /* no interferir con iconos */
       selPid=p.id; ctxSubId=null; renderRight();
       document.querySelectorAll('.procRow').forEach(function(el){ el.classList.remove('active'); });
       row.classList.add('active');
       document.querySelectorAll('[id^="d_"]').forEach(function(el){ el.style.display='none'; });
       const det=byId('d_'+p.id);
       if(det){ det.style.display='block'; const ta=det.querySelector('textarea'); autoGrow(ta); }
-      closeAllEditBars();
     };
 
     box.appendChild(row);
@@ -510,7 +486,7 @@ function stepRow(proc,sub,st,i){
   if(st.docUrl){ const a=document.createElement('a'); a.href=st.docUrl; a.download=st.docName||'documento'; a.target='_blank'; a.className='ico sm'; a.title='Abrir/descargar documento'; a.textContent='📄'; right.append(a); }
 
   const iGoto=ico('🚩','Próximo proceso',function(){ if(!canEdit()) return; pick(st.nextPid,function(v){st.nextPid=v;save();renderRight();}); }, true);
-  const iSiNo=ico('❓','Si/No',function(){ /* despliegue */ }, false);
+  const iSiNo=ico('❓','Si/No',function(){ /* despliegue condicional se crea abajo */ }, false);
   const iDel=ico('−','Eliminar',function(){ if(!canEdit()) return; if(confirm('¿Eliminar paso?')){const pos=list.indexOf(st);list.splice(pos,1);renderRight();} }, true);
   right.append(iGoto,iDel,iSiNo);
   const role=miniSel(st); right.append(role);
@@ -609,7 +585,7 @@ function subMini(proc,s,idx){
 
 /* Selector proceso destino */
 function pick(current,onPick){
-  const o=document.createElement('div'); Object.assign(o.style,{position:'fixed',inset:0,background:rgba(0,0,0,.45),display:'grid',placeItems:'center',zIndex:9990});
+  const o=document.createElement('div'); Object.assign(o.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990});
   const card=document.createElement('div'); Object.assign(card.style,{background:'#fff',padding:'12px',borderRadius:'10px',boxShadow:'0 14px 38px rgba(0,0,0,.2)',width:'min(92vw,420px)'});
   const h=document.createElement('div'); h.textContent='Selecciona proceso de destino'; h.style.fontWeight='800'; h.style.marginBottom='6px';
   const sel=document.createElement('select'); sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px';
