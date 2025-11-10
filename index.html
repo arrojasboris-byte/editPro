@@ -13,7 +13,7 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 
-  /* TOPBAR (clara: gris→rojo→gris oscuro) */
+  /* TOPBAR (gris→rojo→gris) */
   .top{display:flex;gap:8px;align-items:center;padding:10px 12px;
        background:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e);color:#fff}
   .top h1{margin:0 6px 0 0;font-size:20px;font-weight:900}
@@ -22,13 +22,18 @@
   .ticon,.btnTop{border:none;border-radius:10px;background:rgba(255,255,255,.18);color:#fff;padding:6px 9px;cursor:pointer}
   .btnTop{padding:6px 12px;border-radius:999px}
 
+  /* Toggle Admin / Público (no persistente) */
+  .modeSeg{display:flex;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden;margin-left:8px}
+  .seg{border:none;color:#fff;background:transparent;padding:6px 10px;cursor:pointer}
+  .seg.on{background:#ffffff30;color:#fff;font-weight:700}
+
   /* LAYOUT */
   .layout{display:grid;grid-template-columns:320px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 56px)}
   @media(max-width:1100px){.layout{grid-template-columns:1fr}}
   .panel{background:#fff;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.08);display:flex;flex-direction:column;min-width:0}
   .panel>header{padding:10px 12px;background:#202020;color:#fff;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:16px;border-top-right-radius:16px}
 
-  /* IZQUIERDA: SOLO “PROCESOS” */
+  /* IZQUIERDA */
   .leftTitle{font-weight:900;letter-spacing:.3px}
   .body{padding:10px;overflow:auto;flex:1}
   .addInline{display:inline-block;margin:0 0 8px 0;border:none;border-radius:999px;background:#333;color:#fff;padding:6px 10px;cursor:pointer;font-size:12px}
@@ -46,12 +51,11 @@
   .p-desc{display:none;margin-top:6px}
   .p-desc textarea{width:100%;min-height:52px;border:1px solid #e6e6e6;border-radius:8px;padding:6px}
 
-  /* DERECHA: CABECERA SOLO BOTONES */
+  /* DERECHA */
   #rHeader{background:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e)}
   .right-actions{display:flex;gap:6px;align-items:center}
   .right-actions.ro{display:none}
 
-  /* CONTEXTO SUBPROCESO */
   .ctx{display:flex;gap:8px;align-items:center;margin:10px 10px 0}
   .crumb{border:none;background:#333;color:#fff;border-radius:999px;padding:4px 8px;font-size:12px;cursor:pointer}
   .ctxTag{background:#eef0f3;border-radius:999px;padding:4px 10px;font-size:12px}
@@ -93,7 +97,7 @@
 
   .arrowV{opacity:.35;text-align:center;margin:-2px 0 0;font-size:12px}
 
-  /* PRINT: mostramos SOLO #printDoc */
+  /* PRINT: SOLO #printDoc visible */
   @media print{
     body *{ visibility:hidden !important; }
     #printDoc, #printDoc *{ visibility:visible !important; }
@@ -107,6 +111,10 @@
   <div class="top">
     <h1>PROCESOS</h1>
     <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"/>
+    <div class="modeSeg" id="modeSeg">
+      <button id="mAdmin" class="seg on" onclick="setMode('edit')">Admin</button>
+      <button id="mPublic" class="seg" onclick="setMode('view')">Público</button>
+    </div>
     <div class="iconbar">
       <button class="ticon" title="Descargar HTML" onclick="downloadHTML()">⬇️ HTML</button>
       <button class="ticon" title="Imprimir / PDF" onclick="printAll()">🖨️</button>
@@ -148,13 +156,15 @@
   <div id="printDoc" style="display:none"></div>
 
 <script>
-/* ===== BASE + MODO LECTURA ===== */
-const LS='PROC_PRINT_FULL_V1';
+/* ============ CONFIG (sin persistir modo) ============ */
+const LS='PROC_STABLE_V1';               // datos locales
 const CLOUD_KEY=LS+'_CLOUD';
 const PIN_CODE='AR4321';
 const ROLES=['Audiólogo','Responsable','Otros'];
 const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
-const READONLY = new URLSearchParams(location.search).get('mode') === 'view';
+
+/* Modo: por defecto EDIT; solo “view” si viene por URL. No se guarda en localStorage */
+let READONLY = (new URLSearchParams(location.search).get('mode') === 'view');
 
 let data = JSON.parse(localStorage.getItem(LS) || 'null') || [
   {id:uid(), name:'Reparaciones', color:PASTEL[0], desc:'', sub:[
@@ -171,6 +181,7 @@ let data = JSON.parse(localStorage.getItem(LS) || 'null') || [
 let selPid = data[0]?.id || null;
 let ctxSubId = null;
 let q='';
+let dragCtx=null;
 
 const byId=id=>document.getElementById(id);
 function uid(){ return Math.random().toString(36).slice(2,9); }
@@ -178,7 +189,16 @@ function save(){ localStorage.setItem(LS, JSON.stringify(data)); }
 function doSearch(v){ q=v.toLowerCase(); render(); }
 function lighten(hex,f=.86){const c=hex.replace('#',''); const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16); const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f); return `rgb(${nr},${ng},${nb})`; }
 
-/* ===== TOPBAR ===== */
+/* ===== Toggle Admin / Público (no persistente) ===== */
+function setMode(m){
+  READONLY = (m==='view');
+  byId('mAdmin').classList.toggle('on', !READONLY);
+  byId('mPublic').classList.toggle('on', READONLY);
+  byId('saveBtn').style.display = READONLY ? 'none' : '';
+  render();
+}
+
+/* ===== Topbar ===== */
 function togglePin(){
   const ok=sessionStorage.getItem(LS+'_PIN_OK')==='1';
   if(ok){ sessionStorage.removeItem(LS+'_PIN_OK'); byId('pinBtn').textContent='🔒'; return; }
@@ -200,9 +220,6 @@ function loadCloud(){
   if(!raw) return alert('No hay copia en nube.');
   try{ const obj=JSON.parse(raw); data=obj.data; selPid=data[0]?.id||null; ctxSubId=null; render(); alert('Datos cargados desde nube (simulada).'); }catch{ alert('Copia en nube corrupta.'); }
 }
-
-/* ===== DRAG CONTEXT ===== */
-let dragCtx=null; // {type:'process'|'sub'|'step', pid, subId, index}
 
 /* ===== IZQUIERDA ===== */
 function addProcess(){
@@ -287,9 +304,29 @@ function renderRight(){
   if(READONLY){
     document.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=true);
     byId('addProcBtn')?.classList.add('ro');
-    // En modo lectura el usuario puede CONSULTAR: dejamos botones de mostrar Detalle y Si/No
     byId('saveBtn').style.display='none';
+  } else {
+    byId('saveBtn').style.display='';
   }
+}
+
+/* ===== Acciones ===== */
+function addSub(){
+  if(!selPid || READONLY) return;
+  const p=data.find(x=>x.id===selPid);
+  p.sub.push({id:uid(), title:'Nuevo subproceso', desc:'', resp:ROLES[0], steps:[]});
+  ctxSubId=null; renderRight();
+}
+function addStepProcess(){
+  if(!selPid || READONLY) return;
+  const p=data.find(x=>x.id===selPid);
+  if(ctxSubId){
+    const s=p.sub.find(x=>x.id===ctxSubId);
+    (s.steps||(s.steps=[])).push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], yes:[], no:[]});
+  }else{
+    p.steps.push({id:uid(), name:'Nuevo paso', desc:'', resp:ROLES[0], yes:[], no:[]});
+  }
+  renderRight();
 }
 
 /* ===== FILA PASO ===== */
@@ -328,10 +365,9 @@ function stepRow(proc, sub, st, i){
   const doc =icon('📎','Documento',()=>{ if(!READONLY) fileIn.click(); });
   const goto=icon('🚩','Próximo proceso',()=>{ if(READONLY) return; openProcessPicker(st.nextPid,(v)=>{ st.nextPid=v; save(); renderRight(); }); });
   const del =icon('−','Eliminar',()=>{ if(READONLY) return; if(confirm('¿Eliminar paso?')){ const idx=list.indexOf(st); list.splice(idx,1); renderRight(); } });
-  const qBtn=icon('❓','Si/No'); qBtn.classList.add('black'); // visible también en lectura
+  const qBtn=icon('❓','Si/No'); qBtn.classList.add('black');
   icons.append(edit,link,doc,goto,del,qBtn,fileIn);
 
-  /* Pegatina de próximo proceso SIEMPRE visible junto a iconos */
   if(st.nextPid){
     const tgt=data.find(p=>p.id===st.nextPid);
     if(tgt){
@@ -343,17 +379,14 @@ function stepRow(proc, sub, st, i){
     }
   }
 
-  /* 🎯 meta si es último paso (se marca al Guardar) */
   if(st.meta){ const meta=icon('🎯','Meta cumplida'); meta.style.background='#ffe3a6'; icons.appendChild(meta); }
 
-  // En lectura, elimina botones de edición/destrucción pero mantiene mostrar/ocultar
   if(READONLY){ edit.classList.add('ro'); del.classList.add('ro'); goto.classList.add('ro'); doc.classList.add('ro'); link.classList.add('ro'); }
 
   const rightToys=document.createElement('div'); rightToys.className='icons';
   const sel=document.createElement('select'); sel.className='miniSel'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=st.resp||ROLES[0]; sel.onchange=e=>{ st.resp=e.target.value; save(); };
   if(READONLY) sel.disabled=true;
-  const detBtn=icon('▶','Detalle'); // también visible en lectura
-  rightToys.append(sel,detBtn);
+  const detBtn=icon('▶','Detalle'); rightToys.append(sel,detBtn);
 
   head.append(chip,icons,rightToys);
   wrap.appendChild(head);
@@ -378,7 +411,7 @@ function buildCond(st){
   const wrap=document.createElement('div'); wrap.className='condWrap';
   wrap.append(block('Si NO…', st.no||[], ()=>{ (st.no||(st.no=[])).push({id:uid(),text:''}); renderRight(); }, it=>{ st.no=st.no.filter(x=>x!==it); renderRight(); })));
   wrap.append(block('Si SÍ…', st.yes||[],()=>{ (st.yes||(st.yes=[])).push({id:uid(),text:''}); renderRight(); }, it=>{ st.yes=st.yes.filter(x=>x!==it); renderRight(); })));
-  if(READONLY){ wrap.querySelectorAll('.adder,.condDel,textarea').forEach(el=>{ if(el.tagName==='TEXTAREA') el.disabled=true; }); }
+  if(READONLY){ wrap.querySelectorAll('.adder,.condDel,textarea').forEach(el=>{ if(el.tagName==='TEXTAREA') el.disabled=true; else el.classList.add('ro'); }); }
   return wrap;
 }
 function block(title, list, onAdd, onDel){
@@ -397,7 +430,7 @@ function rowCond(it,onDel){
   r.append(tx,del); return r;
 }
 
-/* ===== Subproceso mini (drag y entrar al contexto) ===== */
+/* ===== Subproceso mini (drag + entrar) ===== */
 function subMini(proc, s, idx){
   const row=document.createElement('div'); row.className='row'; row.style.borderColor='#bde6d8';
   if(!READONLY){
@@ -444,7 +477,6 @@ function subMini(proc, s, idx){
 
 /* ===== helpers ===== */
 function icon(g,t,fn){ const b=document.createElement('button'); b.className='icon'; b.title=t||''; b.textContent=g; if(fn) b.onclick=fn; return b; }
-function tag(txt){ const el=document.createElement('span'); el.className='tag'; el.textContent=txt; return el; }
 function clearSubCtx(){ ctxSubId=null; renderRight(); }
 
 /* ===== Picker destino ===== */
@@ -468,7 +500,7 @@ function openProcessPicker(current, onPick){
   card.append(h,sel,bar); overlay.appendChild(card); document.body.appendChild(overlay);
 }
 
-/* ===== Marca meta (🎯) ===== */
+/* ===== Meta (🎯) ===== */
 function saveMeta(){
   const p=data.find(x=>x.id===selPid); if(!p) return;
   const list = ctxSubId ? (p.sub.find(s=>s.id===ctxSubId).steps||[]) : p.steps;
@@ -476,9 +508,8 @@ function saveMeta(){
   save(); renderRight();
 }
 
-/* ===== PRINT: documento completo expandido ===== */
+/* ===== PRINT completo ===== */
 function printAll(){
-  // Construye un documento completo expandido
   const wrap=byId('printDoc'); wrap.innerHTML='';
   const root=document.createElement('div');
 
@@ -487,27 +518,20 @@ function printAll(){
     const title=document.createElement('h2'); title.textContent=(pi+1)+'. '+proc.name; title.style.margin='0 0 8px'; title.style.borderBottom='2px solid #000';
     pBox.appendChild(title);
 
-    // Detalle proceso
     if(proc.desc){ const d=document.createElement('p'); d.textContent='Descripción: '+proc.desc; pBox.appendChild(d); }
 
-    // Pasos del proceso
     if(proc.steps.length){
       const h=document.createElement('h3'); h.textContent='Pasos'; h.style.margin='10px 0 6px'; pBox.appendChild(h);
-      proc.steps.forEach((st,si)=>{
-        pBox.appendChild(printStep(st, si, proc));
-      });
+      proc.steps.forEach((st,si)=> pBox.appendChild(printStep(st, si, proc)));
     }
 
-    // Subprocesos
     if(proc.sub.length){
       const h=document.createElement('h3'); h.textContent='Subprocesos'; h.style.margin='12px 0 6px'; pBox.appendChild(h);
       proc.sub.forEach((sp,qi)=>{
         const sb=document.createElement('div'); sb.style.margin='8px 0 10px'; 
         const sh=document.createElement('h4'); sh.textContent=(pi+1)+'.S'+(qi+1)+' '+sp.title; sh.style.margin='0 0 6px'; sb.appendChild(sh);
         if(sp.desc){ const p=document.createElement('p'); p.textContent='Descripción: '+sp.desc; sb.appendChild(p); }
-        if(sp.steps?.length){
-          sp.steps.forEach((st,si)=> sb.appendChild(printStep(st, si, proc)));
-        }
+        if(sp.steps?.length){ sp.steps.forEach((st,si)=> sb.appendChild(printStep(st, si, proc))); }
         pBox.appendChild(sb);
       });
     }
@@ -531,19 +555,22 @@ function printStep(st, si, proc){
   if(st.link){ const l=document.createElement('div'); l.textContent='Enlace: '+st.link; box.appendChild(l); }
   if(st.doc){ const d=document.createElement('div'); d.textContent='Documento/Adjunto: '+st.doc; box.appendChild(d); }
   if(st.nextPid){ const tgt=data.find(p=>p.id===st.nextPid); if(tgt){ const n=document.createElement('div'); n.textContent='→ Próximo proceso: '+tgt.name; box.appendChild(n); } }
-  if(st.no?.length){ const t=document.createElement('div'); t.textContent='Si NO:'; t.style.marginTop='4px'; box.appendChild(t); st.no.forEach((i,ix)=>{ const li=document.createElement('div'); li.textContent='- '+i.text; li.style.fontSize='13px'; box.appendChild(li); }); }
-  if(st.yes?.length){ const t=document.createElement('div'); t.textContent='Si SÍ:'; t.style.marginTop='4px'; box.appendChild(t); st.yes.forEach((i,ix)=>{ const li=document.createElement('div'); li.textContent='- '+i.text; li.style.fontSize='13px'; box.appendChild(li); }); }
+  if(st.no?.length){ const t=document.createElement('div'); t.textContent='Si NO:'; t.style.marginTop='4px'; box.appendChild(t); st.no.forEach(i=>{ const li=document.createElement('div'); li.textContent='- '+i.text; li.style.fontSize='13px'; box.appendChild(li); }); }
+  if(st.yes?.length){ const t=document.createElement('div'); t.textContent='Si SÍ:'; t.style.marginTop='4px'; box.appendChild(t); st.yes.forEach(i=>{ const li=document.createElement('div'); li.textContent='- '+i.text; li.style.fontSize='13px'; box.appendChild(li); }); }
   return box;
 }
 
-/* ===== UTIL ===== */
-function uid(){ return Math.random().toString(36).slice(2,9); }
-
-/* ===== INIT ===== */
-render();
+/* ===== Init ===== */
+(function init(){
+  // activar estado de botones según URL (?mode=view solo en esa carga)
+  byId('mAdmin').classList.toggle('on', !READONLY);
+  byId('mPublic').classList.toggle('on', READONLY);
+  if(READONLY) byId('saveBtn').style.display='none';
+  render();
+})();
 function render(){ renderLeft(); renderRight(); save(); }
 
-/* Enter = blur/guardar */
+/* Enter = guardar */
 window.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     const a=document.activeElement;
