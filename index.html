@@ -6,36 +6,33 @@
 <title>PROCESOS</title>
 <style>
   :root{
-    --radius:14px; --bg:#f5f6f8; --ink:#111;
-    --hdrG:#3e3e3e; --hdrR:#9c1b1b; --hdrB:#121212;  /* gris → rojo → negro */
-    --panelHead:#0b0b0b;
+    --bg:#f6f7f9;
+    --chipShadow:0 3px 0 #cfd4da,0 10px 22px rgba(0,0,0,.08);
     --rose:#ffe7ec; --mint:#dff7ef;
-    --chipShadow:0 3px 0 #cfd4da,0 10px 22px rgba(0,0,0,.10);
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 
-  /* TOP */
+  /* TOPBAR */
   .top{display:flex;gap:8px;align-items:center;padding:10px 12px;
-       background:linear-gradient(90deg,var(--hdrG),var(--hdrR),var(--hdrB));color:#fff}
-  .top h1{margin:0;font-size:20px;font-weight:900}
-  .search{flex:0 1 210px;max-width:210px;border:none;border-radius:999px;background:rgba(255,255,255,.14);padding:6px 12px;color:#fff}
-  .btn{border:none;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;padding:6px 10px;font-size:12px;cursor:pointer}
+       background:linear-gradient(90deg,#3a3a3a,#8f2020,#121212);color:#fff}
+  .top h1{margin:0 6px 0 0;font-size:20px;font-weight:900}
+  .search{flex:0 1 200px;max-width:200px;border:none;border-radius:999px;background:rgba(255,255,255,.14);padding:6px 12px;color:#fff}
   .iconbar{display:flex;gap:6px;margin-left:auto}
-  .ticon{border:none;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;padding:6px 9px;cursor:pointer}
-  .lock{filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+  .ticon,.btnTop{border:none;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;padding:6px 9px;cursor:pointer}
+  .btnTop{padding:6px 12px;border-radius:999px}
 
   /* LAYOUT */
   .layout{display:grid;grid-template-columns:320px 1fr;gap:10px;padding:10px;min-height:calc(100vh - 56px)}
   @media(max-width:1100px){.layout{grid-template-columns:1fr}}
   .panel{background:#fff;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.08);display:flex;flex-direction:column;min-width:0}
-  .panel>header{padding:10px 12px;background:var(--panelHead);color:#fff;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:16px;border-top-right-radius:16px}
-  .panel .body{padding:10px;overflow:auto;flex:1}
+  .panel>header{padding:10px 12px;background:#0b0b0b;color:#fff;display:flex;justify-content:space-between;align-items:center;border-top-left-radius:16px;border-top-right-radius:16px}
 
-  /* IZQUIERDA */
-  .leftTitle{font-weight:800}
-  .addBtn{border:none;border-radius:10px;background:#222;color:#fff;padding:6px 10px;cursor:pointer}
-  .p-card{border:1px solid #e8eaee;border-radius:12px;padding:8px;margin-bottom:6px;cursor:pointer;background:#fff}
+  /* LEFT: PROCESOS */
+  .leftTitle{font-weight:900;letter-spacing:.3px}
+  .body{padding:10px;overflow:auto;flex:1}
+  .addInline{display:inline-block;margin:0 0 8px 0;border:none;border-radius:999px;background:#222;color:#fff;padding:6px 10px;cursor:pointer;font-size:12px}
+  .p-card{border:1px solid #e8eaee;border-radius:12px;padding:8px;margin-bottom:6px;background:#fff;cursor:pointer}
   .p-card.active{outline:2px solid rgba(0,0,0,.12)}
   .p-name{border:none;background:transparent;font-weight:800;font-size:14px;width:100%}
   .p-actions{display:none;gap:6px;margin-top:6px;align-items:center}
@@ -45,46 +42,48 @@
   .p-desc{display:none;margin-top:6px}
   .p-desc textarea{width:100%;min-height:52px;border:1px solid #e6e6e6;border-radius:8px;padding:6px}
 
-  /* DERECHA */
-  #rHeader{background:linear-gradient(90deg,#3a3a3a,#7d1b1b,#111)} /* menos negro */
+  /* RIGHT HEADER (solo botones) */
+  #rHeader{background:linear-gradient(90deg,#3a3a3a,#8f2020,#121212)}
   .right-actions{display:flex;gap:6px;align-items:center}
-  .ctx{display:flex;gap:8px;align-items:center;margin-left:10px}
+
+  /* CONTEXTO DE SUBPROCESO (aparece bajo cabecera) */
+  .ctx{display:flex;gap:8px;align-items:center;margin:10px 10px 0}
   .crumb{border:none;background:#000;color:#fff;border-radius:999px;padding:4px 8px;font-size:12px;cursor:pointer}
   .ctxTag{background:#eef0f3;border-radius:999px;padding:4px 10px;font-size:12px}
 
   /* TARJETAS */
-  .card{border-radius:12px;border:1px solid #f0c5cd;background:var(--rose);padding:8px}
+  .card{border-radius:12px;border:1px solid #f0c5cd;background:var(--rose);padding:6px}
   .card.green{border-color:#bde6d8;background:var(--mint)}
 
-  /* PASO COMPACTO */
-  .row{border:1px solid #edd6db;background:#fff;border-radius:12px;padding:8px 10px;margin:4px 0}
-  .rowHead{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
-  .chip{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);min-width:380px;max-width:100%}
-  .bubble{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;background:#000;color:#fff;font-weight:900;font-size:12px}
-  .title{border:none;background:transparent;font-weight:800;width:100%;min-width:0;font-size:15px}
-  .icons{display:flex;align-items:center;gap:6px}
-  .icon{border:none;background:#eef0f3;border-radius:999px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  /* PASOS COMPACTOS */
+  .row{border:1px solid #edd6db;background:#fff;border-radius:12px;padding:6px 8px;margin:3px 0}
+  .rowHead{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:linear-gradient(180deg,#fff,#f2f3f5);border:1px solid #e6e8ec;box-shadow:var(--chipShadow);min-width:320px;max-width:100%}
+  .bubble{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#000;color:#fff;font-weight:900;font-size:11px}
+  .title{border:none;background:transparent;font-weight:800;width:100%;min-width:0;font-size:14px}
+  .icons{display:flex;align-items:center;gap:4px}
+  .icon{border:none;background:#eef0f3;border-radius:999px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .icon.black{background:#111;color:#fff}
-  .miniSel{border:1px solid #e5e7eb;border-radius:999px;padding:3px 8px;font-size:12px}
+  .miniSel{border:1px solid #e5e7eb;border-radius:999px;padding:2px 6px;font-size:12px}
 
   .detail{display:none;border-top:1px dashed #e5e7eb;margin-top:6px;padding-top:6px}
-  .detail textarea{width:100%;min-height:60px;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px}
-  .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;background:#eef0f3;margin-right:6px}
+  .detail textarea{width:100%;min-height:56px;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px}
+  .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 8px;font-size:12px;background:#eef0f3;margin-right:6px}
 
-  .condWrap{display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd}
-  .condBlock{margin-bottom:6px}
-  .condHdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-  .condTitle{font-weight:800}
-  .adder{border:none;border-radius:999px;background:#111;color:#fff;width:26px;height:26px;cursor:pointer}
-  .condItem{display:flex;gap:6px;margin:4px 0}
-  .condText{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;min-height:32px}
-  .condDel{border:none;background:#eef0f3;border-radius:999px;width:26px;height:26px;cursor:pointer}
+  .condWrap{display:none;margin-top:6px;padding-top:4px;border-top:1px dashed #ddd}
+  .condBlock{margin-bottom:4px}
+  .condHdr{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+  .condTitle{font-weight:800;font-size:13px}
+  .adder{border:none;border-radius:999px;background:#111;color:#fff;width:24px;height:24px;cursor:pointer}
+  .condItem{display:flex;gap:4px;margin:3px 0}
+  .condText{flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px;min-height:30px;font-size:13px}
+  .condDel{border:none;background:#eef0f3;border-radius:999px;width:24px;height:24px;cursor:pointer}
 
-  .arrowV{opacity:.35;text-align:center;margin:-2px 0 2px}
+  .arrowV{opacity:.35;text-align:center;margin:-2px 0 0;font-size:12px}
 </style>
 </head>
 <body>
-  <!-- TOP -->
+  <!-- TOPBAR -->
   <div class="top">
     <h1>PROCESOS</h1>
     <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"/>
@@ -93,8 +92,8 @@
       <button class="ticon" title="Imprimir / PDF" onclick="window.print()">🖨️</button>
       <button class="ticon" title="Guardar en nube" onclick="saveCloud()">☁️⬆️</button>
       <button class="ticon" title="Actualizar desde nube" onclick="loadCloud()">☁️🔄</button>
-      <button id="pinBtn" class="ticon lock" title="PIN" onclick="togglePin()">🔒</button>
-      <button class="btn" onclick="saveMeta()">💾 Guardar</button>
+      <button id="pinBtn" class="ticon" title="PIN" onclick="togglePin()">🔒</button>
+      <button class="btnTop" onclick="saveMeta()">💾 Guardar</button>
     </div>
   </div>
 
@@ -103,35 +102,35 @@
     <div class="panel">
       <header>
         <span class="leftTitle">PROCESOS</span>
-        <button class="addBtn" onclick="addProcess()">+ Añadir</button>
       </header>
-      <div class="body" id="procList"></div>
+      <div class="body" id="procList">
+        <button class="addInline" onclick="addProcess()">+ Proceso</button>
+      </div>
     </div>
 
     <!-- DERECHA -->
     <div class="panel">
+      <!-- Cabecera: SOLO botones -->
       <header id="rHeader">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <span id="rTitle">Selecciona</span>
-          <!-- Contexto de Subproceso -->
-          <div id="ctxBox" class="ctx" style="display:none">
-            <button class="crumb" onclick="clearSubCtx()">← Volver a pasos del proceso</button>
-            <span id="ctxTag" class="ctxTag"></span>
-          </div>
-        </div>
+        <span></span>
         <div class="right-actions">
-          <button class="btn" onclick="addSub()">+ Subproceso</button>
-          <button class="btn" onclick="addStepProcess()">+ Paso</button>
-          <button class="btn" onclick="saveMeta()">💾 Guardar</button>
+          <button class="btnTop" onclick="addSub()">+ Subproceso</button>
+          <button class="btnTop" onclick="addStepProcess()">+ Paso</button>
+          <button class="btnTop" onclick="saveMeta()">💾 Guardar</button>
         </div>
       </header>
+      <!-- Contexto de subproceso (bajo cabecera) -->
+      <div id="ctxBox" class="ctx" style="display:none">
+        <button class="crumb" onclick="clearSubCtx()">← Volver a pasos del proceso</button>
+        <span id="ctxTag" class="ctxTag"></span>
+      </div>
       <div class="body" id="rightBody"></div>
     </div>
   </div>
 
 <script>
 /* ===== BASE ===== */
-const LS='PROC_FINAL_UI_V1';
+const LS='PROC_HDR_COMPACT_V1';
 const CLOUD_KEY=LS+'_CLOUD';
 const PIN_CODE='AR4321';
 const PASTEL=['#ffd1dc','#c6e2ff','#caffb7','#ffeec6','#e0c6ff','#ffecd1','#c2f0e8','#fff9c6'];
@@ -141,7 +140,7 @@ let data = JSON.parse(localStorage.getItem(LS) || 'null') || [
   {id:uid(), name:'Reparaciones', color:PASTEL[0], desc:'', sub:[
     {id:uid(), title:'Diagnóstico', desc:'', resp:ROLES[0], steps:[]}
   ], steps:[
-    {id:uid(), name:'Recepción', desc:'', resp:ROLES[0], yes:[], no:[]}
+    {id:uid(), name:'compra', desc:'', resp:ROLES[0], yes:[], no:[]}
   ]},
   {id:uid(), name:'Ayudas', color:PASTEL[2], desc:'', sub:[], steps:[]},
 ];
@@ -179,26 +178,25 @@ function loadCloud(){
   try{ const obj=JSON.parse(raw); data=obj.data; selPid=data[0]?.id||null; ctxSubId=null; render(); alert('Datos cargados desde nube (simulada).'); }catch{ alert('Copia en nube corrupta.'); }
 }
 
-/* ===== IZQUIERDA ===== */
+/* ===== LISTA DE PROCESOS ===== */
 function addProcess(){
   data.push({id:uid(), name:'Nuevo proceso', color:PASTEL[Math.floor(Math.random()*PASTEL.length)], desc:'', sub:[], steps:[]});
   selPid=data[data.length-1].id; ctxSubId=null; render();
 }
 function renderLeft(){
-  const box=byId('procList'); box.innerHTML='';
+  const box=byId('procList'); box.innerHTML='<button class="addInline" onclick="addProcess()">+ Proceso</button>';
   let list=data.slice();
   if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q));
-  // Prioriza los que tienen subprocesos
   list.sort((a,b)=>(b.sub.length>0)-(a.sub.length>0));
+
   list.forEach(p=>{
     const card=document.createElement('div'); card.className='p-card'+(p.id===selPid?' active':'');
-    card.style.borderColor=p.color; card.style.background='linear-gradient(180deg,#fff,'+lighten(p.color,.90)+')';
-    card.onclick=()=>{ selPid=p.id; ctxSubId=null; renderRight(); card.classList.add('active'); };
+    card.style.borderColor=p.color; card.style.background='linear-gradient(180deg,#fff,'+lighten(p.color,.92)+')';
+    card.onclick=()=>{ selPid=p.id; ctxSubId=null; renderRight(); document.querySelectorAll('.p-card').forEach(el=>el.classList.remove('active')); card.classList.add('active'); };
 
-    const name=document.createElement('input'); name.className='p-name'; name.value=p.name; name.oninput=e=>{ p.name=e.target.value; if(selPid===p.id) byId('rTitle').textContent=p.name||'Selecciona'; save(); };
+    const name=document.createElement('input'); name.className='p-name'; name.value=p.name; name.oninput=e=>{ p.name=e.target.value; save(); };
     card.appendChild(name);
 
-    // acciones visibles SOLO al seleccionar
     const actions=document.createElement('div'); actions.className='p-actions';
     const edit=document.createElement('button'); edit.className='pill'; edit.textContent='🖉 Editar'; edit.onclick=(ev)=>{ ev.stopPropagation(); name.focus(); name.select(); };
     const descBtn=document.createElement('button'); descBtn.className='pill'; descBtn.textContent='▼ Detalle';
@@ -206,25 +204,22 @@ function renderLeft(){
     del.onclick=(ev)=>{ ev.stopPropagation(); if(confirm('¿Eliminar proceso?')){ data=data.filter(x=>x.id!==p.id); if(selPid===p.id){ selPid=data[0]?.id||null; ctxSubId=null; } render(); } };
     actions.append(edit,descBtn,del); card.appendChild(actions);
 
-    // detalle (oculto siempre por defecto)
     const dWrap=document.createElement('div'); dWrap.className='p-desc';
     const ta=document.createElement('textarea'); ta.value=p.desc||''; ta.oninput=e=>{ p.desc=e.target.value; save(); };
     dWrap.appendChild(ta);
-    card.appendChild(dWrap);
     descBtn.onclick=(ev)=>{ ev.stopPropagation(); const open=dWrap.style.display!=='block'; dWrap.style.display=open?'block':'none'; descBtn.textContent=open?'▲ Detalle':'▼ Detalle'; };
+    card.appendChild(dWrap);
 
     box.appendChild(card);
   });
 }
 
-/* ===== DERECHA ===== */
+/* ===== DERECHA (PASOS y SUBPROCESO CONTEXTO) ===== */
 function renderRight(){
-  const body=byId('rightBody'); const title=byId('rTitle'); const hdr=byId('rHeader');
-  const ctxBox=byId('ctxBox'); const ctxTag=byId('ctxTag');
+  const body=byId('rightBody'); const ctxBox=byId('ctxBox'); const ctxTag=byId('ctxTag');
   body.innerHTML='';
   const p=data.find(x=>x.id===selPid);
-  if(!p){ title.textContent='Selecciona'; hdr.style.background='linear-gradient(90deg,#3a3a3a,#7d1b1b,#111)'; ctxBox.style.display='none'; return; }
-  title.textContent=p.name||'Selecciona'; hdr.style.background=`linear-gradient(90deg,#3a3a3a,${lighten(p.color,.55)},#111)`;
+  if(!p){ ctxBox.style.display='none'; return; }
 
   const sub = ctxSubId ? p.sub.find(s=>s.id===ctxSubId) : null;
   ctxBox.style.display = sub ? 'flex' : 'none';
@@ -233,13 +228,20 @@ function renderRight(){
   const card=document.createElement('div'); card.className='card';
   const list = sub ? (sub.steps||[]) : p.steps;
   list.forEach((st,i)=> card.appendChild(stepRow(p, sub, st, i)));
-  const add=document.createElement('button'); add.textContent='＋'; add.className='adder'; add.style.background='#5a0000'; add.style.margin='4px auto';
+  const add=document.createElement('button'); add.textContent='＋'; add.className='adder'; add.style.cssText='border:none;border-radius:999px;background:#5a0000;color:#fff;width:26px;height:26px;display:block;margin:6px auto;cursor:pointer';
   add.onclick=()=>{ const target=sub ? (sub.steps||(sub.steps=[])) : p.steps; target.push({id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]}); renderRight(); };
   card.appendChild(add);
   body.appendChild(card);
+
+  // Sección Subprocesos (bajo pasos), para entrar al contexto
+  if(p.sub.length){
+    const g=document.createElement('div'); g.className='card green'; g.style.marginTop='8px';
+    p.sub.forEach((s,idx)=> g.appendChild(subMini(p,s,idx)));
+    body.appendChild(g);
+  }
 }
 
-/* ===== FILA PASO ===== */
+/* ===== FILA PASO (compacta) ===== */
 function stepRow(proc, sub, st, i){
   const wrap=document.createElement('div'); wrap.className='row';
   const head=document.createElement('div'); head.className='rowHead';
@@ -288,68 +290,54 @@ function stepRow(proc, sub, st, i){
 /* ===== Si/No ===== */
 function buildCond(st){
   const wrap=document.createElement('div'); wrap.className='condWrap';
-  const bNo=document.createElement('div'); bNo.className='condBlock';
-  bNo.append(titleAdd('Si NO…',()=>{ (st.no||(st.no=[])).push({id:uid(),text:''}); renderRight(); }));
-  (st.no||[]).forEach(it=> bNo.append(condRow(it, v=>{it.text=v; save();}, ()=>{st.no=st.no.filter(x=>x!==it); renderRight();})));
-
-  const bSi=document.createElement('div'); bSi.className='condBlock';
-  bSi.append(titleAdd('Si SÍ…',()=>{ (st.yes||(st.yes=[])).push({id:uid(),text:''}); renderRight(); }));
-  (st.yes||[]).forEach(it=> bSi.append(condRow(it, v=>{it.text=v; save();}, ()=>{st.yes=st.yes.filter(x=>x!==it); renderRight();})));
-
-  wrap.append(bNo,bSi);
+  wrap.append(block('Si NO…', st.no||[], ()=>{ (st.no||(st.no=[])).push({id:uid(),text:''}); renderRight(); }, it=>{ st.no=st.no.filter(x=>x!==it); renderRight(); }));
+  wrap.append(block('Si SÍ…', st.yes||[],()=>{ (st.yes||(st.yes=[])).push({id:uid(),text:''}); renderRight(); }, it=>{ st.yes=st.yes.filter(x=>x!==it); renderRight(); }));
   return wrap;
 }
-function titleAdd(t, onAdd){
-  const h=document.createElement('div'); h.className='condHdr';
-  const tt=document.createElement('div'); tt.className='condTitle'; tt.textContent=t;
+function block(title, list, onAdd, onDel){
+  const b=document.createElement('div'); b.className='condBlock';
+  const hdr=document.createElement('div'); hdr.className='condHdr';
+  const t=document.createElement('div'); t.className='condTitle'; t.textContent=title;
   const add=document.createElement('button'); add.className='adder'; add.textContent='+'; add.onclick=onAdd;
-  h.append(tt,add); return h;
+  hdr.append(t,add); b.appendChild(hdr);
+  list.forEach(it=> b.appendChild(rowCond(it,onDel)));
+  return b;
 }
-function condRow(it,onChange,onDel){
+function rowCond(it,onDel){
   const r=document.createElement('div'); r.className='condItem';
-  const tx=document.createElement('textarea'); tx.className='condText'; tx.placeholder='Escribe…'; tx.value=it.text||''; tx.oninput=e=>onChange(e.target.value);
-  const del=document.createElement('button'); del.className='condDel'; del.textContent='−'; del.onclick=onDel;
+  const tx=document.createElement('textarea'); tx.className='condText'; tx.placeholder='Escribe…'; tx.value=it.text||''; tx.oninput=e=>{ it.text=e.target.value; save(); };
+  const del=document.createElement('button'); del.className='condDel'; del.textContent='−'; del.onclick=()=>onDel(it);
   r.append(tx,del); return r;
 }
 
-/* ===== SUBPROCESOS LIST ===== */
-function subRow(proc, s, idx){
-  const wrap=document.createElement('div'); wrap.className='row';
+/* ===== Subproceso mini (lista debajo de pasos) ===== */
+function subMini(proc, s, idx){
+  const row=document.createElement('div'); row.className='row'; row.style.borderColor='#bde6d8';
   const head=document.createElement('div'); head.className='rowHead';
-
   const chip=document.createElement('div'); chip.className='chip'; chip.style.cursor='pointer';
   const num=document.createElement('div'); num.className='bubble'; num.textContent=idx+1;
   const title=document.createElement('input'); title.className='title'; title.value=s.title||'Subproceso'; title.oninput=e=>{ s.title=e.target.value; save(); };
-  chip.append(num,title);
-  chip.onclick=()=>{ ctxSubId=s.id; renderRight(); };
+  chip.append(num,title); chip.onclick=()=>{ ctxSubId=s.id; renderRight(); };
 
   const icons=document.createElement('div'); icons.className='icons';
   const edit=icon('🖉','Editar',()=>{ title.focus(); title.select(); });
-  const del =icon('−','Eliminar',()=>{ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==s); if(ctxSubId===s.id) ctxSubId=null; renderRight(); } });
-  const det =icon('▶','Detalle'); 
-  icons.append(edit,del,det);
+  const del=icon('−','Eliminar',()=>{ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==s); if(ctxSubId===s.id) ctxSubId=null; renderRight(); } });
+  icons.append(edit,del);
 
   const right=document.createElement('div'); right.className='icons';
   const sel=document.createElement('select'); sel.className='miniSel'; ROLES.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); }); sel.value=s.resp||ROLES[0]; sel.onchange=e=>{ s.resp=e.target.value; save(); };
   right.appendChild(sel);
 
   head.append(chip,icons,right);
-  wrap.appendChild(head);
+  row.appendChild(head);
 
-  // mini + Paso debajo
+  // mini + Paso
   const mini=document.createElement('div'); mini.style.margin='4px 0 0 42px';
   const add=document.createElement('button'); add.textContent='+ Paso'; add.className='adder'; add.style.width='60px'; add.style.height='22px'; add.style.fontSize='11px';
   add.onclick=()=>{ (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); ctxSubId=s.id; renderRight(); };
   mini.appendChild(add);
-  wrap.appendChild(mini);
-
-  const detail=document.createElement('div'); detail.className='detail';
-  det.onclick=()=>{ detail.style.display=detail.style.display==='block'?'none':'block'; det.textContent=detail.style.display==='block'?'▼':'▶'; };
-  const dTx=document.createElement('textarea'); dTx.value=s.desc||''; dTx.oninput=e=>{ s.desc=e.target.value; save(); };
-  detail.appendChild(dTx);
-  wrap.appendChild(detail);
-
-  return wrap;
+  row.appendChild(mini);
+  return row;
 }
 
 /* ===== helpers ===== */
@@ -357,7 +345,7 @@ function icon(g,t,fn){ const b=document.createElement('button'); b.className='ic
 function tag(txt){ const el=document.createElement('span'); el.className='tag'; el.textContent=txt; return el; }
 function clearSubCtx(){ ctxSubId=null; renderRight(); }
 
-/* ===== Picker de procesos destino (🚩) ===== */
+/* ===== Picker de procesos destino ===== */
 function openProcessPicker(current, onPick){
   const overlay=document.createElement('div');
   Object.assign(overlay.style,{position:'fixed',inset:'0',background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990});
@@ -370,8 +358,8 @@ function openProcessPicker(current, onPick){
   sel.value=current || data[0].id;
 
   const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='10px';
-  const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btn'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.onclick=()=>document.body.removeChild(overlay);
-  const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btn'; ok.style.background='#5a0000'; ok.style.color='#fff';
+  const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.onclick=()=>document.body.removeChild(overlay);
+  const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#5a0000'; ok.style.color='#fff';
   ok.onclick=()=>{ onPick(sel.value); document.body.removeChild(overlay); };
 
   bar.append(cancel,ok);
