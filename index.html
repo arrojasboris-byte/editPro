@@ -101,9 +101,21 @@
   .branch-yes .condNum{color:#166534}
   .branch-no .condNum{color:#7c2d12}
 
-  /* Conectores */
+  /* Conectores: línea vertical del color del proceso, centro a centro, detrás del número */
   .flow .row .bubble{position:relative;z-index:2}
-  .flow .row .bubble::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:100%;width:2px;height:var(--conn-len,22px);background:var(--line);border-radius:2px;pointer-events:none;z-index:0}
+  .flow .row .bubble::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    top:50%;                    /* desde el centro del número */
+    width:2px;
+    height:var(--conn-len,22px);
+    background:var(--conn-color, var(--line));
+    border-radius:2px;
+    pointer-events:none;
+    z-index:1;                  /* detrás del número (z=2) */
+  }
   .flow .row:last-child .bubble::after{content:none}
 
   /* LOCK UI */
@@ -168,7 +180,7 @@
 
 <script>
 /* ======= Estado / Constantes ======= */
-const LS='PROC_COMPACT_PRO_V15_SOLID';  /* <- nueva clave para evitar colisiones con datos antiguos */
+const LS='PROC_COMPACT_PRO_V15_SOLID';
 const CLOUD_KEY=LS+'_CLOUD';
 const PIN_CODE='AR4321';
 const ROLES=['Audiólogo','Responsable','Otros'];
@@ -488,6 +500,9 @@ function removePointFromStep(step, targetId){
 function stepRow(proc,sub,st,i){
   const list=sub?(sub.steps||[]):proc.steps;
   const row=document.createElement('div'); row.className='row'; row.draggable=!(!canEdit()); row.style.borderColor='#dcdfe7';
+  /* color de conector por proceso */
+  row.style.setProperty('--conn-color', proc.color);
+
   row.addEventListener('dragstart',function(e){ if(!canEdit()){ e.preventDefault(); return; } dragCtx={type:'step',pid:proc.id,subId:(sub?sub.id:null),index:i}; });
   row.addEventListener('dragover',function(e){ e.preventDefault(); });
   row.addEventListener('drop',function(e){ e.preventDefault(); if(!canEdit()) return; if(!dragCtx||dragCtx.type!=='step')return; const same=dragCtx.pid===proc.id&&(dragCtx.subId||null)===(sub?sub.id:null); if(!same)return; const from=dragCtx.index,to=i; if(from===to)return; const it=list.splice(from,1)[0]; list.splice(to,0,it); renderRight(); });
@@ -685,13 +700,15 @@ function alignConnectors(container){
   rows.forEach(function(row,idx){
     const b=row.querySelector('.bubble'); if(!b) return;
     const rr=row.getBoundingClientRect(); const br=b.getBoundingClientRect();
+    const brc = br.top + br.height/2; /* centro del número actual */
     row.style.setProperty('--line-x', (br.left - rr.left + br.width/2) + 'px');
     const next=rows[idx+1];
     if(next){
       const nb=next.querySelector('.bubble');
       if(nb){
         const nbb=nb.getBoundingClientRect();
-        const len=Math.max(10, Math.round((nbb.top + nbb.height/2) - (br.bottom)));
+        const nbc = nbb.top + nbb.height/2; /* centro del siguiente número */
+        const len=Math.max(10, Math.round(nbc - brc));
         row.style.setProperty('--conn-len', len + 'px');
       } else {
         row.style.setProperty('--conn-len','22px');
