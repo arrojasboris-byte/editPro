@@ -3,45 +3,27 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>PROCESOS AUDIO — Demo integrada</title>
+<title>PROCESOS AUDIO</title>
 <style>
   :root{
-    --bg:#f4f5f7;            /* fondo gris claro */
-    --surface:#ffffff;
-    --ink:#222;
-    --muted:#667085;
-    --pill:#eceff3;
-    --shadow:0 8px 20px rgba(0,0,0,.08);
-    --ring:0 0 0 2px rgba(59,130,246,.15);
+    --bg:#f4f5f7; --surface:#ffffff; --ink:#222; --muted:#667085;
+    --pill:#eceff3; --shadow:0 8px 20px rgba(0,0,0,.08); --ring:0 0 0 2px rgba(59,130,246,.15);
     --grad:linear-gradient(90deg,#6d0000 0%,#b54444 50%,#6d0000 100%);
     --pillGrad:linear-gradient(180deg,#ffffff 0%,#f2f4f8 100%);
     --ok:#10b981; --warn:#f59e0b; --danger:#ef4444; --info:#3b82f6;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
-  }
-  /* Topbar */
-  .topbar{
-    position:sticky;top:0;z-index:20;
-    display:flex;align-items:center;gap:.75rem;
-    padding:.65rem .9rem;background:var(--grad);color:#fff;
-    box-shadow:var(--shadow)
-  }
-  .title{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:22px;letter-spacing:.3px}
-  .title .phone{filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
-  .search{
-    flex:1;display:flex;align-items:center;background:rgba(255,255,255,.15);
-    padding:.35rem .6rem;border-radius:9999px
-  }
-  .search input{
-    width:100%;border:0;background:transparent;outline:0;color:#fff;font-weight:600
-  }
-  .bar-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border:0;border-radius:9999px;
-    color:#fff;background:rgba(255,255,255,.12);backdrop-filter:saturate(120%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 0 rgba(0,0,0,.2);cursor:pointer;transition:transform .06s ease,box-shadow .2s;
-  }
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
+
+  /* Top bar */
+  .topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:.75rem;
+    padding:.65rem .9rem;background:var(--grad);color:#fff;box-shadow:var(--shadow)}
+  .title{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:22px}
+  .search{flex:1;display:flex;align-items:center;background:rgba(255,255,255,.15);padding:.35rem .6rem;border-radius:9999px}
+  .search input{width:100%;border:0;background:transparent;outline:0;color:#fff;font-weight:600}
+  .bar-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border:0;border-radius:9999px;color:#fff;
+    background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 0 rgba(0,0,0,.2);cursor:pointer}
   .bar-btn:active{transform:translateY(1px)}
   .bar-right{margin-left:auto;display:flex;align-items:center;gap:.5rem}
   .stamp{color:#fff;opacity:.85;font-size:12px;background:rgba(255,255,255,.12);border-radius:9999px;padding:.3rem .65rem}
@@ -54,60 +36,58 @@
   @media (max-width:1200px){ .right{grid-template-columns:1fr} .wrap{grid-template-columns:320px 1fr}}
   @media (max-width:880px){ .wrap{grid-template-columns:1fr} .right{grid-template-columns:1fr}}
 
-  /* Procesos (izquierda) */
-  .proc-item{
-    display:flex;align-items:center;gap:.5rem;background:var(--pillGrad);
-    border-radius:14px;padding:.55rem .7rem;margin:.45rem 0;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);
-    cursor:pointer;border:2px solid transparent
-  }
+  /* Procesos */
+  .proc-item{display:flex;flex-direction:column;gap:.45rem;background:var(--pillGrad);border-radius:14px;
+    padding:.55rem .7rem;margin:.45rem 0;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);border:2px solid transparent}
+  .proc-row{display:flex;align-items:center;gap:.5rem;cursor:pointer}
   .proc-item.activo{border-color:rgba(59,130,246,.35);box-shadow:var(--ring),0 1px 0 rgba(0,0,0,.06)}
   .dot{width:10px;height:10px;border-radius:50%;background:#ddd;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
   .proc-name{flex:1;font-weight:700}
   .proc-acts{display:flex;align-items:center;gap:.35rem}
   .icon-btn{width:28px;height:28px;border-radius:12px;border:0;background:#f2f4f8;box-shadow:inset 0 1px 0 #fff;cursor:pointer}
   .icon-btn:active{transform:translateY(1px)}
+  .proc-detail{display:none}
+  .proc-detail textarea{width:100%;min-height:72px;border-radius:10px;border:1px solid #e6e8ec;padding:.5rem}
 
-  /* Módulo (derecha) */
-  .module{
-    background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);
-    display:flex;flex-direction:column;gap:8px;padding:10px;min-height:240px
-  }
-  .mod-head{
-    display:flex;align-items:center;gap:.5rem;background:#333;color:#fff;border-radius:12px;
-    padding:.45rem .7rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)
-  }
-  .mod-title{flex:1;font-weight:800}
-  .mod-ctl{display:flex;align-items:center;gap:.35rem}
+  /* Módulo */
+  .module{background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);display:flex;flex-direction:column;gap:8px;padding:10px}
+  .mod-head{display:flex;align-items:center;gap:.5rem;background:#333;color:#fff;border-radius:12px;padding:.45rem .7rem}
+  .mod-title{flex:1;font-weight:800;border:0;background:transparent;color:#fff;outline:0}
+  .select{border:1px solid #e6e8ec;background:#fff;border-radius:10px;padding:.25rem .5rem}
   .pill{height:30px;padding:0 .65rem;background:#222;border-radius:9999px;color:#fff;border:0;cursor:pointer}
   .pill:active{transform:translateY(1px)}
+  .badge-diana{margin-left:.25rem}
 
-  /* Lista de pasos */
+  /* Pasos */
   .steps{display:flex;flex-direction:column;gap:10px;padding:6px}
-  .step{
-    position:relative;display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:.5rem .6rem;
-    box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06)
-  }
-  .bubble{
-    min-width:28px;height:28px;border-radius:9999px;background:#111;color:#fff;display:grid;place-items:center;
-    font-weight:800;font-size:12px;z-index:2
-  }
-  .vline{
-    position:absolute;left:33px;top:0;bottom:0;width:3px;background:#ffd166;opacity:.8;z-index:1;border-radius:2px
-  }
-  .step input.title{
-    font-weight:700;border:0;background:transparent;outline:0;width:100%
-  }
-  .select{border:1px solid #e6e8ec;background:#fff;border-radius:10px;padding:.25rem .5rem}
-  .ghost{opacity:.6}
+  .step{position:relative;display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:.5rem .6rem;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06)}
+  .bubble{min-width:32px;height:32px;border-radius:9999px;background:#111;color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;z-index:2}
+  .vline{position:absolute;left:37px;top:0;bottom:0;width:4px;background:#ffd166;opacity:.85;z-index:1;border-radius:2px}
+  .step input.title{font-weight:700;border:0;background:transparent;outline:0;width:100%}
+  .minis{display:flex;gap:.35rem}
+  .mini{width:28px;height:28px;border-radius:10px;border:0;background:#f2f4f8;cursor:pointer}
+  .chip{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;border-radius:9999px;padding:.2rem .55rem;color:#111}
+  .chip small{opacity:.7;font-weight:700}
+
+  /* Si / No */
+  .branches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:-6px 0 4px 54px}
+  .branch{background:#fff;border:1px solid #ececec;border-radius:10px;padding:.45rem .5rem;box-shadow:inset 0 1px 0 #fff}
+  .branch.yes .bh-label{font-size:12px;font-weight:700;opacity:.8}
+  .branch.no .bh-label{font-size:14px;font-weight:900}
+  .bh-top{display:flex;align-items:center;gap:.35rem;margin-bottom:.35rem}
+  .plist{display:flex;flex-direction:column;gap:.35rem}
+  .point{display:flex;align-items:center;gap:.4rem}
+  .point .num{min-width:42px;font-weight:800;opacity:.7}
+  .pt-input{flex:1;border:1px solid #e6e8ec;border-radius:8px;padding:.25rem .45rem}
+  .p-mini{width:24px;height:24px;border-radius:8px;border:0;background:#f2f4f8;cursor:pointer}
+  .children{margin-left:42px;display:flex;flex-direction:column;gap:.2rem}
   .hide{display:none!important}
 </style>
 </head>
 <body>
-  <!-- Topbar -->
   <div class="topbar">
-    <div class="title"><span class="phone">🎧</span> PROCESOS AUDIO</div>
+    <div class="title"><span>🎧</span> PROCESOS AUDIO</div>
     <div class="search"><input id="q" placeholder="Buscar…"></div>
-    <!-- Botones principales -->
     <button id="btnAddProcess" class="bar-btn">+ Procesos</button>
     <button id="btnAddStepGlobal" class="bar-btn" title="Añadir paso al proceso activo">+ Paso</button>
     <button id="btnAddSubprocPaso" class="bar-btn">+ Subproceso + Paso</button>
@@ -117,214 +97,290 @@
     </div>
   </div>
 
-  <!-- Layout -->
   <div class="wrap">
-    <!-- Columna izquierda: Procesos -->
-    <div class="left">
-      <div id="processList"></div>
-    </div>
-
-    <!-- Columna derecha: módulos -->
+    <div class="left"><div id="processList"></div></div>
     <div class="right" id="modules"></div>
   </div>
 
+  <!-- Modal selector de proceso destino -->
+  <div id="procModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;z-index:50">
+    <div style="background:#fff;border-radius:14px;min-width:320px;max-width:92vw;padding:10px;box-shadow:0 20px 40px rgba(0,0,0,.2)">
+      <div style="font-weight:800;margin:.2rem .2rem .5rem">Selecciona proceso destino</div>
+      <div id="procModalList" style="display:flex;flex-direction:column;gap:.35rem"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:.6rem">
+        <button id="pmCancel" class="bar-btn" style="background:#ddd;color:#111">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-/* ===============================
-   Datos & Utilidades
-================================ */
-const LSKEY = 'pa_demo_integrada_v1';
-const RESPONSABLES = ['Audiólogo','Responsable','Otros'];
-const pastelPalette = [
-  '#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5',
-  '#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'
-];
+/* ========= Datos / util ========= */
+const LSKEY='pa_v2_flags_yesno';
+const RESPONSABLES=['Audiólogo','Responsable','Otros'];
+const colors=['#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5','#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'];
+const uid=()=>'p'+Math.random().toString(36).slice(2,9);
+const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
 
-const uid = ()=>'p'+Math.random().toString(36).slice(2,9);
-const nowStamp = _=>{
-  const d = new Date(); const pad=n=>n<10?'0'+n:n;
-  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-};
+const state={processes:[]};
+let activePid=null;
 
-function saveState(){
-  localStorage.setItem(LSKEY, JSON.stringify(state));
-  document.getElementById('stamp').textContent = 'Última actualización '+nowStamp();
-}
-function loadState(){
-  const raw = localStorage.getItem(LSKEY);
-  if(!raw){
-    // seed mínimo
-    state.processes.push({
-      id:uid(), name:'Revisión auditiva', color: pastelPalette[0],
-      modules:[]
-    });
-    saveState();
-  }else{
-    try{ Object.assign(state, JSON.parse(raw)); }catch(e){}
-  }
+function save(){ localStorage.setItem(LSKEY,JSON.stringify(state)); document.getElementById('stamp').textContent='Última actualización '+stamp(); }
+function load(){ const raw=localStorage.getItem(LSKEY);
+  if(!raw){ state.processes.push({id:uid(),name:'Revisión auditiva',color:colors[0],detail:'',modules:[]}); save(); }
+  else{ try{ Object.assign(state,JSON.parse(raw)); }catch{} }
+  if(!activePid && state.processes[0]) activePid=state.processes[0].id;
 }
 
-/* ===============================
-   Estado
-================================ */
-const state = { processes:[] };
-let activePid = null;
+/* ========= Izquierda: procesos ========= */
+function procRow(p){
+  const wrap=document.createElement('div'); wrap.className='proc-item'+(p.id===activePid?' activo':'');
+  const row=document.createElement('div'); row.className='proc-row';
+  row.innerHTML=`<span class="dot" style="background:${p.color}"></span>
+    <span class="proc-name">${p.name}</span>
+    <div class="proc-acts">
+      <button class="icon-btn" title="Detalle">▾</button>
+      <button class="icon-btn" title="Renombrar">✏️</button>
+      <button class="icon-btn" title="Eliminar" style="box-shadow:inset 0 0 0 #fff">🗑️</button>
+    </div>`;
+  row.onclick=e=>{ if(e.target.closest('.icon-btn')) return; activePid=p.id; render(); };
+  const btns=row.querySelectorAll('.icon-btn');
+  btns[0].onclick=e=>{ e.stopPropagation(); det.classList.toggle('hide'); };
+  btns[1].onclick=e=>{ e.stopPropagation(); const nn=prompt('Nombre del proceso',p.name); if(nn){p.name=nn;save();render();} };
+  btns[2].onclick=e=>{ e.stopPropagation(); if(confirm('¿Eliminar proceso y sus módulos?')){ const i=state.processes.findIndex(x=>x.id===p.id); if(i>-1){ state.processes.splice(i,1); activePid=state.processes[0]?.id||null; save(); render(); } } };
 
-/* ===============================
-   Render: Procesos (izquierda)
-================================ */
+  const det=document.createElement('div'); det.className='proc-detail hide';
+  det.innerHTML=`<textarea placeholder="Detalle del proceso…">${p.detail||''}</textarea>`;
+  det.querySelector('textarea').oninput=e=>{ p.detail=e.target.value; save(); };
+  wrap.appendChild(row); wrap.appendChild(det);
+  return wrap;
+}
 function renderProcesses(){
-  const box = document.getElementById('processList');
-  box.innerHTML = '';
+  const box=document.getElementById('processList'); box.innerHTML='';
+  state.processes.forEach(p=>box.appendChild(procRow(p)));
+}
+
+/* ========= Modal de bandera (selector de proceso) ========= */
+function openProcPicker(onPick){
+  const modal=document.getElementById('procModal');
+  const list=document.getElementById('procModalList'); list.innerHTML='';
   state.processes.forEach(p=>{
-    const row = document.createElement('div');
-    row.className = 'proc-item'+(p.id===activePid?' activo':'');
-    row.dataset.pid = p.id;
-    row.innerHTML = `
-      <span class="dot" style="background:${p.color}"></span>
-      <span class="proc-name">${p.name}</span>
-      <div class="proc-acts">
-        <button class="icon-btn" title="Renombrar">✏️</button>
-        <button class="icon-btn" title="Eliminar">🗑️</button>
-      </div>
-    `;
-    // click select
-    row.addEventListener('click', e=>{
-      if(e.target!==row && e.target.closest('.icon-btn')) return;
-      activePid = p.id;
-      renderProcesses(); renderModules();
-    });
-    // rename
-    row.querySelectorAll('.icon-btn')[0].onclick = e=>{
-      e.stopPropagation();
-      const nn = prompt('Nuevo nombre del proceso:', p.name);
-      if(nn){ p.name = nn; saveState(); renderProcesses(); renderModules(); }
-    };
-    // delete
-    row.querySelectorAll('.icon-btn')[1].onclick = e=>{
-      e.stopPropagation();
-      if(!confirm('¿Eliminar proceso y sus módulos?')) return;
-      const i = state.processes.findIndex(x=>x.id===p.id);
-      if(i>-1){ state.processes.splice(i,1); activePid = state.processes[0]?.id || null; saveState(); renderProcesses(); renderModules(); }
-    };
-    box.appendChild(row);
+    const b=document.createElement('button');
+    b.className='bar-btn'; b.style.cssText=`justify-content:flex-start;color:#111;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06);border-radius:12px`;
+    b.innerHTML=`<span class="dot" style="background:${p.color}"></span> <strong>${p.name}</strong>`;
+    b.onclick=()=>{ modal.classList.add('hide'); onPick(p.id); };
+    list.appendChild(b);
   });
+  document.getElementById('pmCancel').onclick=()=>modal.classList.add('hide');
+  modal.classList.remove('hide');
 }
 
-/* ===============================
-   Render: Módulos (derecha)
-================================ */
-function moduleCardHTML(m,p){
-  return `
-  <div class="module module-card" data-id="${m.id}" data-pid="${p.id}">
-    <div class="mod-head" style="background:linear-gradient(180deg,#333 0%,#1f1f1f 100%);">
-      <input class="mod-title" value="${m.title}" style="flex:1;border:0;background:transparent;color:#fff;font-weight:800;outline:0">
-      <select class="select">
-        ${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}
-      </select>
-      <div class="mod-ctl">
-        <button class="pill" data-act="add-step">+ Paso</button>
-        <button class="pill" data-act="del-mod">–</button>
-      </div>
-    </div>
-    <div class="steps" data-steps>
-      ${m.steps.map((s,i)=>`
-        <div class="step">
-          <div class="bubble" style="background:#111">${i+1}</div>
-          <div class="vline" style="background:${p.color}"></div>
-          <input class="title" value="${s.title}">
-        </div>`).join('')}
-    </div>
-  </div>`;
+/* ========= Paso: Si/No puntos ========= */
+function pushPoint(branchArr){ branchArr.push({id:uid(),text:'',children:[]}); }
+function pushSubPoint(pt){ pt.children.push({id:uid(),text:''}); }
+function delFromArray(arr, id){ const i=arr.findIndex(x=>x.id===id); if(i>-1) arr.splice(i,1); }
+
+/* ========= Derecha: módulos ========= */
+function modCard(p,m){
+  const card=document.createElement('div'); card.className='module';
+  const head=document.createElement('div'); head.className='mod-head';
+  head.innerHTML=`<input class="mod-title" value="${m.title}">
+    <select class="select">${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
+    <button class="pill" data-act="add-step">+ Paso</button>
+    <button class="pill" data-act="close">${m.completed?'🎯 Cerrado':'🎯 Guardar (cerrar pasos)'}</button>
+    <button class="pill" data-act="del">–</button>`;
+  head.querySelector('.mod-title').oninput=e=>{ m.title=e.target.value; save(); };
+  head.querySelector('select').onchange=e=>{ m.responsable=e.target.value; save(); };
+  head.querySelector('[data-act="add-step"]').onclick=()=>{ m.steps.push(makeStep()); save(); renderModules(); };
+  head.querySelector('[data-act="close"]').onclick=()=>{ m.completed=!m.completed; save(); renderModules(); };
+  head.querySelector('[data-act="del"]').onclick=()=>{ if(confirm('¿Eliminar subproceso?')){ const i=p.modules.findIndex(x=>x.id===m.id); if(i>-1){ p.modules.splice(i,1); save(); renderModules(); } } };
+  card.appendChild(head);
+
+  const steps=document.createElement('div'); steps.className='steps';
+  m.steps.forEach((st,idx)=> steps.appendChild(stepRow(p,m,st,idx)));
+  card.appendChild(steps);
+  return card;
 }
 
-function renderModules(){
-  const box = document.getElementById('modules');
-  box.innerHTML = '';
-  const p = state.processes.find(x=>x.id===activePid) || state.processes[0];
-  if(!p) return;
-  activePid = p.id;
+function stepRow(p,m,st,index){
+  const row=document.createElement('div');
+  const sc=document.createElement('div'); sc.className='step';
+  sc.innerHTML=`
+    <div class="bubble">${index+1}</div>
+    <div class="vline" style="background:${p.color}"></div>
+    <input class="title" value="${st.title}">
+    <div class="minis">
+      <button class="mini" title="Bandera paso">🚩</button>
+      <button class="mini" title="Si / No">❓</button>
+      <button class="mini" title="Eliminar">–</button>
+    </div>`;
+  sc.querySelector('.title').oninput=e=>{ st.title=e.target.value; save(); };
+  // eliminar paso
+  sc.querySelectorAll('.mini')[2].onclick=()=>{ m.steps.splice(index,1); save(); renderModules(); };
+  // bandera paso
+  sc.querySelectorAll('.mini')[0].onclick=()=>{
+    openProcPicker(pid=>{ st.link={pid}; save(); renderModules(); });
+  };
+  // toggle ramas
+  sc.querySelectorAll('.mini')[1].onclick=()=> br.classList.toggle('hide');
 
-  // para cada módulo de ese proceso, pintamos una tarjeta
-  p.modules.forEach(m=>{
-    const w = document.createElement('div');
-    w.innerHTML = moduleCardHTML(m,p);
-    const card = w.firstElementChild;
-    // manejar acciones
-    card.querySelector('[data-act="add-step"]').onclick = ()=>addStepIntoModule(p.id,m.id);
-    card.querySelector('[data-act="del-mod"]').onclick = ()=>{
-      if(confirm('¿Eliminar subproceso?')){
-        const i = p.modules.findIndex(x=>x.id===m.id);
-        if(i>-1){ p.modules.splice(i,1); saveState(); renderModules(); }
+  row.appendChild(sc);
+
+  // chip de bandera (si existe)
+  if(st.link?.pid){
+    const dest=state.processes.find(x=>x.id===st.link.pid);
+    if(dest){
+      const chip=document.createElement('div');
+      chip.className='chip'; chip.style.background=dest.color; chip.style.margin='0 0 0 54px';
+      chip.innerHTML=`→ <small>Ir al proceso:</small> <strong>${dest.name}</strong>`;
+      row.appendChild(chip);
+    }
+  }
+
+  // ramas SI/NO
+  const br=document.createElement('div'); br.className='branches hide';
+  br.appendChild(branchBox(p,m,st,'no',index));  // NO primero (más “grande”)
+  br.appendChild(branchBox(p,m,st,'yes',index));
+  row.appendChild(br);
+  return row;
+}
+
+function branchBox(p,m,st,kind,stepIndex){
+  const isYes=kind==='yes';
+  const arr = st[kind] || (st[kind]=[]);
+  const wrap=document.createElement('div'); wrap.className='branch '+(isYes?'yes':'no');
+
+  const top=document.createElement('div'); top.className='bh-top';
+  const label=document.createElement('div'); label.className='bh-label'; label.textContent=isYes?'SÍ':'NO';
+  const add=document.createElement('button'); add.className='p-mini'; add.textContent='＋'; add.title='Añadir punto';
+  const flag=document.createElement('button'); flag.className='p-mini'; flag.textContent='🚩'; flag.title='Bandera rama';
+  add.onclick=()=>{ pushPoint(arr); save(); renderModules(); };
+  flag.onclick=()=>{ openProcPicker(pid=>{ st[kind+'Link']={pid}; save(); renderModules(); }); };
+
+  top.appendChild(label); top.appendChild(add); top.appendChild(flag);
+
+  // chip rama
+  if(st[kind+'Link']?.pid){
+    const dest=state.processes.find(x=>x.id===st[kind+'Link'].pid);
+    if(dest){
+      const chip=document.createElement('span');
+      chip.className='chip'; chip.style.background=dest.color; chip.style.marginLeft='.35rem';
+      chip.innerHTML=`→ <small>Proceso:</small> <strong>${dest.name}</strong>`;
+      top.appendChild(chip);
+    }
+  }
+
+  wrap.appendChild(top);
+
+  const list=document.createElement('div'); list.className='plist';
+  arr.forEach((pt,i)=>{
+    const li=document.createElement('div'); li.className='point';
+    const num=`${stepIndex+1}.${i+1}`;
+    li.innerHTML=`<span class="num">${num}</span>
+      <input class="pt-input" placeholder="Escribe…" value="${pt.text||''}">
+      <button class="p-mini" title="Subpunto">＋</button>
+      <button class="p-mini" title="Bandera">🚩</button>
+      <button class="p-mini" title="Borrar">🗑</button>`;
+    li.querySelector('.pt-input').oninput=e=>{ pt.text=e.target.value; save(); };
+    // subpunto
+    li.querySelectorAll('.p-mini')[0].onclick=()=>{ pushSubPoint(pt); save(); renderModules(); };
+    // bandera punto
+    li.querySelectorAll('.p-mini')[1].onclick=()=>{ openProcPicker(pid=>{ pt.link={pid}; save(); renderModules(); }); };
+    // borrar punto
+    li.querySelectorAll('.p-mini')[2].onclick=()=>{ delFromArray(arr,pt.id); save(); renderModules(); };
+
+    // chip punto
+    if(pt.link?.pid){
+      const dest=state.processes.find(x=>x.id===pt.link.pid);
+      if(dest){
+        const pc=document.createElement('span'); pc.className='chip'; pc.style.background=dest.color; pc.style.marginLeft='.35rem';
+        pc.innerHTML=`→ <small>${dest.name}</small>`;
+        li.appendChild(pc);
       }
-    };
-    // línea vertical coloreada
-    card.querySelectorAll('.vline').forEach(v=>v.style.background = p.color);
+    }
+
+    // hijos
+    const kids=document.createElement('div'); kids.className='children';
+    pt.children.forEach((ch,j)=>{
+      const cli=document.createElement('div'); cli.className='point';
+      const cnum=`${num}.${j+1}`;
+      cli.innerHTML=`<span class="num">${cnum}</span>
+        <input class="pt-input" placeholder="Subpunto…" value="${ch.text||''}">
+        <button class="p-mini" title="Bandera">🚩</button>
+        <button class="p-mini" title="Borrar">🗑</button>`;
+      cli.querySelector('.pt-input').oninput=e=>{ ch.text=e.target.value; save(); };
+      cli.querySelectorAll('.p-mini')[0].onclick=()=>{ openProcPicker(pid=>{ ch.link={pid}; save(); renderModules(); }); };
+      cli.querySelectorAll('.p-mini')[1].onclick=()=>{ const k=pt.children.indexOf(ch); if(k>-1){ pt.children.splice(k,1); save(); renderModules(); } };
+
+      if(ch.link?.pid){
+        const dest=state.processes.find(x=>x.id===ch.link.pid);
+        if(dest){
+          const cc=document.createElement('span'); cc.className='chip'; cc.style.background=dest.color; cc.style.marginLeft='.35rem';
+          cc.innerHTML=`→ <small>${dest.name}</small>`;
+          cli.appendChild(cc);
+        }
+      }
+      kids.appendChild(cli);
+    });
+
+    list.appendChild(li); list.appendChild(kids);
+  });
+  wrap.appendChild(list);
+  return wrap;
+}
+
+/* ========= helpers ========= */
+function makeStep(){ return {id:uid(),title:'Nuevo paso',link:null,yes:[],no:[]}; }
+
+/* ========= render modules ========= */
+function renderModules(){
+  const box=document.getElementById('modules'); box.innerHTML='';
+  const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p) return; activePid=p.id;
+
+  p.modules.forEach(m=>{
+    const card=modCard(p,m);
+    // línea vertical color en todos los pasos
+    card.querySelectorAll('.vline').forEach(v=>v.style.background=p.color);
+    // diana si está cerrado
+    if(m.completed){ const d=document.createElement('span'); d.className='badge-diana'; d.textContent='🎯'; card.querySelector('.mod-head').appendChild(d); }
     box.appendChild(card);
   });
 }
 
-/* ===============================
-   Acciones
-================================ */
+/* ========= acciones globales ========= */
 function addProcess(){
-  const color = pastelPalette[state.processes.length % pastelPalette.length];
-  const p = { id:uid(), name:'Nuevo proceso', color, modules:[] };
-  state.processes.push(p);
-  activePid = p.id;
-  saveState(); renderProcesses(); renderModules();
+  const color=colors[state.processes.length%colors.length];
+  const p={id:uid(),name:'Nuevo proceso',color,detail:'',modules:[]};
+  state.processes.push(p); activePid=p.id; save(); render();
 }
 function addSubprocPasoForProcess(pid){
-  const p = state.processes.find(x=>x.id===pid);
-  if(!p) return null;
-  const mod = { id:uid(), title:'Nuevo subproceso', responsable: RESPONSABLES[0], steps:[{id:uid(), title:'Nuevo paso'}] };
-  p.modules.push(mod);
-  saveState(); renderModules();
-  return mod;
-}
-function addStepIntoModule(pid, mid){
-  const p = state.processes.find(x=>x.id===pid); if(!p) return;
-  const m = p.modules.find(x=>x.id===mid); if(!m) return;
-  m.steps.push({id:uid(), title:'Nuevo paso'});
-  saveState(); renderModules();
+  const p=state.processes.find(x=>x.id===pid); if(!p) return null;
+  const m={id:uid(),title:'Nuevo subproceso',responsable:RESPONSABLES[0],steps:[makeStep()],completed:false};
+  p.modules.push(m); save(); renderModules(); return m;
 }
 function addStepGlobal(){
-  const p = state.processes.find(x=>x.id===activePid) || state.processes[0];
+  const p=state.processes.find(x=>x.id===activePid)||state.processes[0];
   if(!p){ alert('Primero crea un proceso'); return; }
-  // ¿hay módulo?
-  let m = p.modules[p.modules.length-1];
-  if(!m){ // crea Subproceso+Paso y luego añade otro paso
-    m = addSubprocPasoForProcess(p.id);
-  }
-  // meter paso en el último módulo
-  if(m) addStepIntoModule(p.id, m.id);
+  let m=p.modules[p.modules.length-1];
+  if(!m) m=addSubprocPasoForProcess(p.id);
+  m.steps.push(makeStep()); save(); renderModules();
 }
 
-/* ===============================
-   Eventos iniciales
-================================ */
-document.getElementById('btnAddProcess').onclick = addProcess;
-document.getElementById('btnAddSubprocPaso').onclick = ()=>{
-  const p = state.processes.find(x=>x.id===activePid) || state.processes[0];
-  if(!p){ alert('Primero crea un proceso'); return; }
-  addSubprocPasoForProcess(p.id);
-};
-document.getElementById('btnAddStepGlobal').onclick = addStepGlobal;
-document.getElementById('btnSave').onclick = saveState;
-document.getElementById('q').addEventListener('input', e=>{
-  const q = e.target.value.toLowerCase();
+/* ========= Render maestro ========= */
+function render(){ renderProcesses(); renderModules(); }
+
+/* ========= boot ========= */
+load(); document.getElementById('stamp').textContent='Última actualización '+stamp(); render();
+document.getElementById('btnAddProcess').onclick=addProcess;
+document.getElementById('btnAddSubprocPaso').onclick=()=>{ const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p){alert('Crea un proceso');return;} addSubprocPasoForProcess(p.id); };
+document.getElementById('btnAddStepGlobal').onclick=addStepGlobal;
+document.getElementById('btnSave').onclick=save;
+document.getElementById('q').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase();
   document.querySelectorAll('.proc-item').forEach(el=>{
-    const hit = el.querySelector('.proc-name').textContent.toLowerCase().includes(q);
-    el.classList.toggle('hide', !hit);
+    const name=el.querySelector('.proc-name').textContent.toLowerCase();
+    el.classList.toggle('hide',!name.includes(q));
   });
 });
-
-/* ===============================
-   Boot
-================================ */
-loadState();
-if(!activePid && state.processes[0]) activePid = state.processes[0].id;
-document.getElementById('stamp').textContent = 'Última actualización '+nowStamp();
-renderProcesses(); renderModules();
 </script>
 </body>
 </html>
