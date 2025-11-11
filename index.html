@@ -2,433 +2,414 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>PROCESOS AUDIO</title>
 <style>
-  :root{
-    --bg:#2b2b2d;              /* gris base */
-    --bg-soft:#323236;         /* gris suave */
-    --panel:#3a3a3f;
-    --ink:#f4f4f6;
-    --muted:#bfc3cc;
-    --accent:#e25b5b;
-    --btn-grad-a:#4d4d52;
-    --btn-grad-b:#2f3033;
-    --shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
-    --radius:16px;
-    --number-bg:#111;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial;
-  }
-  /* Barra superior */
-  header{
-    position:sticky;top:0;z-index:5;
-    background:linear-gradient(90deg,#6d6e73,#9b3c3c 40%,#6e2f2f 70%,#4a2828);
-    padding:10px 14px;display:flex;gap:12px;align-items:center;
-    box-shadow:0 6px 18px rgba(0,0,0,.25);
-  }
-  header h1{
-    margin:0;font-weight:800;letter-spacing:.5px;display:flex;gap:10px;align-items:center;
-    text-shadow:0 2px 0 rgba(0,0,0,.35);
-  }
-  header h1 .phone{font-size:22px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.4))}
-  header input[type="search"]{
-    flex:1;max-width:640px;border:none;border-radius:999px;
-    padding:10px 14px;background:#ffffff1a;color:#fff;outline:none;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
-  }
-  .pill{
-    border:none;border-radius:999px;padding:10px 14px;
-    background:linear-gradient(180deg,var(--btn-grad-a),var(--btn-grad-b));
-    color:#fff;box-shadow:var(--shadow);cursor:pointer;display:inline-flex;gap:8px;align-items:center;
-  }
-  .pill:active{transform:translateY(1px)}
-  .row{display:flex;gap:16px;padding:16px}
+:root{
+  --bg:#0b0f14;            /* se sobrescribe en modo claro */
+  --bg-soft:#121820;       /* se sobrescribe en modo claro */
+  --panel:#151c24;         /* se sobrescribe en modo claro */
+  --ink:#eef3fa;           /* se sobrescribe en modo claro */
+  --muted:#98a2ad;         /* se sobrescribe en modo claro */
+  --btn-grad-a:#1b2430;    /* se sobrescribe en modo claro */
+  --btn-grad-b:#121820;    /* se sobrescribe en modo claro */
+  --shadow:0 10px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+  --radius:14px;
+  --accent:#e25a5a;
+}
 
-  /* Layout */
-  .wrap{display:grid;grid-template-columns: 380px 1fr;gap:0;min-height:calc(100dvh - 64px)}
-  @media (max-width:1100px){ .wrap{grid-template-columns:320px 1fr} }
-  @media (max-width:860px){ .wrap{grid-template-columns:1fr} }
+/* ========= LIGHT THEME (gris claro) ========= */
+body.light{
+  --bg:#f5f6f9;         /* fondo general casi blanco */
+  --bg-soft:#eef0f4;    /* panel gris clarito */
+  --panel:#ffffff;      /* tarjetas en blanco */
+  --ink:#1f2328;        /* texto oscuro */
+  --muted:#6b717c;      /* texto sutil */
+  --btn-grad-a:#ffffff; /* botones 3D claros */
+  --btn-grad-b:#eceff3;
+  --shadow:0 6px 18px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.9);
+}
 
-  /* Panel izquierdo */
-  .left{
-    border-right:1px solid #ffffff14;background:var(--bg-soft);
-  }
-  .left-head{
-    display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #ffffff14;
-  }
-  .left-list{padding:12px;display:flex;flex-direction:column;gap:10px}
-  .proc{
-    background:var(--panel);border-radius:14px;padding:10px 12px;
-    display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
-    box-shadow:var(--shadow);cursor:pointer;border:2px solid transparent;
-  }
-  .proc .dot{width:10px;height:10px;border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
-  .proc .name{font-weight:700}
-  .proc .min{opacity:.8;font-size:12px}
-  .proc .ctrls{display:flex;gap:8px}
-  .ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
-       background:#ffffff14;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
-  .proc.active{border-color:#fff8}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
 
-  /* Panel derecho */
-  .right{background:var(--bg);overflow:auto}
-  .process-sheet{padding:16px}
-  .sheet-head{
-    display:flex;align-items:center;gap:12px;background:var(--bg-soft);
-    border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);
-  }
-  .sheet-title{font-weight:900;letter-spacing:.3px}
-  .badge{padding:4px 10px;border-radius:999px;background:#ffffff1a}
-  .sub-grid{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+/* ---------- APLICACIÓN ---------- */
+.app{display:flex;flex-direction:column;height:100%}
 
-  /* Subproceso */
-  .sub{
-    background:var(--panel);border-radius:16px;padding:12px 12px 10px;box-shadow:var(--shadow);
-  }
-  .sub-head{
-    display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;margin-bottom:8px;
-    background:linear-gradient(180deg,#4a4a4f,#3b3b3f);padding:8px;border-radius:12px;
-  }
-  .sub-name{
-    font-weight:800;letter-spacing:.2px;padding:8px 10px;border-radius:12px;
-    background:linear-gradient(180deg,#111,#1c1c1f);color:#fff;border:1px solid #ffffff1a;
-  }
-  .sub-ctrls{display:flex;gap:8px;align-items:center}
-  .resp{background:#ffffff10;border:1px solid #ffffff22;color:#fff;border-radius:10px;padding:6px 10px}
+/* Header degradado rojo */
+.header{
+  padding:14px 18px;
+  background:linear-gradient(90deg,#915b5b 0,#c74f4f 25%,#9a3a3a 50%,#7e2e2e 100%);
+  display:flex;gap:14px;align-items:center;position:sticky;top:0;z-index:10;
+}
+.h-title{display:flex;align-items:center;gap:10px;font-weight:800;font-size:26px;letter-spacing:.5px}
+.h-title .ear{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;background:#fff2;box-shadow:var(--shadow)}
+.search{flex:1;max-width:620px}
+.search input{
+  width:100%;padding:10px 14px;border-radius:999px;border:1px solid #0000;
+  background:#ffffff22;color:#fff;outline:none;box-shadow:inset 0 1px 0 #fff4,0 4px 10px rgba(0,0,0,.2)
+}
+.btn{
+  padding:10px 16px;border-radius:999px;border:1px solid #00000028;
+  background:linear-gradient(180deg,var(--btn-grad-a),var(--btn-grad-b));
+  box-shadow:var(--shadow);color:var(--ink);display:inline-flex;gap:10px;align-items:center;cursor:pointer;
+  user-select:none
+}
+.btn.primary{background:linear-gradient(180deg,#fffc,#eef2f7);border-color:#d9dee6}
+.btn .dot{width:10px;height:10px;border-radius:50%}
+.badge{opacity:.85}
 
-  /* Pasos línea vertical + burbuja */
-  .steps{display:flex;flex-direction:column;gap:8px;position:relative}
-  .step{
-    position:relative;padding-left:72px;background:#22252a;border-radius:14px;
-    box-shadow:var(--shadow);min-height:56px;display:flex;flex-direction:column;justify-content:center
-  }
-  /* Línea vertical gruesa (color proceso) */
-  .step::before{
-    content:"";position:absolute;left:40px;top:10px;bottom:10px;width:6px;border-radius:6px;background:var(--line);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 1px 0 rgba(255,255,255,.05);
-  }
-  /* burbuja número grande */
-  .bubble{
-    position:absolute;left:20px;top:50%;transform:translateY(-50%);
-    width:36px;height:36px;border-radius:999px;background:var(--number-bg);
-    display:grid;place-items:center;font-weight:900;font-size:13px;border:1px solid #ffffff1a;
-    box-shadow:0 6px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
-  }
-  .step-head{
-    display:flex;align-items:center;gap:10px;padding:8px 10px
-  }
-  .step-title{
-    flex:1;border:none;background:transparent;color:#fff;font-weight:700;outline:none;
-  }
-  .step-ctrls{display:flex;gap:6px}
-  .btn-icon{
-    width:32px;height:32px;border-radius:10px;border:1px solid #ffffff20;display:grid;place-items:center;
-    background:#ffffff0f;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)
-  }
-  .detail{
-    display:none;padding:8px 10px 12px
-  }
-  .detail textarea{
-    width:100%;min-height:70px;border-radius:10px;border:1px solid #ffffff22;background:#ffffff10;color:#fff;padding:8px;outline:none
-  }
-  .si-no{display:flex;gap:14px;align-items:flex-start;margin-top:8px}
-  .col {flex:1}
-  .col h5{margin:0 0 6px;font-size:12px;letter-spacing:.4px;opacity:.85}
-  .point{display:flex;align-items:center;gap:6px;margin:4px 0}
-  .point input{
-    flex:1;background:#ffffff10;color:#fff;border:1px solid #ffffff22;border-radius:8px;padding:6px 8px
-  }
-  .point .btn-icon{width:28px;height:28px}
+/* layout columnas */
+.body{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:14px}
+.left{background:var(--bg-soft);border-right:1px solid #dde2ea;border-radius:12px;padding:14px;overflow:auto}
+.right{background:var(--bg);border-radius:12px;padding:0;overflow:auto}
 
-  /* Adjuntos */
-  .attach{display:flex;gap:10px;margin-top:6px}
-  .attach .pill{padding:8px 10px}
+/* ---------- PROCESOS (izq) ---------- */
+.left h3{margin:0 0 10px 0;font-size:18px}
+.proc{
+  background:var(--panel);border-radius:14px;padding:12px 12px;border:1px solid #e6ebf2;
+  display:flex;flex-direction:column;gap:8px;margin-bottom:12px;box-shadow:var(--shadow)
+}
+.proc .top{display:flex;align-items:center;gap:10px}
+.proc .dot{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 1px 0 #fff}
+.proc .name{flex:1;font-weight:700}
+.proc .acts{display:flex;gap:6px}
+.ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;cursor:pointer;
+  background:#0000000a;border:1px solid #00000014;color:var(--ink)}
+.ico:hover{filter:brightness(1.1)}
+.proc .min{font-size:12px;color:var(--muted)}
 
-  /* pie/control barra inferior */
-  .dock{
-    position:sticky;bottom:0;z-index:4;background:#1f1f20cc;backdrop-filter:blur(8px);
-    padding:10px;display:flex;gap:10px;justify-content:center;border-top:1px solid #ffffff14
-  }
+/* ---------- HOJA (derecha) ---------- */
+.sheet-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;background:var(--bg-soft);border-bottom:1px solid #e6ebf2;border-radius:12px 12px 0 0
+}
+.sheet-title{font-weight:800;font-size:18px}
+.head-actions{display:flex;gap:10px;align-items:center}
+.pill{
+  padding:8px 12px;border-radius:999px;border:1px solid #d9dee6;
+  background:linear-gradient(180deg,var(--btn-grad-a),var(--btn-grad-b));
+  box-shadow:var(--shadow);display:inline-flex;gap:8px;align-items:center;color:var(--ink);cursor:pointer
+}
 
-  /* Editar: oculta iconos cuando NO está editando */
-  body:not(.editing) .ico,
-  body:not(.editing) .btn-icon,
-  body:not(.editing) .sub-ctrls,
-  body:not(.editing) .resp,
-  body:not(.editing) .detail .attach .pill { display:none !important; }
+.sheet-body{padding:14px}
 
-  /* Mostrar detalle SIEMPRE justo tras el título (si está abierto) */
-  .step.open .detail{ display:block }
+/* tarjeta de subproceso */
+.sub{background:var(--panel);border-radius:14px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid #e6ebf2}
+.sub-head{
+  display:flex;align-items:center;gap:10px; padding:10px 12px;
+  background:linear-gradient(180deg,#f9fafc,#eef1f6);
+  border-bottom:1px solid #e3e7ee;border-radius:14px 14px 0 0
+}
+.sub-name{
+  flex:1; font-weight:800; padding:8px 10px;border-radius:10px;border:1px solid #dfe4ec;background:#fff
+}
+.sub-acts{display:flex;gap:8px;align-items:center}
 
-  /* estados */
-  .muted{opacity:.65}
+/* pasos */
+.sub-body{padding:10px 12px}
+.step{
+  position:relative;background:#fff;border:1px solid #e9edf3;border-radius:14px;padding:12px 12px 12px 58px;
+  margin:10px 0;box-shadow:0 6px 16px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.9)
+}
+/* línea vertical gruesa (color de proceso en --line) */
+.step:before{
+  content:"";position:absolute;left:36px;top:-8px;bottom:-8px;width:6px;border-radius:999px;
+  background:var(--line);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35), 0 1px 0 rgba(0,0,0,.05)
+}
+.bubble{
+  position:absolute;left:16px;top:10px;width:36px;height:36px;border-radius:50%;
+  display:grid;place-items:center;background:#fff;border:1px solid #d9dee6;color:#111;
+  box-shadow:0 8px 14px rgba(0,0,0,.05), inset 0 1px 0 #fff;font-weight:800
+}
 
-  /* 3D botones */
-  .act{
-    background:linear-gradient(180deg,#585a60,#383a3f);
-    border:1px solid #ffffff22;color:#fff;border-radius:12px;padding:8px 12px;
-    box-shadow:var(--shadow);display:inline-flex;gap:8px;align-items:center
-  }
-  .act:active{transform:translateY(1px)}
+.step-row{display:flex;gap:8px;align-items:center}
+.step-title{font-weight:800}
+.btn-icon{
+  padding:6px 8px;border-radius:10px;border:1px solid #00000018;background:#00000008;color:var(--ink);
+  display:inline-grid;place-items:center;cursor:pointer
+}
+.detail{margin-top:8px}
+.detail textarea{
+  width:100%;min-height:64px;border-radius:10px;border:1px solid #00000018;background:#00000006;padding:10px;color:var(--ink);
+  resize:vertical
+}
+.attach{display:flex;gap:8px;margin-top:8px;align-items:center}
+.attach .pill{font-size:12px}
+
+/* selector responsable */
+.resp{margin-left:auto;padding:6px 10px;border-radius:999px;border:1px solid #00000018;background:#00000006}
+
+/* dock inferior (opcional) */
+.dock{
+  position:sticky;bottom:0;padding:10px;border-top:1px solid #e6ebf2;background:#ffffffd9;
+  display:flex;gap:8px;justify-content:flex-end
+}
+
+/* Edit mode: oculta/visualiza iconos */
+.hide-icons .ico, .hide-icons .btn-icon, .hide-icons .pill.icon-only{display:none}
+
+/* utilidades */
+.row{display:flex;gap:10px;align-items:center}
+.mt8{margin-top:8px}
+.mt12{margin-top:12px}
+.w100{width:100%}
+.small{font-size:12px;color:var(--muted)}
 </style>
 </head>
-<body>
+<body class="light">
+<div class="app" id="app">
 
-<header>
-  <h1><span class="phone">🎧</span> PROCESOS AUDIO</h1>
-  <input type="search" id="q" placeholder="Buscar…">
-  <button id="addProcess" class="pill">+ Procesos</button>
-  <button id="addSP" class="pill">+ Subproceso + Paso</button>
-  <button id="saveSP" class="pill">🎯 Guardar subproceso</button>
-  <span id="last" class="badge">—</span>
-</header>
-
-<div class="wrap">
-  <!-- IZQUIERDA -->
-  <aside class="left">
-    <div class="left-head">
-      <strong class="muted">Procesos</strong>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="h-title">
+      <span class="ear">🎧</span> PROCESOS AUDIO
     </div>
-    <div id="procList" class="left-list"></div>
-  </aside>
+    <div class="search"><input id="q" placeholder="Buscar…"></div>
 
-  <!-- DERECHA -->
-  <main class="right">
-    <div class="process-sheet" id="sheet"></div>
-  </main>
-</div>
+    <button class="btn" id="btnAddProc"><span class="dot" style="background:#ffd1d1"></span> + Procesos</button>
+    <button class="btn primary" id="btnAddSubStep">+ Subproceso + Paso</button>
+    <button class="btn" id="btnSave">💾 Guardar subproceso</button>
+    <div class="badge small" id="last"></div>
+  </div>
 
-<!-- DOCK inferior -->
-<div class="dock">
-  <button class="pill" id="toggleEdit">✏️ Editar</button>
-  <button class="pill" id="compact">🧩 Compacto</button>
-  <button class="pill" id="exportHtml">⬇️ HTML</button>
+  <!-- BODY -->
+  <div class="body">
+    <!-- LEFT -->
+    <div class="left">
+      <h3>Procesos</h3>
+      <div id="procList"></div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <div id="sheet"></div>
+    </div>
+  </div>
+
+  <!-- DOCK -->
+  <div class="dock">
+    <button class="pill" id="btnToggleEdit">✏️ Editar</button>
+    <button class="pill" id="btnCompact">🧩 Compacto</button>
+  </div>
 </div>
 
 <script>
-/* ========= STATE ========= */
-const LSKEY='PROCESOS_AUDIO_V2';
-let state = load() || seed();
-let current = 0;
-let editing = false;
-
-/* ========= UTILS ========= */
-function save(){
-  localStorage.setItem(LSKEY, JSON.stringify(state));
-  document.getElementById('last').textContent =
-    'Última actualización ' + new Date().toLocaleString();
-}
-function load(){
-  try { return JSON.parse(localStorage.getItem(LSKEY)); } catch(e){ return null }
-}
-function seed(){
-  // crea un proceso base
-  return [{
-    id: uid(), name:'Revisión auditiva', desc:'',
-    pastel: pastel(0),
+/* ================== DATA ================== */
+const LSKEY='pa_data_v4';
+let data = JSON.parse(localStorage.getItem(LSKEY)||'null') || {
+  selected:null,
+  processes:[{
+    id: uid(), name:'Revisión auditiva', color:'#ffc9c9',
     sub:[]
-  }];
-}
-function uid(){ return Math.random().toString(36).slice(2,9) }
-function pastel(i){
-  // paleta pastel estable
-  const hues=[10,25,45,100,140,180,205,230,260,300,330];
-  const h=hues[i%hues.length];
-  return `hsl(${h} 70% 70%)`;
-}
-function byId(id){ return document.getElementById(id) }
-function el(tag,cls,html){
-  const e=document.createElement(tag);
-  if(cls) e.className=cls;
-  if(html!=null) e.innerHTML=html;
-  return e;
+  }]
+};
+if(data.selected==null) data.selected=data.processes[0]?.id||null;
+
+/* ================== UTILS ================== */
+function uid(){return Math.random().toString(36).slice(2,9)}
+function save(){ localStorage.setItem(LSKEY,JSON.stringify(data)); stamp() }
+function stamp(){
+  const el=document.getElementById('last');
+  el.textContent='Última actualización '+new Date().toLocaleString();
 }
 
-/* ========= RENDER LEFT ========= */
+/* pastel auto (varios tonos) */
+const PALETTE=['#ffc9c9','#ffe0c9','#fff3bf','#e9fac8','#d2f4ea','#c5f6fa','#e7f5ff','#e5dbff','#ffd6e8','#ffe5cc'];
+
+/* ================== RENDER LEFT ================== */
 function renderLeft(){
-  const wrap=byId('procList'); wrap.innerHTML='';
-  state.forEach((p,i)=>{
-    const item=el('div','proc');
-    item.style.setProperty('--pastel', p.pastel);
-    item.innerHTML=`
-      <span class="dot" style="background:${p.pastel}"></span>
-      <div>
-        <div class="name">${p.name||'Nuevo proceso'}</div>
-        <div class="min muted">${p.sub.length} subprocesos</div>
+  const box=document.getElementById('procList'); box.innerHTML='';
+  const q=document.getElementById('q').value.toLowerCase();
+  data.processes.forEach((p,idx)=>{
+    if(q && !p.name.toLowerCase().includes(q)) return;
+    const card=document.createElement('div'); card.className='proc'; card.style.setProperty('--line', p.color);
+    card.innerHTML=`
+      <div class="top">
+        <span class="dot" style="background:${p.color}"></span>
+        <div class="name">${p.name}</div>
+        <div class="acts">
+          <span class="ico" title="Editar" onclick="editProcess('${p.id}')">✏️</span>
+          <span class="ico" title="Eliminar" onclick="delProcess('${p.id}')">🗑️</span>
+        </div>
       </div>
-      <div class="ctrls">
-        <button class="ico" title="Editar" onclick="renameProcess(${i})">✏️</button>
-        <button class="ico" title="Borrar" onclick="removeProcess(${i})">🗑</button>
-      </div>
+      <div class="min">${p.sub.length} subprocesos</div>
     `;
-    item.onclick = (ev)=>{ if(ev.target.closest('.ico')) return; current=i; renderRight(); highlight() }
-    wrap.appendChild(item);
-  });
-  highlight();
-}
-function highlight(){
-  [...document.querySelectorAll('.proc')].forEach((n,idx)=>{
-    n.classList.toggle('active', idx===current);
+    card.onclick=(e)=>{ if(e.target.closest('.acts')) return; data.selected=p.id; renderRight(); save(); }
+    if(p.id===data.selected) card.style.outline=`2px solid ${p.color}`;
+    box.appendChild(card);
   });
 }
 
-/* ========= RENDER RIGHT ========= */
+/* ================== RENDER RIGHT ================== */
+function current(){ return data.processes.find(p=>p.id===data.selected) }
+
 function renderRight(){
-  const p=state[current]; if(!p) return;
+  const p=current(); const sheet=document.getElementById('sheet'); sheet.innerHTML='';
+  if(!p){sheet.innerHTML='<div class="sheet-head"><div class="sheet-title">Selecciona un proceso</div></div>'; return;}
 
-  const sheet=byId('sheet'); sheet.innerHTML='';
-  const head=el('div','sheet-head');
+  /* HEAD */
+  const head=document.createElement('div'); head.className='sheet-head';
   head.innerHTML=`
-    <div class="sheet-title">Proceso: <strong>${p.name||'Nuevo proceso'}</strong></div>
-    <span class="badge" style="background:${p.pastel}22;color:#fff">Color</span>
-    <button class="act" onclick="addSubWithStep()">+ Subproceso + Paso</button>
+    <div class="sheet-title">Proceso: ${p.name}</div>
+    <div class="head-actions">
+      <span class="pill" onclick="cycleColor()"><b>Color</b> <span class="dot" style="background:${p.color}"></span></span>
+      <span class="pill" onclick="addSubStep()">+ Subproceso + Paso</span>
+    </div>
   `;
   sheet.appendChild(head);
 
-  const grid=el('div','sub-grid'); sheet.appendChild(grid);
-
-  // render cada subproceso
-  p.sub.forEach((sp,si)=>{
-    const sub=el('div','sub');
-    const lineColor=p.pastel; // para pasos de este sub
-
-    const head=el('div','sub-head');
-    const name=el('input','sub-name');
-    name.value=sp.name||'Subproceso';
-    name.oninput=()=>{ sp.name=name.value; save() };
-
-    const ctrls=el('div','sub-ctrls');
-    ctrls.innerHTML=`
-      <button class="ico" title="Añadir paso" onclick="addStep(${si})">＋</button>
-      <button class="ico" title="Borrar subproceso" onclick="removeSub(${si})">🗑</button>
+  /* BODY */
+  const body=document.createElement('div'); body.className='sheet-body';
+  p.sub.forEach((s,si)=>{
+    const sub=document.createElement('div'); sub.className='sub';
+    sub.innerHTML=`
+      <div class="sub-head">
+        <input class="sub-name" value="${s.name}" oninput="s.name=this.value; save()">
+        <div class="sub-acts">
+          <span class="btn-icon" title="Paso +" onclick="addStep('${s.id}')">➕</span>
+          <select class="resp" onchange="s.resp=this.value; save()">
+            ${['Audiólogo','Responsable','Otros'].map(r=>`<option ${s.resp===r?'selected':''}>${r}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="sub-body" id="sub-${s.id}"></div>
     `;
-    const resp=el('select','resp');
-    resp.innerHTML=`<option>Audiólogo</option><option>Responsable</option><option>Otros</option>`;
-    resp.value=sp.resp||'Audiólogo';
-    resp.oninput=()=>{ sp.resp=resp.value; save() };
+    body.appendChild(sub);
 
-    head.append(name, ctrls, resp);
-    sub.appendChild(head);
-
-    const steps=el('div','steps'); sub.appendChild(steps);
-
-    (sp.steps||[]).forEach((st,idx)=>{
-      const row=el('div','step'); 
-      row.style.setProperty('--line', lineColor);
-
-      const bubble=el('div','bubble', String(idx+1));
-      row.appendChild(bubble);
-
-      const head=el('div','step-head');
-      const ti=el('input','step-title'); ti.value=st.title||'Nuevo paso';
-      ti.oninput=()=>{ st.title=ti.value; save() };
-
-      const sc=el('div','step-ctrls');
-      sc.innerHTML=`
-        <button class="btn-icon" title="Ver/ocultar detalle" onclick="toggleDetail(this)">▾</button>
-        <button class="btn-icon" title="Borrar paso" onclick="removeStep(${si},${idx})">🗑</button>
-      `;
-      head.append(ti, sc);
-      row.appendChild(head);
-
-      /* DETALLE (siempre debajo del título) */
-      const det=el('div','detail');
-      det.innerHTML=`
-        <textarea placeholder="Descripción">${st.desc||''}</textarea>
-        <div class="si-no">
-          <div class="col">
-            <h5>NO</h5>
-            <div class="point"><input value="${(st.no?.[0]||'')}" placeholder="Ej. 1.1"><button class="btn-icon" onclick="addPoint(${si},${idx},'no')">＋</button></div>
-          </div>
-          <div class="col">
-            <h5>SÍ</h5>
-            <div class="point"><input value="${(st.yes?.[0]||'')}" placeholder="Ej. 1.1"><button class="btn-icon" onclick="addPoint(${si},${idx},'yes')">＋</button></div>
-          </div>
+    const list=sub.querySelector(`#sub-${s.id}`);
+    s.steps.forEach((st,i)=>{
+      const step=document.createElement('div'); step.className='step'; step.style.setProperty('--line',p.color);
+      step.innerHTML=`
+        <div class="bubble">${i+1}</div>
+        <div class="step-row">
+          <div class="step-title w100"><input value="${st.title}" oninput="st.title=this.value; save()" class="w100" style="border:0;background:#0000;font-weight:800"></div>
+          <select class="resp" onchange="st.resp=this.value; save()">
+            ${['Audiólogo','Responsable','Otros'].map(r=>`<option ${st.resp===r?'selected':''}>${r}</option>`).join('')}
+          </select>
+          <span class="btn-icon" title="Eliminar paso" onclick="delStep('${s.id}','${st.id}')">🗑️</span>
         </div>
+
+        <!-- Detalle SIEMPRE debajo del título -->
+        <div class="detail">
+          <textarea placeholder="Descripción…" oninput="st.desc=this.value; save()">${st.desc||''}</textarea>
+        </div>
+
         <div class="attach">
-          <button class="pill" onclick="addLink(${si},${idx})">🔗 Enlace</button>
-          <button class="pill" onclick="addDoc(${si},${idx})">📎 Documento</button>
+          <span class="pill icon-only" onclick="addLink('${s.id}','${st.id}')">🔗 Enlace</span>
+          <span class="pill icon-only" onclick="addDoc('${s.id}','${st.id}')">📎 Documento</span>
+          <span class="small" id="meta-${st.id}"></span>
         </div>
       `;
-      // bind textarea
-      det.querySelector('textarea').oninput=(e)=>{ st.desc=e.target.value; save() };
-      row.appendChild(det);
-
-      steps.appendChild(row);
+      list.appendChild(step);
+      refreshMeta(st);
     });
-
-    // guardar subproceso
-    const foot=el('div','',`<div style="padding:10px 6px 0"><button class="pill" onclick="save();alert('Subproceso guardado');">🎯 Guardar subproceso</button></div>`);
-    sub.appendChild(foot);
-
-    grid.appendChild(sub);
   });
+  sheet.appendChild(body);
 
-  // para que al entrar se vea todo compacto
-  document.body.classList.toggle('editing', editing);
+  /* color vertical para este proceso */
+  document.documentElement.style.setProperty('--line', p.color);
 }
 
-/* ========= ACTIONS ========= */
+/* ========= helpers de attachments ========= */
+function refreshMeta(st){
+  const meta=document.getElementById('meta-'+st.id);
+  const tags=[];
+  if(st.link) tags.push(`<a href="${st.link}" target="_blank">🔗</a>`);
+  if(st.doc)  tags.push(`<a href="${st.doc}" target="_blank">📎</a>`);
+  meta.innerHTML=tags.join(' ');
+}
+
+/* ================== ACTIONS ================== */
 function addProcess(){
-  const i=state.length;
-  state.push({id:uid(), name:'Nuevo proceso', desc:'', pastel:pastel(i), sub:[]});
-  current=state.length-1;
-  save(); renderLeft(); renderRight();
+  const name=prompt('Nombre del proceso','Nuevo proceso'); if(!name) return;
+  const color=PALETTE[(data.processes.length)%PALETTE.length];
+  data.processes.push({id:uid(), name, color, sub:[]});
+  data.selected=data.processes[data.processes.length-1].id;
+  renderLeft(); renderRight(); save();
 }
-function renameProcess(i){
-  const name=prompt('Nombre del proceso:', state[i].name||'');
-  if(name!=null){ state[i].name=name; save(); renderLeft(); renderRight() }
+function editProcess(id){
+  const p=data.processes.find(x=>x.id===id); if(!p) return;
+  const name=prompt('Editar nombre', p.name); if(!name) return;
+  p.name=name; renderLeft(); renderRight(); save();
 }
-function removeProcess(i){
-  if(!confirm('¿Eliminar proceso?')) return;
-  state.splice(i,1); current=Math.max(0,current-1); save(); renderLeft(); renderRight();
+function delProcess(id){
+  if(!confirm('¿Eliminar proceso y su contenido?')) return;
+  const i=data.processes.findIndex(x=>x.id===id); if(i>-1) data.processes.splice(i,1);
+  if(data.selected===id) data.selected=data.processes[0]?.id||null;
+  renderLeft(); renderRight(); save();
 }
-function addSubWithStep(){
-  const p=state[current]; if(!p) return;
-  p.sub??=[]; 
-  p.sub.push({id:uid(), name:'Nuevo subproceso', resp:'Audiólogo', steps:[{id:uid(), title:'Nuevo paso', desc:'', yes:[], no:[], links:[], docs:[]}]});
-  save(); renderRight();
-}
-function addStep(si){
-  const p=state[current]; const sp=p.sub[si];
-  sp.steps.push({id:uid(), title:'Nuevo paso', desc:'', yes:[], no:[], links:[], docs:[]});
-  save(); renderRight();
-}
-function removeSub(si){
-  const p=state[current]; p.sub.splice(si,1); save(); renderRight();
-}
-function removeStep(si,idx){
-  const p=state[current]; p.sub[si].steps.splice(idx,1); save(); renderRight();
-}
-function toggleDetail(btn){
-  const step = btn.closest('.step'); step.classList.toggle('open');
-}
-function addPoint(si,idx,which){
-  const p=state[current]; const st=p.sub[si].steps[idx];
-  st[which]??=[]; st[which].push(''); save(); renderRight();
-}
-function addLink(si,idx){ alert('Adjuntar enlace (demo)'); }
-function addDoc(si,idx){ alert('Adjuntar documento (demo)'); }
 
-/* ========= EVENTS ========= */
-document.getElementById('addProcess').onclick=addProcess;
-document.getElementById('addSP').onclick=addSubWithStep;
-document.getElementById('saveSP').onclick=()=>{ save(); alert('Subproceso guardado'); };
-document.getElementById('toggleEdit').onclick=()=>{ editing=!editing; document.body.classList.toggle('editing', editing) };
-document.getElementById('compact').onclick=()=>{ window.scrollTo({top:0,behavior:'smooth'}) };
-document.getElementById('exportHtml').onclick=()=>{
-  const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='procesos-audio.html'; a.click();
-};
+function cycleColor(){
+  const p=current(); if(!p) return;
+  const i=PALETTE.indexOf(p.color); p.color=PALETTE[(i+1)%PALETTE.length];
+  renderLeft(); renderRight(); save();
+}
 
-/* ========= INIT ========= */
-renderLeft();
-renderRight();
-save(); // pone la fecha de última actualización
+/* Subproceso + Paso anclado */
+function addSubStep(){
+  const p=current(); if(!p) return;
+  const s={id:uid(), name:'Nuevo subproceso', resp:'Audiólogo', steps:[]};
+  p.sub.push(s);
+  addStep(s.id);
+  renderLeft(); renderRight(); save();
+}
+function addStep(subId){
+  const p=current(); const s=p.sub.find(x=>x.id===subId); if(!s) return;
+  s.steps.push({id:uid(), title:'Nuevo paso', desc:'', resp:'Audiólogo'});
+  renderRight(); save();
+}
+function delStep(subId,stepId){
+  const p=current(); const s=p.sub.find(x=>x.id===subId); if(!s) return;
+  const i=s.steps.findIndex(t=>t.id===stepId); if(i>-1) s.steps.splice(i,1);
+  renderRight(); save();
+}
+
+function addLink(subId,stepId){
+  const p=current(); const s=p.sub.find(x=>x.id===subId); const st=s.steps.find(t=>t.id===stepId);
+  const v=prompt('URL del enlace', st.link||''); if(v==null) return;
+  st.link=v.trim(); save(); refreshMeta(st);
+}
+function addDoc(subId,stepId){
+  const p=current(); const s=p.sub.find(x=>x.id===subId); const st=s.steps.find(t=>t.id===stepId);
+  const v=prompt('URL del documento', st.doc||''); if(v==null) return;
+  st.doc=v.trim(); save(); refreshMeta(st);
+}
+
+/* edición compacta / mostrar iconos */
+let editMode=false;
+function toggleEdit(){
+  editMode=!editMode;
+  document.getElementById('app').classList.toggle('hide-icons', !editMode);
+}
+let compact=true;
+function toggleCompact(){
+  compact=!compact;
+  document.body.style.setProperty('letter-spacing', compact? '0' : '.2px');
+}
+
+/* ================== INIT ================== */
+document.getElementById('btnAddProc').onclick=addProcess;
+document.getElementById('btnAddSubStep').onclick=addSubStep;
+document.getElementById('btnSave').onclick=save;
+document.getElementById('btnToggleEdit').onclick=toggleEdit;
+document.getElementById('btnCompact').onclick=toggleCompact;
+document.getElementById('q').oninput=renderLeft;
+
+/* vista limpia por defecto (iconos ocultos) */
+document.getElementById('app').classList.add('hide-icons');
+
+renderLeft(); renderRight(); stamp();
+
+/* ACTIVAR MODO CLARO SI NO ESTÁ */
+document.body.classList.add('light');
 </script>
 </body>
 </html>
