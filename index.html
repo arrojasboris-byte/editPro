@@ -2,276 +2,329 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>🎧 PROCESOS AUDIO</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PROCESOS AUDIO — Demo integrada</title>
 <style>
   :root{
-    --bg:#eceff3; --ink:#0f1115; --mut:#6b7280;
-    --grad:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e);
-    --panel:#f3f4f8; --card:#f7f8fb; --inset:#f5f7fb; --line:#cfcfd4;
-    --sh-l1:0 1px 0 #fff inset, 0 1px 2px rgba(0,0,0,.08);
-    --sh-l2:0 2px 0 #e8eaf0, 0 8px 16px rgba(0,0,0,.08);
-    --sh-in:0 2px 6px rgba(0,0,0,.06) inset;
+    --bg:#f4f5f7;            /* fondo gris claro */
+    --surface:#ffffff;
+    --ink:#222;
+    --muted:#667085;
+    --pill:#eceff3;
+    --shadow:0 8px 20px rgba(0,0,0,.08);
+    --ring:0 0 0 2px rgba(59,130,246,.15);
+    --grad:linear-gradient(90deg,#6d0000 0%,#b54444 50%,#6d0000 100%);
+    --pillGrad:linear-gradient(180deg,#ffffff 0%,#f2f4f8 100%);
+    --ok:#10b981; --warn:#f59e0b; --danger:#ef4444; --info:#3b82f6;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+  }
+  /* Topbar */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;gap:.75rem;
+    padding:.65rem .9rem;background:var(--grad);color:#fff;
+    box-shadow:var(--shadow)
+  }
+  .title{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:22px;letter-spacing:.3px}
+  .title .phone{filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+  .search{
+    flex:1;display:flex;align-items:center;background:rgba(255,255,255,.15);
+    padding:.35rem .6rem;border-radius:9999px
+  }
+  .search input{
+    width:100%;border:0;background:transparent;outline:0;color:#fff;font-weight:600
+  }
+  .bar-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1rem;border:0;border-radius:9999px;
+    color:#fff;background:rgba(255,255,255,.12);backdrop-filter:saturate(120%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 0 rgba(0,0,0,.2);cursor:pointer;transition:transform .06s ease,box-shadow .2s;
+  }
+  .bar-btn:active{transform:translateY(1px)}
+  .bar-right{margin-left:auto;display:flex;align-items:center;gap:.5rem}
+  .stamp{color:#fff;opacity:.85;font-size:12px;background:rgba(255,255,255,.12);border-radius:9999px;padding:.3rem .65rem}
 
-  /* TOPBAR */
-  .top{display:flex;gap:0;align-items:center;padding:8px 10px;background:var(--grad);color:#fff;box-shadow:var(--sh-l2)}
-  .top h1{margin:0 8px 0 0;font-size:20px;font-weight:900;text-shadow:0 1px 0 rgba(0,0,0,.35);display:flex;align-items:center;gap:8px}
-  .top h1 .logo{font-size:36px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
-  .top h1 .title-text{letter-spacing:.2px}
-  .search{flex:1 1 520px;max-width:740px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.18);padding:6px 12px;color:#fff;box-shadow:var(--sh-l1)}
-  .last{margin:0 8px;font-size:12px;opacity:.85}
-  .iconbar{display:flex;gap:6px;margin-left:auto}
-  .ticon,.btnTop{border:1px solid rgba(255,255,255,.35);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.12));color:#fff;padding:6px 9px;cursor:pointer;line-height:1;box-shadow:var(--sh-l2)}
-  .btnTop{padding:6px 12px}
+  /* Layout */
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px;min-height:calc(100dvh - 62px)}
+  .left,.right{background:var(--surface);border-radius:14px;box-shadow:var(--shadow)}
+  .left{padding:10px}
+  .right{padding:10px;display:grid;grid-template-columns:repeat(2,minmax(380px,1fr));gap:12px}
+  @media (max-width:1200px){ .right{grid-template-columns:1fr} .wrap{grid-template-columns:320px 1fr}}
+  @media (max-width:880px){ .wrap{grid-template-columns:1fr} .right{grid-template-columns:1fr}}
 
-  /* LAYOUT */
-  .layout{display:grid;grid-template-columns:1fr 2fr;min-height:calc(100vh - 48px);background:var(--grad)}
-  @media(max-width:1024px){.layout{grid-template-columns:1fr}}
-  .panel{display:flex;flex-direction:column;min-width:0}
-  .panel>header{padding:6px 8px;background:transparent;color:#fff;display:flex;justify-content:space-between;align-items:center;font-weight:800;min-height:44px}
-  #procList{padding-top:12px}
-  .body{padding:6px;overflow:auto;flex:1;background:var(--panel);border-radius:12px;box-shadow:var(--sh-l2)}
+  /* Procesos (izquierda) */
+  .proc-item{
+    display:flex;align-items:center;gap:.5rem;background:var(--pillGrad);
+    border-radius:14px;padding:.55rem .7rem;margin:.45rem 0;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);
+    cursor:pointer;border:2px solid transparent
+  }
+  .proc-item.activo{border-color:rgba(59,130,246,.35);box-shadow:var(--ring),0 1px 0 rgba(0,0,0,.06)}
+  .dot{width:10px;height:10px;border-radius:50%;background:#ddd;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+  .proc-name{flex:1;font-weight:700}
+  .proc-acts{display:flex;align-items:center;gap:.35rem}
+  .icon-btn{width:28px;height:28px;border-radius:12px;border:0;background:#f2f4f8;box-shadow:inset 0 1px 0 #fff;cursor:pointer}
+  .icon-btn:active{transform:translateY(1px)}
 
-  /* PROCESOS IZQ */
-  .procRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e0e4ec;border-radius:12px;background:linear-gradient(180deg,#fdfefe,#eef1f6);margin-bottom:9px;cursor:grab;box-shadow:var(--sh-l2);position:relative}
-  .procRow.active{border-width:2px;box-shadow:0 0 0 2px rgba(0,0,0,.06), var(--sh-l2)}
-  .pTitle{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;font-size:14px;flex:1 1 92%;min-width:0;line-height:1.2;border-radius:8px;padding:4px 6px}
-  .tiny{display:flex;gap:4px}
-  .ico{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:8px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
-  .ico.xs{min-width:18px;height:18px;font-size:10px}
-  .ico.trash{background:#fee2e2;border-color:#fecaca;color:#7c2d12}
-  .ico:active{transform:translateY(1px)}
-  .ico:focus-visible{outline:2px solid #b63a3a}
+  /* Módulo (derecha) */
+  .module{
+    background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);
+    display:flex;flex-direction:column;gap:8px;padding:10px;min-height:240px
+  }
+  .mod-head{
+    display:flex;align-items:center;gap:.5rem;background:#333;color:#fff;border-radius:12px;
+    padding:.45rem .7rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)
+  }
+  .mod-title{flex:1;font-weight:800}
+  .mod-ctl{display:flex;align-items:center;gap:.35rem}
+  .pill{height:30px;padding:0 .65rem;background:#222;border-radius:9999px;color:#fff;border:0;cursor:pointer}
+  .pill:active{transform:translateY(1px)}
 
-  /* DERECHA / TARJETAS */
-  .card{border-radius:12px;border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
-  .card.green{border-color:#cfe9df;background:linear-gradient(180deg,#ffffff,#eef7f5)}
-
-  /* PASOS */
-  .row{border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#eef1f7);border-radius:10px;padding:3px 4px;margin:4px 0;cursor:grab;box-shadow:var(--sh-l2);position:relative}
-  .chip{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;padding:5px 6px;border:1px solid #e6e8ec;border-radius:10px;background:linear-gradient(180deg,#ffffff,#f3f4f6);box-shadow:var(--sh-l1)}
-  .bubble{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:linear-gradient(180deg,#1f2937,#0b1020);border:1px solid #0b0f18;color:#fff;font-weight:900;font-size:10px;box-shadow:var(--sh-l2);position:relative;z-index:2}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;color:#fff;font-weight:800;font-size:11px;box-shadow:var(--sh-l2)}
-  .title{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;width:100%;min-width:0;font-size:13px;border-radius:8px;padding:4px 6px}
-  .subTitle{background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;border-radius:8px;padding:6px 8px;color:#fff;box-shadow:var(--sh-l2)}
-  .rightPack{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-self:end}
-  .miniSel{border:1px solid #dfe3ea;border-radius:999px;padding:3px 8px;font-size:11px;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in)}
-  .nextBadge{font-weight:800;border-radius:999px;padding:2px 6px;border:1px solid #bbb;background:linear-gradient(180deg,#ffffff,#eef0f3);color:#111;max-width:clamp(160px,50vw,640px);white-space:normal;word-break:break-word;line-height:1.1;box-shadow:var(--sh-l1)}
-  .detail{display:none;padding:4px 2px 2px}
-  .detail textarea{width:100%;min-height:40px;border:1px solid #dfe3ea;border-radius:8px;padding:6px 7px;overflow:hidden;resize:none;font-size:13px;background:var(--inset);box-shadow:var(--sh-in)}
-
-  /* Si/No */
-  .condWrap{display:none;padding:5px 0 2px;border-top:1px dashed #e2e2e7;margin-top:3px;margin-left:calc(var(--line-x,42px) + 14px)}
-  .condHdr{display:flex;align-items:center;gap:6px;margin-bottom:2px}
-  .condTitle{font-weight:800;font-size:12px}
-  .adder{border:1px solid #dfe3ea;border-radius:999px;background:linear-gradient(180deg,#ffffff,#f4f6f9);color:#111;min-width:22px;height:22px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
-  .condItem{display:flex;gap:4px;align-items:center;margin:3px 0}
-  .condText{flex:1;border:1px solid #dfe3ea;border-radius:8px;padding:6px 7px;min-height:28px;font-size:12px;overflow:hidden;resize:none;background:var(--inset);box-shadow:var(--sh-in)}
-  .condDel{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:999px;min-width:18px;height:18px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
-  .condNum{font-weight:900;margin-right:6px;color:#111;font-size:10px}
-  .condChildren{margin-left:16px;border-left:2px dashed #c7ccd4;padding-left:10px}
-  .branch-yes .condChildren{border-left-color:#a7f3d0}
-  .branch-no .condChildren{border-left-color:#fecaca}
-  .branch-yes .condNum{color:#166534}
-  .branch-no .condNum{color:#7c2d12}
-
-  /* Conectores verticales */
-  .flow .row .bubble{position:relative;z-index:2}
-  .flow .row .bubble::after{ content:""; position:absolute; left:50%; transform:translateX(-50%); top:50%; width:2px; height:var(--conn-len,22px); background:var(--conn-color, var(--line)); border-radius:2px; pointer-events:none; z-index:1; }
-  .flow .row:last-child .bubble::after{content:none}
-
-  /* VISTA MÓDULOS */
-  .modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:10px}
-  .module{border:1px solid #dcdfe7;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
-  .moduleHead{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-  .headTools{display:flex;gap:4px;margin-left:auto}
-  .headTools .ico{min-width:22px;height:22px;font-size:12px}
-  .headTools .ico.trash{background:#fee2e2;border-color:#fecaca;color:#7c2d12}
-
-  /* LOCK UI */
-  body.locked .editOnly, body.locked .adder, body.locked .ico.del, body.locked .editBar { display:none !important; }
-  body.locked input.title, body.locked input.pTitle, body.locked textarea { pointer-events:none; background:linear-gradient(180deg,#f2f3f6,#e9ecf3); color:#555; }
-  body.locked select.miniSel { pointer-events:none; opacity:.6; }
+  /* Lista de pasos */
+  .steps{display:flex;flex-direction:column;gap:10px;padding:6px}
+  .step{
+    position:relative;display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:.5rem .6rem;
+    box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06)
+  }
+  .bubble{
+    min-width:28px;height:28px;border-radius:9999px;background:#111;color:#fff;display:grid;place-items:center;
+    font-weight:800;font-size:12px;z-index:2
+  }
+  .vline{
+    position:absolute;left:33px;top:0;bottom:0;width:3px;background:#ffd166;opacity:.8;z-index:1;border-radius:2px
+  }
+  .step input.title{
+    font-weight:700;border:0;background:transparent;outline:0;width:100%
+  }
+  .select{border:1px solid #e6e8ec;background:#fff;border-radius:10px;padding:.25rem .5rem}
+  .ghost{opacity:.6}
+  .hide{display:none!important}
 </style>
 </head>
 <body>
-  <div class="top">
-    <h1><span class="logo" aria-hidden="true">🎧</span><span class="title-text">PROCESOS AUDIO</span></h1>
-    <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"> <span id="lastSaved" class="last">Última actualización: —</span>
-    <div class="iconbar">
-      <button class="ticon" title="Descargar HTML" onclick="downloadHTML()">⬇️ HTML</button>
-      <button class="ticon" title="Imprimir / PDF" onclick="printAll()">🖨️</button>
-      <button class="ticon" title="Guardar en nube" onclick="saveCloud()">☁️⬆️</button>
-      <button class="ticon" title="Actualizar desde nube" onclick="loadCloud()">☁️🔄</button>
-      <button id="pinBtn" class="ticon" title="PIN" onclick="togglePin()">🔒</button>
-      <button id="saveBtn" class="btnTop editOnly" onclick="saveMeta()">💾 Guardar</button>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="title"><span class="phone">🎧</span> PROCESOS AUDIO</div>
+    <div class="search"><input id="q" placeholder="Buscar…"></div>
+    <!-- Botones principales -->
+    <button id="btnAddProcess" class="bar-btn">+ Procesos</button>
+    <button id="btnAddStepGlobal" class="bar-btn" title="Añadir paso al proceso activo">+ Paso</button>
+    <button id="btnAddSubprocPaso" class="bar-btn">+ Subproceso + Paso</button>
+    <div class="bar-right">
+      <span id="stamp" class="stamp">—</span>
+      <button id="btnSave" class="bar-btn">💾 Guardar</button>
     </div>
   </div>
 
-  <div class="layout">
-    <div class="panel">
-      <header class="leftHdr">
-        <div style="justify-content:flex-end;width:100%;display:flex">
-          <button class="btnTop editOnly" onclick="addProcess()">+Procesos</button>
-        </div>
-      </header>
-      <div class="body" id="procList"></div>
+  <!-- Layout -->
+  <div class="wrap">
+    <!-- Columna izquierda: Procesos -->
+    <div class="left">
+      <div id="processList"></div>
     </div>
 
-    <div class="panel">
-      <header id="rHeader">
-        <span></span>
-        <div class="right-actions" style="display:flex;gap:6px;align-items:center">
-          <button class="btnTop editOnly" onclick="addSub()">+ Subproceso</button>
-          <button class="btnTop editOnly" onclick="addStepProcess()">+ Paso</button>
-          <button class="btnTop" id="viewBtn" onclick="toggleView()">Vista módulos</button>
-        </div>
-      </header>
-      <div class="body" id="rightBody"></div>
-    </div>
+    <!-- Columna derecha: módulos -->
+    <div class="right" id="modules"></div>
   </div>
 
 <script>
-const LS='PROC_COMPACT_PRO_V18_SOLID';
-const PIN_CODE='AR4321';
-const ROLES=['Audiólogo','Responsable','Otros'];
-const PASTEL=['#ffc6b3','#ffd1dc','#ffb3b3','#caffb7','#b56576','#c6e2ff','#b3e5ff','#ffdb58','#c8b3ff','#d6b3ff','#ffe8b3','#b3ffd9','#ffd3b6','#e6b3ff','#b3c7ff','#ffd6a5','#a0e7e5','#c0f7a6','#f6c1ff','#fcd5ce'];
-const byId=id=>document.getElementById(id);
-function uid(){return Math.random().toString(36).slice(2,9);} 
-function lighten(hex,f=0.86){const c=hex.replace('#','');const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f);return `rgb(${nr},${ng},${nb})`;}
-// 👉 Auto-ajuste de altura de <textarea>
-function autoGrow(el){ if(!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+/* ===============================
+   Datos & Utilidades
+================================ */
+const LSKEY = 'pa_demo_integrada_v1';
+const RESPONSABLES = ['Audiólogo','Responsable','Otros'];
+const pastelPalette = [
+  '#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5',
+  '#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'
+];
 
-/* --- Estado --- */
-let data=safeLoad();
-let selPid=(data[0]&&data[0].id)||null;
-let ctxSubId=null; let q='';
-let modulesMode=localStorage.getItem(LS+'_VMODE')==='1';
+const uid = ()=>'p'+Math.random().toString(36).slice(2,9);
+const nowStamp = _=>{
+  const d = new Date(); const pad=n=>n<10?'0'+n:n;
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+};
 
-function canEdit(){return sessionStorage.getItem(LS+'_PIN')==='1'}
-function save(){ localStorage.setItem(LS,JSON.stringify(data)); updateLastSaved(); }
-function updateLastSaved(){ const el=byId('lastSaved'); if(!el) return; const d=new Date(); const pad=n=>String(n).padStart(2,'0'); const ts=`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; el.textContent='Última actualización: '+ts; localStorage.setItem(LS+'_STAMP', ts); }
-function doSearch(v){q=(v||'').toLowerCase();render();}
-function getUsedColors(){ return new Set(data.map(p=>p.color)); }
-function nextColor(){ const used=getUsedColors(); for(const c of PASTEL){ if(!used.has(c)) return c; } return '#ffd1dc'; }
-
-function safeLoad(){ try{ const raw=localStorage.getItem(LS); if(!raw){ const seed=[{id:uid(),name:'Revisión auditiva',color:PASTEL[0],desc:'',sub:[],steps:[]}]; localStorage.setItem(LS,JSON.stringify(seed)); return seed;} const o=JSON.parse(raw); o.forEach(p=>{p.sub=p.sub||[];p.steps=p.steps||[]}); return o; }catch(e){ return [{id:uid(),name:'Proceso',color:PASTEL[0],desc:'',sub:[],steps:[]}]; } }
-
-/* PIN */
-function togglePin(){ const ok=canEdit(); if(ok){ sessionStorage.removeItem(LS+'_PIN'); byId('pinBtn').textContent='🔒'; applyLockState(); return; } const p=prompt('Introduce PIN'); if(p===PIN_CODE){ sessionStorage.setItem(LS+'_PIN','1'); byId('pinBtn').textContent='🔓'; applyLockState(); } else alert('PIN incorrecto'); }
-function applyLockState(){ const locked=!canEdit(); document.body.classList.toggle('locked', locked); }
-
-/* TOPBAR */
-function downloadHTML(){ const html=document.documentElement.outerHTML; const payload=JSON.stringify(data).replace(/</g,'\\u003C'); const stamp=localStorage.getItem(LS+'_STAMP')||new Date().toISOString(); const injector='<script>(function(){try{localStorage.setItem("'+LS+'",'+payload+');localStorage.setItem("'+LS+'_STAMP","'+stamp.replace(/</g,'\\u003C').replace(/"/g,'\\"')+'");}catch(e){}})();<'+'\/script>'; let final; if(html.includes('<head>')) final=html.replace('<head>','<head>'+injector); else if(html.includes('</body>')) final=html.replace('</body>',injector+'</body>'); else final=injector+html; const blob=new Blob([final],{type:'text/html'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='procesos.html'; a.click(); URL.revokeObjectURL(a.href); }
-function printAll(){window.print()}
-function saveCloud(){ if(!canEdit()) return alert('Modo lectura'); localStorage.setItem(LS+'_CLOUD',JSON.stringify({ts:Date.now(),data})); alert('Guardado'); }
-function loadCloud(){ if(!canEdit()) return alert('Modo lectura'); const raw=localStorage.getItem(LS+'_CLOUD'); if(!raw) return alert('No hay copia'); const obj=JSON.parse(raw); data=obj.data; selPid=data[0]&&data[0].id||null; render(); }
-
-/* IZQUIERDA */
-function addProcess(){ if(!canEdit()) return alert('Modo lectura'); data.push({id:uid(),name:'Nuevo proceso',color:nextColor(),desc:'',sub:[],steps:[]}); selPid=data[data.length-1].id; ctxSubId=null; render(); }
-function renderLeft(){ const box=byId('procList'); box.innerHTML=''; let list=data.slice(); if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q)); list.forEach(p=>{ const row=document.createElement('div'); row.className='procRow'+(p.id===selPid?' active':''); row.style.background='linear-gradient(180deg,#fdfefe,'+lighten(p.color,.9)+')'; row.style.borderColor=p.color; row.style.borderLeft='6px solid '+p.color; const title=document.createElement('input'); title.className='pTitle'; title.value=p.name; title.oninput=e=>{ if(!canEdit()) return; p.name=e.target.value; save(); }; row.appendChild(title); const tiny=document.createElement('div'); tiny.className='tiny'; const editIco=ico('🖉','Editar',()=>{ if(!canEdit()) return; title.focus(); title.select(); }, true); const delIco=ico('🗑️','Borrar',()=>{ if(!canEdit()) return; if(confirm('¿Eliminar proceso?')){ const idx=data.findIndex(pp=>pp.id===p.id); if(idx>-1){ data.splice(idx,1); selPid=data[0]?data[0].id:null; ctxSubId=null; render(); } } }, true); delIco.classList.add('xs','trash'); const detailIco=ico('▾','Detalle',()=>toggleDesc(p.id,'toggle'), false); tiny.append(editIco,delIco,detailIco); row.appendChild(tiny); row.onclick=e=>{ if(e.target.closest('.ico')) return; selPid=p.id; ctxSubId=null; renderRight(); document.querySelectorAll('.procRow').forEach(el=>el.classList.remove('active')); row.classList.add('active'); document.querySelectorAll('[id^="d_"]').forEach(el=>el.style.display='none'); const det=byId('d_'+p.id); if(det){ det.style.display='block'; const ta=det.querySelector('textarea'); autoGrow(ta); } }; box.appendChild(row); const detail=document.createElement('div'); detail.id='d_'+p.id; detail.style.display=(p.id===selPid)?'block':'none'; detail.style.margin='4px 0 6px'; detail.style.background=lighten(p.color,.94); detail.style.border='1px solid '+lighten(p.color,.8); detail.style.borderRadius='8px'; const ta=document.createElement('textarea'); ta.style.width='100%'; ta.style.minHeight='96px'; ta.style.border='1px solid #e6e6e6'; ta.style.borderRadius='8px'; ta.style.padding='6px'; ta.value=p.desc||''; ta.oninput=ev=>{ if(!canEdit()) return; p.desc=ev.target.value; autoGrow(ta); save(); }; autoGrow(ta); detail.appendChild(ta); box.appendChild(detail); }); }
-function toggleDesc(pid,mode){ const el=byId('d_'+pid); if(!el) return; if(mode==='toggle') el.style.display=(el.style.display==='block')?'none':'block'; else if(mode==='close') el.style.display='none'; else el.style.display='block'; if(el.style.display==='block'){ const ta=el.querySelector('textarea'); autoGrow(ta); } }
-
-/* DERECHA */
-function addSub(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); p.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]}); ctxSubId=p.sub[p.sub.length-1].id; renderRight(); }
-function addStepProcess(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); const st={id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]}; if(p.defaultNextPid) st.nextPid=p.defaultNextPid; p.steps.push(st); ctxSubId=null; renderRight(); }
-
-function toggleView(){ modulesMode=!modulesMode; localStorage.setItem(LS+'_VMODE', modulesMode?'1':'0'); renderRight(); const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; }
-
-function renderRight(){ const body=byId('rightBody'); body.innerHTML=''; const p=data.find(x=>x.id===selPid); if(!p) return; body.style.background='linear-gradient(180deg,'+lighten(p.color,.985)+',#f1f3f8)'; body.style.borderLeft='4px solid '+lighten(p.color,.78); if(modulesMode){ renderRightModules(p); }else{ renderRightLinear(p); } const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; }
-
-/* LINEAL (como tu vista base) */
-function renderRightLinear(p){ const body=byId('rightBody'); const card=document.createElement('div'); card.className='card flow'; card.style.padding='5px'; const list=p.steps; list.forEach((st,i)=> card.appendChild(stepRow(p,null,st,i)) ); body.appendChild(card); if(p.sub.length){ const g=document.createElement('div'); g.className='card green'; g.style.marginTop='6px'; p.sub.forEach((s,idx)=>g.appendChild(subMini(p,s,idx))); body.appendChild(g); } alignConnectors(card); setTimeout(()=>alignConnectors(card),0); }
-
-/* MÓDULOS (subprocesos + pasos repetidos en la misma pantalla) */
-function renderRightModules(p){ const body=byId('rightBody'); const grid=document.createElement('div'); grid.className='modules';
-  if(p.steps && p.steps.length){ grid.appendChild(buildModule(p,'Pasos del proceso',null,p.steps)); }
-  (p.sub||[]).forEach(s=>{ grid.appendChild(buildModule(p,s.title||'Sub-proceso',s,(s.steps||[]))); });
-  body.appendChild(grid);
-  body.querySelectorAll('.module').forEach(mod=>alignConnectors(mod));
+function saveState(){
+  localStorage.setItem(LSKEY, JSON.stringify(state));
+  document.getElementById('stamp').textContent = 'Última actualización '+nowStamp();
 }
-function buildModule(proc,titleOrSub,sub,list){
-  const mod=document.createElement('div'); mod.className='module flow'; mod.style.setProperty('--conn-color', proc.color);
-  const head=document.createElement('div'); head.className='moduleHead';
-  let titleEl; if(sub){ titleEl=document.createElement('input'); titleEl.className='title subTitle'; titleEl.value=sub.title||'Subproceso'; titleEl.oninput=e=>{ if(!canEdit()) return; sub.title=e.target.value; save(); }; }
-  else { titleEl=document.createElement('div'); titleEl.className='subTitle'; titleEl.textContent=titleOrSub; }
-  const role=miniSel(sub||proc);
-  const tools=document.createElement('div'); tools.className='headTools';
-  const bAddSub=ico('+','Añadir subproceso',()=>{ if(!canEdit()) return; proc.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]}); save(); renderRight(); }, true);
-  const bAddPaso=ico('+','Añadir paso',()=>{ if(!canEdit()) return; const tgt=sub||proc; const st={id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}; if(tgt.defaultNextPid) st.nextPid=tgt.defaultNextPid; (tgt.steps||(tgt.steps=[])).push(st); save(); renderRight(); }, true);
-  const bFlag=ico('🚩','Próximo proceso por defecto',()=>{ if(!canEdit()) return; pick((sub||proc).defaultNextPid, v=>{ (sub||proc).defaultNextPid=v; save(); renderRight(); }); }, true);
-  const bSiNo=ico('❓','Mostrar Si/No',()=>{ mod.querySelectorAll('.condWrap').forEach(el=>{ if(el.dataset.inited!=='1'){ const row=el.closest('.row'); const i=[...row.parentNode.children].indexOf(row)+1; const stepIdx=i; const st=(sub?(sub.steps||[]):proc.steps)[stepIdx-1]; if(st){ el.appendChild(condBlock(st, stepIdx)); el.dataset.inited='1'; } }
-    el.style.display='block';
-  }); }, false);
-  const bDel=ico('−','Eliminar módulo',()=>{ if(!canEdit()) return; if(sub){ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==sub); save(); renderRight(); } } else { if(confirm('¿Vaciar pasos del proceso?')){ proc.steps=[]; save(); renderRight(); } } }, true); bDel.classList.add('trash');
-  tools.append(bAddSub,bAddPaso,bFlag,bSiNo,bDel);
-  head.append(titleEl,role,tools); mod.appendChild(head);
-  const listBox=document.createElement('div'); list.forEach((st,i)=> listBox.appendChild(stepRow(proc,sub,st,i)) ); mod.appendChild(listBox);
-  const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='space-between'; bar.style.gap='6px'; bar.style.marginTop='6px';
-  const close=document.createElement('button'); close.textContent='🎯 Guardar (cerrar pasos)'; close.className='btnTop'; close.onclick=()=>{ if(!canEdit()) return; const arr=list; if(arr.length){ arr.forEach((s,k)=>s.meta=(k===arr.length-1)); save(); renderRight(); } }; bar.appendChild(close);
-  mod.appendChild(bar);
+function loadState(){
+  const raw = localStorage.getItem(LSKEY);
+  if(!raw){
+    // seed mínimo
+    state.processes.push({
+      id:uid(), name:'Revisión auditiva', color: pastelPalette[0],
+      modules:[]
+    });
+    saveState();
+  }else{
+    try{ Object.assign(state, JSON.parse(raw)); }catch(e){}
+  }
+}
+
+/* ===============================
+   Estado
+================================ */
+const state = { processes:[] };
+let activePid = null;
+
+/* ===============================
+   Render: Procesos (izquierda)
+================================ */
+function renderProcesses(){
+  const box = document.getElementById('processList');
+  box.innerHTML = '';
+  state.processes.forEach(p=>{
+    const row = document.createElement('div');
+    row.className = 'proc-item'+(p.id===activePid?' activo':'');
+    row.dataset.pid = p.id;
+    row.innerHTML = `
+      <span class="dot" style="background:${p.color}"></span>
+      <span class="proc-name">${p.name}</span>
+      <div class="proc-acts">
+        <button class="icon-btn" title="Renombrar">✏️</button>
+        <button class="icon-btn" title="Eliminar">🗑️</button>
+      </div>
+    `;
+    // click select
+    row.addEventListener('click', e=>{
+      if(e.target!==row && e.target.closest('.icon-btn')) return;
+      activePid = p.id;
+      renderProcesses(); renderModules();
+    });
+    // rename
+    row.querySelectorAll('.icon-btn')[0].onclick = e=>{
+      e.stopPropagation();
+      const nn = prompt('Nuevo nombre del proceso:', p.name);
+      if(nn){ p.name = nn; saveState(); renderProcesses(); renderModules(); }
+    };
+    // delete
+    row.querySelectorAll('.icon-btn')[1].onclick = e=>{
+      e.stopPropagation();
+      if(!confirm('¿Eliminar proceso y sus módulos?')) return;
+      const i = state.processes.findIndex(x=>x.id===p.id);
+      if(i>-1){ state.processes.splice(i,1); activePid = state.processes[0]?.id || null; saveState(); renderProcesses(); renderModules(); }
+    };
+    box.appendChild(row);
+  });
+}
+
+/* ===============================
+   Render: Módulos (derecha)
+================================ */
+function moduleCardHTML(m,p){
+  return `
+  <div class="module module-card" data-id="${m.id}" data-pid="${p.id}">
+    <div class="mod-head" style="background:linear-gradient(180deg,#333 0%,#1f1f1f 100%);">
+      <input class="mod-title" value="${m.title}" style="flex:1;border:0;background:transparent;color:#fff;font-weight:800;outline:0">
+      <select class="select">
+        ${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}
+      </select>
+      <div class="mod-ctl">
+        <button class="pill" data-act="add-step">+ Paso</button>
+        <button class="pill" data-act="del-mod">–</button>
+      </div>
+    </div>
+    <div class="steps" data-steps>
+      ${m.steps.map((s,i)=>`
+        <div class="step">
+          <div class="bubble" style="background:#111">${i+1}</div>
+          <div class="vline" style="background:${p.color}"></div>
+          <input class="title" value="${s.title}">
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderModules(){
+  const box = document.getElementById('modules');
+  box.innerHTML = '';
+  const p = state.processes.find(x=>x.id===activePid) || state.processes[0];
+  if(!p) return;
+  activePid = p.id;
+
+  // para cada módulo de ese proceso, pintamos una tarjeta
+  p.modules.forEach(m=>{
+    const w = document.createElement('div');
+    w.innerHTML = moduleCardHTML(m,p);
+    const card = w.firstElementChild;
+    // manejar acciones
+    card.querySelector('[data-act="add-step"]').onclick = ()=>addStepIntoModule(p.id,m.id);
+    card.querySelector('[data-act="del-mod"]').onclick = ()=>{
+      if(confirm('¿Eliminar subproceso?')){
+        const i = p.modules.findIndex(x=>x.id===m.id);
+        if(i>-1){ p.modules.splice(i,1); saveState(); renderModules(); }
+      }
+    };
+    // línea vertical coloreada
+    card.querySelectorAll('.vline').forEach(v=>v.style.background = p.color);
+    box.appendChild(card);
+  });
+}
+
+/* ===============================
+   Acciones
+================================ */
+function addProcess(){
+  const color = pastelPalette[state.processes.length % pastelPalette.length];
+  const p = { id:uid(), name:'Nuevo proceso', color, modules:[] };
+  state.processes.push(p);
+  activePid = p.id;
+  saveState(); renderProcesses(); renderModules();
+}
+function addSubprocPasoForProcess(pid){
+  const p = state.processes.find(x=>x.id===pid);
+  if(!p) return null;
+  const mod = { id:uid(), title:'Nuevo subproceso', responsable: RESPONSABLES[0], steps:[{id:uid(), title:'Nuevo paso'}] };
+  p.modules.push(mod);
+  saveState(); renderModules();
   return mod;
 }
-
-/* Helpers compartidos */
-function miniSel(obj){ const sel=document.createElement('select'); sel.className='miniSel'; ROLES.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o)}); sel.value=obj.resp||ROLES[0]; sel.onchange=e=>{ if(!canEdit()) return; obj.resp=e.target.value; save(); }; return sel; }
-function ico(g,t,fn,editOnly){ const b=document.createElement('button'); b.className='ico sm'; if(editOnly) b.classList.add('editOnly'); b.title=t; b.textContent=g; if(fn){ b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();fn(ev);}); } return b; }
-
-/* Paso + Si/No */
-function normalize(list){if(!Array.isArray(list))return [];return list.map(x=>typeof x==='string'?{id:uid(),text:x}:(x.id?x:{id:uid(),...x}))}
-function removePointFromStep(step,id){ function rec(lst){ if(!Array.isArray(lst)) return false; const i=lst.findIndex(n=>n&&n.id===id); if(i>-1){ lst.splice(i,1); return true; } for(const n of lst){ if(n && n.children && rec(n.children)) return true; } return false; } return rec(step.yes)||rec(step.no); }
-function badge(pid,prefix){ prefix=(typeof prefix==='string'?prefix:'IR AL PROCESO: '); const tgt=data.find(p=>p.id===pid); if(!tgt) return null; const el=document.createElement('span'); el.className='nextBadge'; el.textContent=prefix+tgt.name; el.style.background=lighten(tgt.color,.55); el.style.border='1px solid '+lighten(tgt.color,.35); return el; }
-function stepRow(proc,sub,st,i){ const list=sub?(sub.steps||[]):proc.steps; const row=document.createElement('div'); row.className='row'; row.style.setProperty('--conn-color', proc.color);
-  const chip=document.createElement('div'); chip.className='chip';
-  const num=document.createElement('div'); num.className='bubble'; num.textContent=i+1; const title=document.createElement('input'); title.className='title'; title.value=st.name||'Paso'; title.oninput=e=>{ if(!canEdit()) return; st.name=e.target.value; save(); };
-  const right=document.createElement('div'); right.className='rightPack';
-  const iGoto=ico('🚩','Próximo proceso',()=>{ if(!canEdit()) return; pick(st.nextPid,v=>{st.nextPid=v;save();renderRight();}); }, true);
-  const iDetail=ico('▾','Detalle',toggleDetail,false);
-  const iDel=ico('−','Eliminar',()=>{ if(!canEdit()) return; if(confirm('¿Eliminar paso?')){const pos=list.indexOf(st);list.splice(pos,1);renderRight();} }, true);
-  right.append(iDetail,iGoto,iDel, miniSel(st)); if(st.nextPid){const b=badge(st.nextPid); if(b) right.append(b);} if(st.meta){const m=ico('🎯','Meta cumplida',null,false); m.style.background='#ffe3a6'; right.append(m);} chip.append(num,title,right); row.appendChild(chip);
-  // Si/No
-  st.yes=normalize(st.yes); st.no=normalize(st.no);
-  const condWrap=document.createElement('div'); condWrap.className='condWrap'; row.appendChild(condWrap);
-  const iSiNo=ico('❓','Si/No',()=>{ const active=(st.yes.length>0||st.no.length>0); if(active){ ensureCondVisible(); return; } condWrap.style.display=(condWrap.style.display==='block')?'none':'block'; if(condWrap.style.display==='block') buildCond(); }, false);
-  right.append(iSiNo);
-  function buildCond(){ if(condWrap.dataset.inited==='1') return; condWrap.innerHTML=''; condWrap.appendChild(condBlock(st, i+1)); condWrap.dataset.inited='1'; }
-  function ensureCondVisible(){ buildCond(); condWrap.style.display='block'; }
-  if(st.yes.length||st.no.length) ensureCondVisible();
-  // Detalle
-  const detail=document.createElement('div'); detail.className='detail'; const tx=document.createElement('textarea'); tx.value=st.desc||''; tx.oninput=e=>{ if(!canEdit()) return; st.desc=e.target.value; autoGrow(tx); save(); }; autoGrow(tx); detail.appendChild(tx); function toggleDetail(){ const open=detail.style.display!=='block'; detail.style.display=open?'block':'none'; if(open) autoGrow(tx); }
-  row.appendChild(detail);
-  return row;
+function addStepIntoModule(pid, mid){
+  const p = state.processes.find(x=>x.id===pid); if(!p) return;
+  const m = p.modules.find(x=>x.id===mid); if(!m) return;
+  m.steps.push({id:uid(), title:'Nuevo paso'});
+  saveState(); renderModules();
 }
-function condBlock(st, stepNum){ const wrap=document.createElement('div'); wrap.className='condBox'; wrap.append(oneSide('Si NO…','no',st,stepNum)); wrap.append(oneSide('Si SÍ…','yes',st,stepNum)); return wrap; }
-function oneSide(title,branch,st,stepNum){ const b=document.createElement('div'); b.classList.add(branch==='yes' ? 'branch-yes' : 'branch-no'); const hdr=document.createElement('div'); hdr.className='condHdr'; const t=document.createElement('div'); t.className='condTitle'; t.textContent=title; const plus=document.createElement('button'); plus.className='adder editOnly'; plus.textContent='+'; plus.title='Añadir punto a '+title; const list=(st[branch]||(st[branch]=[])); plus.addEventListener('click',()=>{ if(!canEdit()) return; list.push({id:uid(),text:'',children:[]}); save(); renderRight(); }); hdr.append(t,plus); b.appendChild(hdr); function renderPoints(arr, base, container){ (arr||[]).forEach((it,idx)=>{ it.children=it.children||[]; const numStr=base+'.'+(idx+1); const r=document.createElement('div'); r.className='condItem'; const num=document.createElement('span'); num.className='condNum'; num.textContent=numStr; const tx=document.createElement('textarea'); tx.className='condText'; tx.placeholder='Escribe…'; tx.value=it.text||''; tx.oninput=e=>{ if(!canEdit()) return; it.text=e.target.value; autoGrow(tx); save(); }; autoGrow(tx); const flag=ico('🚩','Próximo proceso',()=>{ if(!canEdit()) return; pick(it.nextPid,v=>{ it.nextPid=v; save(); renderRight(); }); }, true); const addChild=ico('+','Añadir subpunto',()=>{ if(!canEdit()) return; it.children.push({id:uid(),text:'',children:[]}); save(); renderRight(); }, true); const del=document.createElement('button'); del.className='condDel editOnly'; del.textContent='−'; del.addEventListener('click',()=>{ if(!canEdit()) return; if(removePointFromStep(st,it.id)){ save(); renderRight(); } }); r.append(num,tx,flag,addChild,del); if(it.nextPid){ const bb=badge(it.nextPid,'IR AL PROCESO: '); if(bb) r.appendChild(bb); } container.appendChild(r); if(it.children && it.children.length){ const kids=document.createElement('div'); kids.className='condChildren'; container.appendChild(kids); renderPoints(it.children, numStr, kids); } }); } renderPoints(list, String(stepNum), b); return b; }
-
-/* Subprocesos mini (para vista lineal) */
-function subMini(proc,s,idx){
-  const row=document.createElement('div'); row.className='row'; row.style.setProperty('--conn-color', proc.color);
-  const chip=document.createElement('div'); chip.className='chip';
-  const num=document.createElement('div'); num.className='bubble'; num.textContent=idx+1; const title=document.createElement('input'); title.className='title'; title.value=s.title||'Subproceso'; title.oninput=e=>{ if(!canEdit()) return; s.title=e.target.value; save(); };
-  const right=document.createElement('div'); right.className='rightPack';
-  const add=ico('+','Añadir paso',()=>{ if(!canEdit()) return; (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); save(); renderRight(); }, true);
-  right.append(add, miniSel(s));
-  chip.append(num,title,right); row.appendChild(chip);
-  // pasos contenidos (vista previa corta)
-  (s.steps||[]).forEach((st,i)=> row.appendChild(stepRow(proc,s,st,i)) );
-  return row;
+function addStepGlobal(){
+  const p = state.processes.find(x=>x.id===activePid) || state.processes[0];
+  if(!p){ alert('Primero crea un proceso'); return; }
+  // ¿hay módulo?
+  let m = p.modules[p.modules.length-1];
+  if(!m){ // crea Subproceso+Paso y luego añade otro paso
+    m = addSubprocPasoForProcess(p.id);
+  }
+  // meter paso en el último módulo
+  if(m) addStepIntoModule(p.id, m.id);
 }
 
-/* picker proceso destino */
-function pick(current,onPick){ const o=document.createElement('div'); Object.assign(o.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990}); const card=document.createElement('div'); Object.assign(card.style,{background:'#fff',padding:'12px',borderRadius:'10px',boxShadow:'0 14px 38px rgba(0,0,0,.2)',width:'min(92vw,420px)'}); const h=document.createElement('div'); h.textContent='Selecciona proceso de destino'; h.style.fontWeight='800'; h.style.marginBottom='6px'; const sel=document.createElement('select'); sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px'; data.forEach(p=>{const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; sel.appendChild(opt);}); sel.value=current||data[0].id; const preview=document.createElement('div'); preview.style.display='flex'; preview.style.alignItems='center'; preview.style.gap='8px'; preview.style.margin='8px 0 4px'; const badgePreview=document.createElement('span'); badgePreview.className='nextBadge'; function updatePreview(){ const id=sel.value; const tgt=data.find(p=>p.id===id)||data[0]; if(!tgt) return; badgePreview.textContent='IR AL PROCESO: '+tgt.name; badgePreview.style.background=lighten(tgt.color,.55); badgePreview.style.border='1px solid '+lighten(tgt.color,.35); } sel.addEventListener('change',updatePreview); updatePreview(); preview.append(badgePreview); const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='8px'; const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.addEventListener('click',()=>document.body.removeChild(o)); const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; ok.addEventListener('click',()=>{onPick(sel.value); document.body.removeChild(o);}); bar.append(cancel,ok); card.append(h,sel,preview,bar); o.appendChild(card); document.body.appendChild(o); }
+/* ===============================
+   Eventos iniciales
+================================ */
+document.getElementById('btnAddProcess').onclick = addProcess;
+document.getElementById('btnAddSubprocPaso').onclick = ()=>{
+  const p = state.processes.find(x=>x.id===activePid) || state.processes[0];
+  if(!p){ alert('Primero crea un proceso'); return; }
+  addSubprocPasoForProcess(p.id);
+};
+document.getElementById('btnAddStepGlobal').onclick = addStepGlobal;
+document.getElementById('btnSave').onclick = saveState;
+document.getElementById('q').addEventListener('input', e=>{
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.proc-item').forEach(el=>{
+    const hit = el.querySelector('.proc-name').textContent.toLowerCase().includes(q);
+    el.classList.toggle('hide', !hit);
+  });
+});
 
-function render(){renderLeft();renderRight();applyLockState();save();}
-function alignConnectors(container){ const rows=container.querySelectorAll('.row'); if(!rows.length) return; if(rows.length===1){ rows[0].style.setProperty('--conn-len','22px'); return; } rows.forEach((row,idx)=>{ const b=row.querySelector('.bubble'); if(!b) return; const rr=row.getBoundingClientRect(); const br=b.getBoundingClientRect(); const brc = br.top + br.height/2; row.style.setProperty('--line-x', (br.left - rr.left + br.width/2) + 'px'); const next=rows[idx+1]; if(next){ const nb=next.querySelector('.bubble'); if(nb){ const nbb=nb.getBoundingClientRect(); const nbc = nbb.top + nbb.height/2; const len=Math.max(10, Math.round(nbc - brc)); row.style.setProperty('--conn-len', len + 'px'); } else { row.style.setProperty('--conn-len','22px'); } } else { row.style.setProperty('--conn-len','0px'); } }); }
-
-render();
-
-document.addEventListener('DOMContentLoaded',()=>{ const s=localStorage.getItem(LS+'_STAMP'); if(s){ const el=byId('lastSaved'); if(el) el.textContent='Última actualización: '+s; } byId('pinBtn').textContent = canEdit() ? '🔓' : '🔒'; applyLockState(); const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; });
+/* ===============================
+   Boot
+================================ */
+loadState();
+if(!activePid && state.processes[0]) activePid = state.processes[0].id;
+document.getElementById('stamp').textContent = 'Última actualización '+nowStamp();
+renderProcesses(); renderModules();
 </script>
 </body>
 </html>
