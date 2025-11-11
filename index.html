@@ -1,567 +1,434 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>PROCESOS AUDIO</title>
 <style>
   :root{
-    --bg:#0e0f12;
-    --panel:#14161c;
-    --ink:#e8eaee;
-    --muted:#b9bfcc;
-    --stroke:#2a2f3a;
-    --chip:#1b1f27;
-    --ok:#00c2a8;
-    --warn:#ffb100;
-    --bad:#ff5c6c;
-    --btn:#1e2230;
-    --shadow:0 6px 18px rgba(0,0,0,.25);
+    --bg:#2b2b2d;              /* gris base */
+    --bg-soft:#323236;         /* gris suave */
+    --panel:#3a3a3f;
+    --ink:#f4f4f6;
+    --muted:#bfc3cc;
+    --accent:#e25b5b;
+    --btn-grad-a:#4d4d52;
+    --btn-grad-b:#2f3033;
+    --shadow: 0 6px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+    --radius:16px;
+    --number-bg:#111;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 14px/1.35 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
-  /* Layout */
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial;
+  }
+  /* Barra superior */
   header{
-    background:linear-gradient(90deg,#5b6169,#9c2f35 32%,#6d3437);
-    padding:10px 14px; display:flex; align-items:center; gap:10px;
-    position:sticky; top:0; z-index:20; border-bottom:1px solid #5a3033;
+    position:sticky;top:0;z-index:5;
+    background:linear-gradient(90deg,#6d6e73,#9b3c3c 40%,#6e2f2f 70%,#4a2828);
+    padding:10px 14px;display:flex;gap:12px;align-items:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
-  header h1{margin:0; font-size:18px; letter-spacing:.5px; display:flex; align-items:center; gap:10px}
-  header h1 .headset{font-size:20px}
-  header .spacer{flex:1}
-  header input[type=search]{min-width:320px; max-width:620px; width:40vw; border:1px solid #70353a; background:#ffffff1a; color:#fff; border-radius:12px; padding:8px 12px; outline:none}
-  header .hbtn{border:1px solid #70353a;background:#ffffff1a;color:#fff;border-radius:12px;padding:8px 12px;cursor:pointer}
-  header .hbtn:active{transform:translateY(1px)}
+  header h1{
+    margin:0;font-weight:800;letter-spacing:.5px;display:flex;gap:10px;align-items:center;
+    text-shadow:0 2px 0 rgba(0,0,0,.35);
+  }
+  header h1 .phone{font-size:22px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.4))}
+  header input[type="search"]{
+    flex:1;max-width:640px;border:none;border-radius:999px;
+    padding:10px 14px;background:#ffffff1a;color:#fff;outline:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .pill{
+    border:none;border-radius:999px;padding:10px 14px;
+    background:linear-gradient(180deg,var(--btn-grad-a),var(--btn-grad-b));
+    color:#fff;box-shadow:var(--shadow);cursor:pointer;display:inline-flex;gap:8px;align-items:center;
+  }
+  .pill:active{transform:translateY(1px)}
+  .row{display:flex;gap:16px;padding:16px}
 
-  .grid{display:grid; grid-template-columns: 34% 66%; gap:0}
-  .left{background:linear-gradient(180deg,#2a2d33,#1b1d24); border-right:1px solid var(--stroke); min-height:calc(100vh - 56px); padding:10px}
-  .right{background:var(--panel); min-height:calc(100vh - 56px); padding:10px 12px}
+  /* Layout */
+  .wrap{display:grid;grid-template-columns: 380px 1fr;gap:0;min-height:calc(100dvh - 64px)}
+  @media (max-width:1100px){ .wrap{grid-template-columns:320px 1fr} }
+  @media (max-width:860px){ .wrap{grid-template-columns:1fr} }
 
-  /* Botones */
-  .btn{border:1px solid var(--stroke); background:var(--btn); color:#fff; border-radius:12px; padding:8px 12px; cursor:pointer}
-  .btn:active{transform:translateY(1px)}
-  .btn.pastel{background:#ffffff22}
+  /* Panel izquierdo */
+  .left{
+    border-right:1px solid #ffffff14;background:var(--bg-soft);
+  }
+  .left-head{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #ffffff14;
+  }
+  .left-list{padding:12px;display:flex;flex-direction:column;gap:10px}
+  .proc{
+    background:var(--panel);border-radius:14px;padding:10px 12px;
+    display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
+    box-shadow:var(--shadow);cursor:pointer;border:2px solid transparent;
+  }
+  .proc .dot{width:10px;height:10px;border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+  .proc .name{font-weight:700}
+  .proc .min{opacity:.8;font-size:12px}
+  .proc .ctrls{display:flex;gap:8px}
+  .ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+       background:#ffffff14;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+  .proc.active{border-color:#fff8}
 
-  /* Procesos (izquierda) */
-  .procHead{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
-  .procAdd{background:linear-gradient(90deg,#7d2b31,#b33b41); border:1px solid #7d2b31; color:#fff; border-radius:12px; padding:8px 12px; cursor:pointer}
-  .plist{display:flex; flex-direction:column; gap:10px}
-  .pCard{
-    background:#ffffff10; border:1px solid var(--stroke); border-radius:14px;
-    box-shadow: var(--shadow);
-    padding:10px; position:relative; user-select:none;
+  /* Panel derecho */
+  .right{background:var(--bg);overflow:auto}
+  .process-sheet{padding:16px}
+  .sheet-head{
+    display:flex;align-items:center;gap:12px;background:var(--bg-soft);
+    border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);
   }
-  .pCard[draggable="true"]{cursor:grab}
-  .pTop{display:flex; align-items:center; gap:8px}
-  .dot{width:10px;height:10px;border-radius:50%}
-  .pName{font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .pAct{display:flex; gap:6px}
-  .iconBtn{width:28px;height:28px;border:1px solid var(--stroke); background:var(--chip); color:#fff; border-radius:50%; display:grid; place-items:center; cursor:pointer}
-  .iconBtn.trash{box-shadow:none} /* sin sombra para papelera */
-  .pDesc{margin-top:6px; display:none}
-  .pDesc textarea{
-    width:100%; min-height:110px; resize:vertical; border:1px dashed var(--stroke); border-radius:10px;
-    background:#0f1320; color:#fff; padding:8px 10px;
-  }
-  .pCard.active{outline:2px solid #ffffff35}
+  .sheet-title{font-weight:900;letter-spacing:.3px}
+  .badge{padding:4px 10px;border-radius:999px;background:#ffffff1a}
+  .sub-grid{display:flex;flex-direction:column;gap:14px;margin-top:12px}
 
-  /* Encabezado derecho */
-  .rHead{display:flex; align-items:center; gap:8px; margin-bottom:10px}
-  .tag{padding:6px 10px;border-radius:10px;background:#ffffff18;border:1px solid var(--stroke)}
-  .pill{padding:4px 10px;border-radius:999px;background:#ffffff10;border:1px solid var(--stroke)}
-  .rBtns{margin-left:auto; display:flex; gap:8px}
+  /* Subproceso */
+  .sub{
+    background:var(--panel);border-radius:16px;padding:12px 12px 10px;box-shadow:var(--shadow);
+  }
+  .sub-head{
+    display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;margin-bottom:8px;
+    background:linear-gradient(180deg,#4a4a4f,#3b3b3f);padding:8px;border-radius:12px;
+  }
+  .sub-name{
+    font-weight:800;letter-spacing:.2px;padding:8px 10px;border-radius:12px;
+    background:linear-gradient(180deg,#111,#1c1c1f);color:#fff;border:1px solid #ffffff1a;
+  }
+  .sub-ctrls{display:flex;gap:8px;align-items:center}
+  .resp{background:#ffffff10;border:1px solid #ffffff22;color:#fff;border-radius:10px;padding:6px 10px}
 
-  /* Subprocesos (derecha) */
-  .spBlock{
-    background:#ffffff0f; border:1px solid var(--stroke); border-radius:14px; box-shadow:var(--shadow);
-    margin-bottom:12px; overflow:hidden;
+  /* Pasos línea vertical + burbuja */
+  .steps{display:flex;flex-direction:column;gap:8px;position:relative}
+  .step{
+    position:relative;padding-left:72px;background:#22252a;border-radius:14px;
+    box-shadow:var(--shadow);min-height:56px;display:flex;flex-direction:column;justify-content:center
   }
-  .spTitle{
-    background:linear-gradient(90deg,#1d1f26,#434851); color:#fff; padding:10px 12px;
-    display:flex; align-items:center; gap:8px;
+  /* Línea vertical gruesa (color proceso) */
+  .step::before{
+    content:"";position:absolute;left:40px;top:10px;bottom:10px;width:6px;border-radius:6px;background:var(--line);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 1px 0 rgba(255,255,255,.05);
   }
-  .spTitle input{
-    background:transparent; border:0; border-bottom:1px dashed #6d747e; color:#fff; outline:none; font-weight:700; width:40%;
-  }
-  .spBody{padding:10px 12px}
-  .spDetail{display:none; margin:8px 0}
-  .spDetail textarea{
-    width:100%; min-height:100px; background:#0f1320; color:#fff; border:1px dashed var(--stroke); border-radius:10px; padding:8px 10px;
-  }
-
-  /* Pasos */
-  .step{position:relative; background:#ffffff08; border:1px solid var(--stroke); border-radius:12px; margin:8px 0 12px; padding:10px 12px 12px 56px}
+  /* burbuja número grande */
   .bubble{
-    position:absolute; left:14px; top:12px; width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
-    background:#0d111a; color:#fff; border:2px solid #ffffff40; font-weight:800; z-index:2;
+    position:absolute;left:20px;top:50%;transform:translateY(-50%);
+    width:36px;height:36px;border-radius:999px;background:var(--number-bg);
+    display:grid;place-items:center;font-weight:900;font-size:13px;border:1px solid #ffffff1a;
+    box-shadow:0 6px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
   }
-  .connector{ /* línea vertical detrás de la burbuja */
-    position:absolute; left:27px; top:0; bottom:0; width:2px; border-radius:2px; background:#ff5c6c33; z-index:1;
+  .step-head{
+    display:flex;align-items:center;gap:10px;padding:8px 10px
   }
-  .sTop{display:flex; align-items:center; gap:8px}
-  .sTitle{
-    background:transparent; border:0; border-bottom:1px dashed #69707c; color:#fff; outline:none; font-weight:700; width:46%;
+  .step-title{
+    flex:1;border:none;background:transparent;color:#fff;font-weight:700;outline:none;
   }
-  .sDetail{display:none; margin:6px 0}
-  .sDetail textarea{
-    width:100%; min-height:80px; background:#0f1320; color:#fff; border:1px dashed var(--stroke); border-radius:10px; padding:8px 10px;
+  .step-ctrls{display:flex;gap:6px}
+  .btn-icon{
+    width:32px;height:32px;border-radius:10px;border:1px solid #ffffff20;display:grid;place-items:center;
+    background:#ffffff0f;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)
+  }
+  .detail{
+    display:none;padding:8px 10px 12px
+  }
+  .detail textarea{
+    width:100%;min-height:70px;border-radius:10px;border:1px solid #ffffff22;background:#ffffff10;color:#fff;padding:8px;outline:none
+  }
+  .si-no{display:flex;gap:14px;align-items:flex-start;margin-top:8px}
+  .col {flex:1}
+  .col h5{margin:0 0 6px;font-size:12px;letter-spacing:.4px;opacity:.85}
+  .point{display:flex;align-items:center;gap:6px;margin:4px 0}
+  .point input{
+    flex:1;background:#ffffff10;color:#fff;border:1px solid #ffffff22;border-radius:8px;padding:6px 8px
+  }
+  .point .btn-icon{width:28px;height:28px}
+
+  /* Adjuntos */
+  .attach{display:flex;gap:10px;margin-top:6px}
+  .attach .pill{padding:8px 10px}
+
+  /* pie/control barra inferior */
+  .dock{
+    position:sticky;bottom:0;z-index:4;background:#1f1f20cc;backdrop-filter:blur(8px);
+    padding:10px;display:flex;gap:10px;justify-content:center;border-top:1px solid #ffffff14
   }
 
-  /* chips Si / No (No más grande) */
-  .chips{display:flex; gap:10px; align-items:center; margin:6px 0}
-  .chip{border:1px solid var(--stroke); background:var(--chip); color:#fff; border-radius:999px; padding:5px 10px; display:inline-flex; align-items:center; gap:6px}
-  .chip.no{font-weight:800; padding:6px 13px; background:#000; border-color:#333}
-  .chip.si{font-weight:700; padding:4px 9px; background:#0a2c3a}
-  .chip small{opacity:.7}
-  .subpoints{margin-left:10px; display:flex; flex-direction:column; gap:6px}
-  .pRow{display:flex; gap:6px; align-items:center}
-  .pRow input[type=text]{flex:1; border:1px dashed var(--stroke); background:#0f1320; color:#fff; border-radius:8px; padding:6px 8px; outline:none}
-  .flag{padding:4px 8px;border:1px solid var(--stroke);border-radius:10px;background:#ffffff12}
-  .goto{font-weight:800}
-  .helpers{display:flex; gap:8px; align-items:center; margin-top:6px}
-  .linkShow, .docShow{display:none; gap:6px; align-items:center; padding:4px 8px; border:1px dashed var(--stroke); border-radius:10px; background:#ffffff0d}
-  .linkShow a, .docShow a{color:#8ad2ff; text-decoration:none}
-  .endRow{display:flex; justify-content:flex-end; margin-top:10px}
+  /* Editar: oculta iconos cuando NO está editando */
+  body:not(.editing) .ico,
+  body:not(.editing) .btn-icon,
+  body:not(.editing) .sub-ctrls,
+  body:not(.editing) .resp,
+  body:not(.editing) .detail .attach .pill { display:none !important; }
 
-  /* Impresión por proceso */
-  @media print{
-    header, .procHead, .rBtns, .helpers, .endRow{display:none !important}
-    .grid{grid-template-columns:100%}
-    .left{display:none}
-    .spBlock{break-inside:avoid}
-    .pBreak{page-break-after:always}
+  /* Mostrar detalle SIEMPRE justo tras el título (si está abierto) */
+  .step.open .detail{ display:block }
+
+  /* estados */
+  .muted{opacity:.65}
+
+  /* 3D botones */
+  .act{
+    background:linear-gradient(180deg,#585a60,#383a3f);
+    border:1px solid #ffffff22;color:#fff;border-radius:12px;padding:8px 12px;
+    box-shadow:var(--shadow);display:inline-flex;gap:8px;align-items:center
   }
+  .act:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
 
 <header>
-  <h1><span class="headset">🎧</span>PROCESOS AUDIO</h1>
-  <div class="spacer"></div>
-  <input type="search" id="search" placeholder="Buscar…"/>
-  <button class="hbtn" id="toHtml">⬇ HTML</button>
-  <button class="hbtn" id="toPdf" onclick="window.print()">🖨 PDF</button>
-  <button class="hbtn" id="saveCloud">☁ Guardar</button>
+  <h1><span class="phone">🎧</span> PROCESOS AUDIO</h1>
+  <input type="search" id="q" placeholder="Buscar…">
+  <button id="addProcess" class="pill">+ Procesos</button>
+  <button id="addSP" class="pill">+ Subproceso + Paso</button>
+  <button id="saveSP" class="pill">🎯 Guardar subproceso</button>
+  <span id="last" class="badge">—</span>
 </header>
 
-<div class="grid">
-  <!-- LEFT -->
+<div class="wrap">
+  <!-- IZQUIERDA -->
   <aside class="left">
-    <div class="procHead">
-      <button class="procAdd" id="addProc">+ Procesos</button>
+    <div class="left-head">
+      <strong class="muted">Procesos</strong>
     </div>
-    <div class="plist" id="plist"></div>
+    <div id="procList" class="left-list"></div>
   </aside>
 
-  <!-- RIGHT -->
+  <!-- DERECHA -->
   <main class="right">
-    <div class="rHead">
-      <div id="currentProcTag" class="tag">Sin proceso</div>
-      <div class="pill" id="updatedAt">–</div>
-      <div class="rBtns">
-        <button class="btn pastel" id="addPair">➕ Subproceso + Paso</button>
-        <button class="btn" id="addSp">+ Subproceso</button>
-        <button class="btn" id="addStep">+ Paso</button>
-        <button class="btn" id="saveSub">💾 Guardar subproceso</button>
-      </div>
-    </div>
-    <div id="rlist"></div>
+    <div class="process-sheet" id="sheet"></div>
   </main>
 </div>
 
+<!-- DOCK inferior -->
+<div class="dock">
+  <button class="pill" id="toggleEdit">✏️ Editar</button>
+  <button class="pill" id="compact">🧩 Compacto</button>
+  <button class="pill" id="exportHtml">⬇️ HTML</button>
+</div>
+
 <script>
-/* ================== DATA =================== */
-const PALETTE = [
-  '#ffd9d9','#ffe8d1','#fff8c7','#e6ffd2','#d8fff3','#d9f0ff','#e6d9ff','#ffd9f0',
-  '#ffe0db','#f3ffd9','#d9fff5','#d9f3ff','#f2d9ff','#ffe5f6'
-];
-const state = JSON.parse(localStorage.getItem('pa_data_v3')||'null') || {
-  seq:1,
-  processes: [{
-    id: 1, name:'Revisión auditiva', color: PALETTE[0], desc:'', subflows:[]
-  }]
-};
-let currentPid = state.processes[0].id;
-let workingSubId = null; // subproceso “abierto” para anclar pasos
+/* ========= STATE ========= */
+const LSKEY='PROCESOS_AUDIO_V2';
+let state = load() || seed();
+let current = 0;
+let editing = false;
 
-/* =========== HELPERS =========== */
-const $ = (sel,root=document)=>root.querySelector(sel);
-const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
-const save = ()=>{
-  localStorage.setItem('pa_data_v3', JSON.stringify(state));
-  $('#updatedAt').textContent = 'Última actualización ' + new Date().toLocaleString();
-};
-const uid = ()=> Math.random().toString(36).slice(2,9);
-const currentProc = ()=> state.processes.find(p=>p.id===currentPid);
+/* ========= UTILS ========= */
+function save(){
+  localStorage.setItem(LSKEY, JSON.stringify(state));
+  document.getElementById('last').textContent =
+    'Última actualización ' + new Date().toLocaleString();
+}
+function load(){
+  try { return JSON.parse(localStorage.getItem(LSKEY)); } catch(e){ return null }
+}
+function seed(){
+  // crea un proceso base
+  return [{
+    id: uid(), name:'Revisión auditiva', desc:'',
+    pastel: pastel(0),
+    sub:[]
+  }];
+}
+function uid(){ return Math.random().toString(36).slice(2,9) }
+function pastel(i){
+  // paleta pastel estable
+  const hues=[10,25,45,100,140,180,205,230,260,300,330];
+  const h=hues[i%hues.length];
+  return `hsl(${h} 70% 70%)`;
+}
+function byId(id){ return document.getElementById(id) }
+function el(tag,cls,html){
+  const e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(html!=null) e.innerHTML=html;
+  return e;
+}
 
-/* Unique pastel per process */
-const nextPastel = ()=>{
-  const used = new Set(state.processes.map(p=>p.color));
-  for(const c of PALETTE){ if(!used.has(c)) return c; }
-  return '#ffe8d1';
-};
-
-/* =========== LEFT RENDER & INTERACTIONS =========== */
+/* ========= RENDER LEFT ========= */
 function renderLeft(){
-  const list = $('#plist');
-  list.innerHTML = '';
-  state.processes.forEach((p,i)=>{
-    const card = document.createElement('div');
-    card.className='pCard';
-    card.draggable = true;
-    card.dataset.id=p.id;
-    card.style.setProperty('--pc', p.color);
-    card.style.background = p.color + '33';
-
-    const top = document.createElement('div'); top.className='pTop';
-    const dot = document.createElement('div'); dot.className='dot'; dot.style.background=p.color;
-    const name = document.createElement('div'); name.className='pName'; name.textContent = `${i+1}. ${p.name}`;
-    const act = document.createElement('div'); act.className='pAct';
-
-    const btnEdit = iconBtn('✏️'); // lapiz
-    const btnDetail = iconBtn('▾'); // despliegue
-    const btnTrash = iconBtn('🗑'); btnTrash.classList.add('trash');
-
-    act.append(btnEdit, btnDetail, btnTrash);
-    top.append(dot,name,act);
-    card.append(top);
-
-    const detail = document.createElement('div'); detail.className='pDesc';
-    const ta = document.createElement('textarea'); ta.value = p.desc||'';
-    detail.append(ta);
-    card.append(detail);
-
-    if(p.id===currentPid) card.classList.add('active');
-
-    /* clicks */
-    card.addEventListener('click',(e)=>{
-      if(e.target.closest('.iconBtn')) return;
-      currentPid = p.id; workingSubId = null;
-      highlightCurrent();
-      renderRight();
-    });
-    btnDetail.addEventListener('click',(e)=>{
-      e.stopPropagation();
-      detail.style.display = detail.style.display==='block' ? 'none' : 'block';
-    });
-    btnEdit.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const newName = prompt('Nombre del proceso:', p.name) || p.name;
-      p.name = newName;
-      save(); renderLeft(); renderRight();
-    });
-    btnTrash.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      if(!confirm('¿Borrar proceso?')) return;
-      const idx = state.processes.findIndex(x=>x.id===p.id);
-      state.processes.splice(idx,1);
-      if(state.processes.length===0){
-        state.processes.push({id: ++state.seq, name:'Nuevo proceso', color:nextPastel(), desc:'', subflows:[]});
-      }
-      currentPid = state.processes[0].id;
-      save(); renderLeft(); renderRight();
-    });
-    ta.addEventListener('input',()=>{ p.desc = ta.value; save(); });
-
-    /* drag */
-    card.addEventListener('dragstart',(e)=>{ e.dataTransfer.setData('text/plain',p.id); card.style.opacity=.5; });
-    card.addEventListener('dragend',()=>{ card.style.opacity=1; });
-    card.addEventListener('dragover',(e)=>{ e.preventDefault(); card.style.outline='2px dashed #fff3'; });
-    card.addEventListener('dragleave',()=> card.style.outline='');
-    card.addEventListener('drop',(e)=>{
-      e.preventDefault();
-      card.style.outline='';
-      const dragId = +e.dataTransfer.getData('text/plain');
-      if(dragId===p.id) return;
-      const arr = state.processes;
-      const from = arr.findIndex(x=>x.id===dragId);
-      const to = arr.findIndex(x=>x.id===p.id);
-      const [m]=arr.splice(from,1);
-      arr.splice(to,0,m);
-      save(); renderLeft(); renderRight();
-    });
-
-    list.append(card);
+  const wrap=byId('procList'); wrap.innerHTML='';
+  state.forEach((p,i)=>{
+    const item=el('div','proc');
+    item.style.setProperty('--pastel', p.pastel);
+    item.innerHTML=`
+      <span class="dot" style="background:${p.pastel}"></span>
+      <div>
+        <div class="name">${p.name||'Nuevo proceso'}</div>
+        <div class="min muted">${p.sub.length} subprocesos</div>
+      </div>
+      <div class="ctrls">
+        <button class="ico" title="Editar" onclick="renameProcess(${i})">✏️</button>
+        <button class="ico" title="Borrar" onclick="removeProcess(${i})">🗑</button>
+      </div>
+    `;
+    item.onclick = (ev)=>{ if(ev.target.closest('.ico')) return; current=i; renderRight(); highlight() }
+    wrap.appendChild(item);
+  });
+  highlight();
+}
+function highlight(){
+  [...document.querySelectorAll('.proc')].forEach((n,idx)=>{
+    n.classList.toggle('active', idx===current);
   });
 }
 
-function iconBtn(ch){
-  const b = document.createElement('button');
-  b.className='iconBtn';
-  b.textContent = ch;
-  return b;
-}
-function highlightCurrent(){
-  $$('#plist .pCard').forEach(el=>{
-    el.classList.toggle('active', +el.dataset.id===currentPid);
-  });
-}
-
-/* =========== RIGHT (SUBPROCESOS + PASOS) =========== */
+/* ========= RENDER RIGHT ========= */
 function renderRight(){
-  const p = currentProc();
-  $('#currentProcTag').textContent = p ? p.name : 'Sin proceso';
-  const r = $('#rlist'); r.innerHTML='';
+  const p=state[current]; if(!p) return;
 
-  // pintar todos los subprocesos
-  p.subflows.forEach((sp,idx)=>{
-    r.append(renderSubBlock(p, sp, idx));
-  });
-}
+  const sheet=byId('sheet'); sheet.innerHTML='';
+  const head=el('div','sheet-head');
+  head.innerHTML=`
+    <div class="sheet-title">Proceso: <strong>${p.name||'Nuevo proceso'}</strong></div>
+    <span class="badge" style="background:${p.pastel}22;color:#fff">Color</span>
+    <button class="act" onclick="addSubWithStep()">+ Subproceso + Paso</button>
+  `;
+  sheet.appendChild(head);
 
-function renderSubBlock(proc, sp, idx){
-  const block = document.createElement('section');
-  block.className='spBlock';
-  // título oscurecido degradado (menos duro)
-  const title = document.createElement('div');
-  title.className='spTitle';
-  title.style.background = 'linear-gradient(90deg,#1d1f26,#3a3f49)';
-  const dot = document.createElement('span'); dot.textContent='●'; dot.style.color=proc.color;
-  const inpt = document.createElement('input'); inpt.value=sp.title||'Nuevo subproceso';
-  const show = iconBtn('▾');
-  const edit = iconBtn('✏️');
-  const resp = selectResp(sp.owner||'Audiólogo');
-  const del  = iconBtn('–');
-  title.append(dot, inpt, show, edit, resp, del);
-  block.append(title);
+  const grid=el('div','sub-grid'); sheet.appendChild(grid);
 
-  const body = document.createElement('div'); body.className='spBody'; block.append(body);
+  // render cada subproceso
+  p.sub.forEach((sp,si)=>{
+    const sub=el('div','sub');
+    const lineColor=p.pastel; // para pasos de este sub
 
-  // detalle (siempre debajo del título; oculto por defecto)
-  const sdet = document.createElement('div'); sdet.className='spDetail';
-  const tda = document.createElement('textarea'); tda.placeholder='Descripción del subproceso…'; tda.value=sp.desc||'';
-  sdet.append(tda);
-  body.append(sdet);
+    const head=el('div','sub-head');
+    const name=el('input','sub-name');
+    name.value=sp.name||'Subproceso';
+    name.oninput=()=>{ sp.name=name.value; save() };
 
-  // pasos
-  sp.steps.forEach((st, i)=> body.append(renderStep(proc, sp, st, i)) );
+    const ctrls=el('div','sub-ctrls');
+    ctrls.innerHTML=`
+      <button class="ico" title="Añadir paso" onclick="addStep(${si})">＋</button>
+      <button class="ico" title="Borrar subproceso" onclick="removeSub(${si})">🗑</button>
+    `;
+    const resp=el('select','resp');
+    resp.innerHTML=`<option>Audiólogo</option><option>Responsable</option><option>Otros</option>`;
+    resp.value=sp.resp||'Audiólogo';
+    resp.oninput=()=>{ sp.resp=resp.value; save() };
 
-  // “Guardar subproceso” al final si es el subproceso “working”
-  if(workingSubId===sp.id){
-    const end = document.createElement('div'); end.className='endRow';
-    const saveBtn = document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent='🎯 Guardar';
-    saveBtn.onclick = ()=>{ workingSubId=null; save(); renderRight(); };
-    end.append(saveBtn); body.append(end);
-  }
+    head.append(name, ctrls, resp);
+    sub.appendChild(head);
 
-  // handlers
-  show.onclick = ()=>{ sdet.style.display = sdet.style.display==='block' ? 'none':'block'; };
-  edit.onclick = ()=>{ inpt.focus(); inpt.select(); };
-  inpt.oninput = ()=>{ sp.title = inpt.value; save(); };
-  tda.oninput = ()=>{ sp.desc = tda.value; save(); };
-  del.onclick = ()=>{
-    if(!confirm('¿Borrar subproceso y sus pasos?')) return;
-    const arr = proc.subflows;
-    const pos = arr.findIndex(x=>x.id===sp.id);
-    arr.splice(pos,1);
-    if(workingSubId===sp.id) workingSubId=null;
-    save(); renderRight();
-  };
+    const steps=el('div','steps'); sub.appendChild(steps);
 
-  return block;
-}
+    (sp.steps||[]).forEach((st,idx)=>{
+      const row=el('div','step'); 
+      row.style.setProperty('--line', lineColor);
 
-function renderStep(proc, sp, st, idx){
-  const wrap = document.createElement('div'); wrap.className='step';
-  // línea vertical detrás del número
-  const line = document.createElement('div'); line.className='connector'; line.style.background = proc.color+'99';
-  wrap.append(line);
+      const bubble=el('div','bubble', String(idx+1));
+      row.appendChild(bubble);
 
-  const bub = document.createElement('div'); bub.className='bubble'; bub.textContent = (idx+1);
-  wrap.append(bub);
+      const head=el('div','step-head');
+      const ti=el('input','step-title'); ti.value=st.title||'Nuevo paso';
+      ti.oninput=()=>{ st.title=ti.value; save() };
 
-  // fila superior
-  const top = document.createElement('div'); top.className='sTop';
-  const title = document.createElement('input'); title.className='sTitle'; title.value=st.title||'Nuevo paso';
-  const show = iconBtn('▾');
-  const del  = iconBtn('–');
-  const q    = iconBtn('?'); // botón “si/no”
-  const who  = selectResp(st.owner||'Audiólogo');
-  top.append(title, show, del, q, who);
-  wrap.append(top);
+      const sc=el('div','step-ctrls');
+      sc.innerHTML=`
+        <button class="btn-icon" title="Ver/ocultar detalle" onclick="toggleDetail(this)">▾</button>
+        <button class="btn-icon" title="Borrar paso" onclick="removeStep(${si},${idx})">🗑</button>
+      `;
+      head.append(ti, sc);
+      row.appendChild(head);
 
-  // detalle (inmediatamente tras el título)
-  const det = document.createElement('div'); det.className='sDetail';
-  const ta = document.createElement('textarea'); ta.placeholder='Detalle…'; ta.value=st.detail||'';
-  det.append(ta);
-  wrap.append(det);
+      /* DETALLE (siempre debajo del título) */
+      const det=el('div','detail');
+      det.innerHTML=`
+        <textarea placeholder="Descripción">${st.desc||''}</textarea>
+        <div class="si-no">
+          <div class="col">
+            <h5>NO</h5>
+            <div class="point"><input value="${(st.no?.[0]||'')}" placeholder="Ej. 1.1"><button class="btn-icon" onclick="addPoint(${si},${idx},'no')">＋</button></div>
+          </div>
+          <div class="col">
+            <h5>SÍ</h5>
+            <div class="point"><input value="${(st.yes?.[0]||'')}" placeholder="Ej. 1.1"><button class="btn-icon" onclick="addPoint(${si},${idx},'yes')">＋</button></div>
+          </div>
+        </div>
+        <div class="attach">
+          <button class="pill" onclick="addLink(${si},${idx})">🔗 Enlace</button>
+          <button class="pill" onclick="addDoc(${si},${idx})">📎 Documento</button>
+        </div>
+      `;
+      // bind textarea
+      det.querySelector('textarea').oninput=(e)=>{ st.desc=e.target.value; save() };
+      row.appendChild(det);
 
-  // SI / NO (después del detalle)
-  const chips = document.createElement('div'); chips.className='chips';
-  const no = document.createElement('span'); no.className='chip no'; no.textContent='NO';
-  const noPlus = iconBtn('+'); noPlus.style.borderRadius='10px';
-  const si = document.createElement('span'); si.className='chip si'; si.innerHTML='SÍ';
-  const siPlus = iconBtn('+'); siPlus.style.borderRadius='10px';
-  chips.append(no, noPlus, si, siPlus);
-  wrap.append(chips);
-
-  // contenedores de puntos 10.1 etc.
-  const noBox = document.createElement('div'); noBox.className='subpoints';
-  const siBox = document.createElement('div'); siBox.className='subpoints';
-  wrap.append(noBox, siBox);
-
-  // helpers (adjuntos)
-  const helpers = document.createElement('div'); helpers.className='helpers';
-  const pickLink = iconBtn('🔗');
-  const pickDoc  = iconBtn('📄');
-  const linkShow = document.createElement('div'); linkShow.className='linkShow'; linkShow.innerHTML='🔗 <a target="_blank"></a>';
-  const docShow  = document.createElement('div'); docShow.className='docShow'; docShow.innerHTML='📄 <a target="_blank"></a>';
-  helpers.append(pickLink, pickDoc, linkShow, docShow);
-  wrap.append(helpers);
-
-  /* bindings */
-  title.oninput = ()=>{ st.title = title.value; save(); };
-  show.onclick  = ()=>{ det.style.display = det.style.display==='block'?'none':'block'; };
-  del.onclick   = ()=>{ if(!confirm('¿Borrar paso?')) return; const i=sp.steps.indexOf(st); sp.steps.splice(i,1); save(); renderRight(); };
-  q.onclick     = ()=>{ // NO recoge; queda visible hasta terminar edición
-    det.style.display = 'block';
-    chips.scrollIntoView({behavior:'smooth',block:'nearest'});
-  };
-  who.onchange  = ()=>{ st.owner = who.value; save(); };
-  ta.oninput    = ()=>{ st.detail = ta.value; save(); };
-
-  /* puntos yes/no numeración 10.1 etc */
-  st.yes = st.yes||[]; st.no = st.no||[];
-  const baseN = (idx+1);
-
-  function addPoint(arr, box){
-    const item = { id: uid(), text:'', next:null, kind: (box===siBox?'S':'N') };
-    arr.push(item); drawPoints();
-  }
-  function rmPoint(arr, it){ const i=arr.indexOf(it); if(i>-1){ arr.splice(i,1); drawPoints(); } }
-
-  function drawPoints(){
-    noBox.innerHTML=''; siBox.innerHTML='';
-    st.no.forEach((it, i)=>{
-      const row = document.createElement('div'); row.className='pRow';
-      const lab = document.createElement('span'); lab.className='flag'; lab.textContent = `${baseN}.${i+1}`;
-      const input=document.createElement('input'); input.type='text'; input.placeholder='Si NO…'; input.value=it.text;
-      const linkBtn = iconBtn('🚩'); linkBtn.title='Vincular próximo proceso';
-      const delBtn  = iconBtn('–');
-      row.append(lab,input,linkBtn,delBtn);
-      if(it.next){
-        const goto = document.createElement('span'); goto.className='goto'; goto.style.color=proc.color;
-        goto.textContent = ` → Ir al proceso: ${it.next}`;
-        row.append(goto);
-      }
-      input.oninput=()=>{ it.text=input.value; save(); };
-      delBtn.onclick=()=>rmPoint(st.no,it);
-      linkBtn.onclick=()=> pickNextProcess(it);
-      noBox.append(row);
+      steps.appendChild(row);
     });
-    st.yes.forEach((it, i)=>{
-      const row = document.createElement('div'); row.className='pRow';
-      const lab = document.createElement('span'); lab.className='flag'; lab.textContent = `${baseN}.${i+1}`;
-      const input=document.createElement('input'); input.type='text'; input.placeholder='Si SÍ…'; input.value=it.text;
-      const linkBtn = iconBtn('🚩'); linkBtn.title='Vincular próximo proceso';
-      const delBtn  = iconBtn('–');
-      row.append(lab,input,linkBtn,delBtn);
-      if(it.next){
-        const goto = document.createElement('span'); goto.className='goto'; goto.style.color=proc.color;
-        goto.textContent = ` → Ir al proceso: ${it.next}`;
-        row.append(goto);
-      }
-      input.oninput=()=>{ it.text=input.value; save(); };
-      delBtn.onclick=()=>rmPoint(st.yes,it);
-      linkBtn.onclick=()=> pickNextProcess(it);
-      siBox.append(row);
-    });
-    // adjuntos visibles
-    linkShow.style.display = st.link ? 'inline-flex':'none';
-    docShow.style.display  = st.doc  ? 'inline-flex':'none';
-    if(st.link){ linkShow.querySelector('a').href=st.link; linkShow.querySelector('a').textContent=st.link; }
-    if(st.doc ){ docShow.querySelector('a').href=st.doc;  docShow.querySelector('a').textContent=st.doc;  }
-    save();
-  }
-  function pickNextProcess(target){
-    const names = state.processes.map(p=>p.name);
-    const sel = prompt('Ir al proceso…\n'+names.map((n,i)=>`${i+1}. ${n}`).join('\n'), target.next||'');
-    if(sel){ target.next=sel; drawPoints(); }
-  }
 
-  noPlus.onclick = ()=> addPoint(st.no, noBox);
-  siPlus.onclick = ()=> addPoint(st.yes, siBox);
+    // guardar subproceso
+    const foot=el('div','',`<div style="padding:10px 6px 0"><button class="pill" onclick="save();alert('Subproceso guardado');">🎯 Guardar subproceso</button></div>`);
+    sub.appendChild(foot);
 
-  pickLink.onclick = ()=>{
-    const v = prompt('Pega un enlace http(s)://', st.link||'');
-    if(v!==null){ st.link=v.trim(); drawPoints(); }
-  };
-  pickDoc.onclick = ()=>{
-    const v = prompt('Pega URL de documento', st.doc||'');
-    if(v!==null){ st.doc=v.trim(); drawPoints(); }
-  };
+    grid.appendChild(sub);
+  });
 
-  drawPoints();
-  return wrap;
+  // para que al entrar se vea todo compacto
+  document.body.classList.toggle('editing', editing);
 }
 
-function selectResp(val){
-  const s = document.createElement('select');
-  ['Audiólogo','Responsable','Otros'].forEach(v=>{
-    const o=document.createElement('option'); o.value=v; o.textContent=v; s.append(o);
-  });
-  s.value = val||'Audiólogo';
-  return s;
+/* ========= ACTIONS ========= */
+function addProcess(){
+  const i=state.length;
+  state.push({id:uid(), name:'Nuevo proceso', desc:'', pastel:pastel(i), sub:[]});
+  current=state.length-1;
+  save(); renderLeft(); renderRight();
 }
-
-/* =========== COMMANDS =========== */
-$('#addProc').onclick = ()=>{
-  state.processes.push({id:++state.seq,name:'Nuevo proceso',color:nextPastel(),desc:'',subflows:[]});
-  currentPid = state.processes[state.processes.length-1].id;
-  save(); renderLeft(); renderRight(); highlightCurrent();
-};
-
-$('#addSp').onclick = ()=>{
-  const p = currentProc();
-  const sp = {id:uid(), title:'Nuevo subproceso', desc:'', owner:'Audiólogo', steps:[]};
-  p.subflows.push(sp);
-  workingSubId = sp.id;
+function renameProcess(i){
+  const name=prompt('Nombre del proceso:', state[i].name||'');
+  if(name!=null){ state[i].name=name; save(); renderLeft(); renderRight() }
+}
+function removeProcess(i){
+  if(!confirm('¿Eliminar proceso?')) return;
+  state.splice(i,1); current=Math.max(0,current-1); save(); renderLeft(); renderRight();
+}
+function addSubWithStep(){
+  const p=state[current]; if(!p) return;
+  p.sub??=[]; 
+  p.sub.push({id:uid(), name:'Nuevo subproceso', resp:'Audiólogo', steps:[{id:uid(), title:'Nuevo paso', desc:'', yes:[], no:[], links:[], docs:[]}]});
   save(); renderRight();
-};
-
-$('#addPair').onclick = ()=>{
-  $('#addSp').click();
-  setTimeout(()=>$('#addStep').click(), 20);
-};
-
-$('#addStep').onclick = ()=>{
-  const p = currentProc();
-  if(!p.subflows.length){ $('#addSp').click(); }
-  const target = workingSubId ? p.subflows.find(s=>s.id===workingSubId) : p.subflows[p.subflows.length-1];
-  if(!target){ return; }
-  target.steps.push({id:uid(),title:'Nuevo paso',detail:'',owner:'Audiólogo',yes:[],no:[],link:'',doc:''});
+}
+function addStep(si){
+  const p=state[current]; const sp=p.sub[si];
+  sp.steps.push({id:uid(), title:'Nuevo paso', desc:'', yes:[], no:[], links:[], docs:[]});
   save(); renderRight();
-};
-$('#saveSub').onclick = ()=>{
-  workingSubId = null;
-  save(); renderRight();
+}
+function removeSub(si){
+  const p=state[current]; p.sub.splice(si,1); save(); renderRight();
+}
+function removeStep(si,idx){
+  const p=state[current]; p.sub[si].steps.splice(idx,1); save(); renderRight();
+}
+function toggleDetail(btn){
+  const step = btn.closest('.step'); step.classList.toggle('open');
+}
+function addPoint(si,idx,which){
+  const p=state[current]; const st=p.sub[si].steps[idx];
+  st[which]??=[]; st[which].push(''); save(); renderRight();
+}
+function addLink(si,idx){ alert('Adjuntar enlace (demo)'); }
+function addDoc(si,idx){ alert('Adjuntar documento (demo)'); }
+
+/* ========= EVENTS ========= */
+document.getElementById('addProcess').onclick=addProcess;
+document.getElementById('addSP').onclick=addSubWithStep;
+document.getElementById('saveSP').onclick=()=>{ save(); alert('Subproceso guardado'); };
+document.getElementById('toggleEdit').onclick=()=>{ editing=!editing; document.body.classList.toggle('editing', editing) };
+document.getElementById('compact').onclick=()=>{ window.scrollTo({top:0,behavior:'smooth'}) };
+document.getElementById('exportHtml').onclick=()=>{
+  const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='procesos-audio.html'; a.click();
 };
 
-/* =========== SEARCH =========== */
-$('#search').addEventListener('input', (e)=>{
-  const q = e.target.value.toLowerCase().trim();
-  $$('#plist .pCard').forEach(card=>{
-    const nm = card.querySelector('.pName').textContent.toLowerCase();
-    card.style.display = nm.includes(q) ? '' : 'none';
-  });
-});
-
-/* Export HTML (simple) */
-$('#toHtml').onclick = ()=>{
-  const data = localStorage.getItem('pa_data_v3')||'';
-  const blob = new Blob([data], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'procesos-audio-data.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
-/* “Guardar nube” → sólo marca hora (puedes conectar backend cuando quieras) */
-$('#saveCloud').onclick = ()=>{ save(); alert('Guardado local. (Conecta tu backend si quieres subirlo a la nube)'); };
-
-/* Init */
-renderLeft(); highlightCurrent(); renderRight();
-$('#updatedAt').textContent = 'Última actualización ' + new Date().toLocaleString();
+/* ========= INIT ========= */
+renderLeft();
+renderRight();
+save(); // pone la fecha de última actualización
 </script>
 </body>
 </html>
