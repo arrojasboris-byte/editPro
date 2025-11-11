@@ -6,439 +6,562 @@
 <title>PROCESOS AUDIO</title>
 <style>
   :root{
-    --bg:#1b1d21;           /* fondo gris */
-    --panel:#20232a;        /* gris oscuro panel */
-    --ink:#e9edf3;
-    --muted:#aab2c5;
-    --stroke:#2f3440;
-    --btn-top:#2d323c;      /* 3D */
-    --btn-bot:#20252d;
-    --chip:#171b24;
-    --shadow:0 10px 24px rgba(0,0,0,.35);
+    --bg:#0e0f12;
+    --panel:#14161c;
+    --ink:#e8eaee;
+    --muted:#b9bfcc;
+    --stroke:#2a2f3a;
+    --chip:#1b1f27;
+    --ok:#00c2a8;
+    --warn:#ffb100;
+    --bad:#ff5c6c;
+    --btn:#1e2230;
+    --shadow:0 6px 18px rgba(0,0,0,.25);
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 14px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto}
-  /* Header */
-  header{
-    display:flex;align-items:center;gap:10px;padding:10px 14px;
-    background:linear-gradient(90deg,#444a55,#8a2f33 32%,#5d2c2f 80%);
-    border-bottom:1px solid #6a3437; position:sticky; top:0; z-index:10;
-  }
-  header h1{margin:0;font-size:18px;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
-  header h1:before{content:"🎧"}
-  header .spacer{flex:1}
-  .hbtn,.btn,.iconBtn,button{
-    border:1px solid var(--stroke);border-radius:12px;color:#fff;cursor:pointer;
-    background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.06), var(--shadow);
-  }
-  .hbtn{padding:8px 12px}
-  .hbtn:active,.btn:active,.iconBtn:active{transform:translateY(1px)}
-  header input[type=search]{min-width:320px;max-width:620px;width:40vw;border:1px solid #6e373a;background:#ffffff1a;color:#fff;border-radius:12px;padding:8px 12px;outline:none}
-
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 14px/1.35 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
   /* Layout */
-  .grid{display:grid;grid-template-columns: 32% 68%;gap:0}
-  .left{min-height:calc(100vh - 56px);background:linear-gradient(180deg,#2a2d33,#1d2027);border-right:1px solid var(--stroke);padding:10px}
-  .right{min-height:calc(100vh - 56px);background:var(--panel);padding:10px 12px}
+  header{
+    background:linear-gradient(90deg,#5b6169,#9c2f35 32%,#6d3437);
+    padding:10px 14px; display:flex; align-items:center; gap:10px;
+    position:sticky; top:0; z-index:20; border-bottom:1px solid #5a3033;
+  }
+  header h1{margin:0; font-size:18px; letter-spacing:.5px; display:flex; align-items:center; gap:10px}
+  header h1 .headset{font-size:20px}
+  header .spacer{flex:1}
+  header input[type=search]{min-width:320px; max-width:620px; width:40vw; border:1px solid #70353a; background:#ffffff1a; color:#fff; border-radius:12px; padding:8px 12px; outline:none}
+  header .hbtn{border:1px solid #70353a;background:#ffffff1a;color:#fff;border-radius:12px;padding:8px 12px;cursor:pointer}
+  header .hbtn:active{transform:translateY(1px)}
 
-  /* Procesos izquierda */
-  .procHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .plist{display:flex;flex-direction:column;gap:8px}
+  .grid{display:grid; grid-template-columns: 34% 66%; gap:0}
+  .left{background:linear-gradient(180deg,#2a2d33,#1b1d24); border-right:1px solid var(--stroke); min-height:calc(100vh - 56px); padding:10px}
+  .right{background:var(--panel); min-height:calc(100vh - 56px); padding:10px 12px}
+
+  /* Botones */
+  .btn{border:1px solid var(--stroke); background:var(--btn); color:#fff; border-radius:12px; padding:8px 12px; cursor:pointer}
+  .btn:active{transform:translateY(1px)}
+  .btn.pastel{background:#ffffff22}
+
+  /* Procesos (izquierda) */
+  .procHead{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+  .procAdd{background:linear-gradient(90deg,#7d2b31,#b33b41); border:1px solid #7d2b31; color:#fff; border-radius:12px; padding:8px 12px; cursor:pointer}
+  .plist{display:flex; flex-direction:column; gap:10px}
   .pCard{
-    background:#ffffff10;border:1px solid var(--stroke);border-radius:14px;padding:8px 10px;box-shadow:var(--shadow);
+    background:#ffffff10; border:1px solid var(--stroke); border-radius:14px;
+    box-shadow: var(--shadow);
+    padding:10px; position:relative; user-select:none;
   }
   .pCard[draggable="true"]{cursor:grab}
-  .pTop{display:flex;align-items:center;gap:8px}
+  .pTop{display:flex; align-items:center; gap:8px}
   .dot{width:10px;height:10px;border-radius:50%}
-  .pName{font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pAct{display:flex;gap:6px}
-  .iconBtn{width:28px;height:28px;border-radius:10px;background:var(--chip);display:grid;place-items:center}
-  .iconBtn.trash{box-shadow:none} /* papelera sin sombra */
-  .pDesc{display:none;margin-top:6px}
-  .pDesc textarea{width:100%;min-height:96px;background:#0e1421;color:#fff;border:1px dashed var(--stroke);border-radius:10px;padding:8px 10px}
-  .pCard.active{outline:2px solid #ffffff30}
+  .pName{font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .pAct{display:flex; gap:6px}
+  .iconBtn{width:28px;height:28px;border:1px solid var(--stroke); background:var(--chip); color:#fff; border-radius:50%; display:grid; place-items:center; cursor:pointer}
+  .iconBtn.trash{box-shadow:none} /* sin sombra para papelera */
+  .pDesc{margin-top:6px; display:none}
+  .pDesc textarea{
+    width:100%; min-height:110px; resize:vertical; border:1px dashed var(--stroke); border-radius:10px;
+    background:#0f1320; color:#fff; padding:8px 10px;
+  }
+  .pCard.active{outline:2px solid #ffffff35}
 
   /* Encabezado derecho */
-  .rHead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-  .tag{padding:6px 10px;border-radius:10px;background:#ffffff12;border:1px solid var(--stroke)}
+  .rHead{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+  .tag{padding:6px 10px;border-radius:10px;background:#ffffff18;border:1px solid var(--stroke)}
   .pill{padding:4px 10px;border-radius:999px;background:#ffffff10;border:1px solid var(--stroke)}
-  .rBtns{margin-left:auto;display:flex;gap:8px}
+  .rBtns{margin-left:auto; display:flex; gap:8px}
 
-  /* Subprocesos + pasos (compacto) */
-  .spBlock{background:#ffffff0e;border:1px solid var(--stroke);border-radius:14px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden}
-  .spTitle{display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(90deg,#22252d,#3a3f49)}
-  .spTitle .c{font-weight:800}
-  .spTitle input{background:transparent;border:0;border-bottom:1px dashed #707783;color:#fff;outline:none;font-weight:800;width:44%}
-  .spBody{padding:8px 10px}
-  .spDetail{display:none;margin:8px 0}
-  .spDetail textarea{width:100%;min-height:84px;background:#0f1320;color:#fff;border:1px dashed var(--stroke);border-radius:10px;padding:8px 10px}
-
-  /* Paso ultra-compacto, todo a la derecha de la línea */
-  .step{
-    position:relative;background:#ffffff08;border:1px solid var(--stroke);border-radius:12px;margin:6px 0 10px;
-    padding:10px 12px 12px 116px; /* espacio para burbuja + línea gruesa */
+  /* Subprocesos (derecha) */
+  .spBlock{
+    background:#ffffff0f; border:1px solid var(--stroke); border-radius:14px; box-shadow:var(--shadow);
+    margin-bottom:12px; overflow:hidden;
   }
+  .spTitle{
+    background:linear-gradient(90deg,#1d1f26,#434851); color:#fff; padding:10px 12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .spTitle input{
+    background:transparent; border:0; border-bottom:1px dashed #6d747e; color:#fff; outline:none; font-weight:700; width:40%;
+  }
+  .spBody{padding:10px 12px}
+  .spDetail{display:none; margin:8px 0}
+  .spDetail textarea{
+    width:100%; min-height:100px; background:#0f1320; color:#fff; border:1px dashed var(--stroke); border-radius:10px; padding:8px 10px;
+  }
+
+  /* Pasos */
+  .step{position:relative; background:#ffffff08; border:1px solid var(--stroke); border-radius:12px; margin:8px 0 12px; padding:10px 12px 12px 56px}
   .bubble{
-    position:absolute;left:36px;top:10px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
-    background:#0c121c;color:#fff;border:2px solid #ffffff35;font-weight:900;font-size:16px;z-index:2;
+    position:absolute; left:14px; top:12px; width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+    background:#0d111a; color:#fff; border:2px solid #ffffff40; font-weight:800; z-index:2;
   }
-  .connector{
-    position:absolute;left:60px;top:0;bottom:0;width:8px;border-radius:6px;background:#7aa2ff; /* se sobrescribe por proceso */
-    z-index:1;
+  .connector{ /* línea vertical detrás de la burbuja */
+    position:absolute; left:27px; top:0; bottom:0; width:2px; border-radius:2px; background:#ff5c6c33; z-index:1;
   }
-  .sTop{display:flex;align-items:center;gap:8px}
-  .sTitle{background:transparent;border:0;border-bottom:1px dashed #6a7280;color:#fff;outline:none;font-weight:800;width:52%}
-  .sDetail{display:none;margin:6px 0}
-  .sDetail textarea{width:100%;min-height:72px;background:#0f1320;color:#fff;border:1px dashed var(--stroke);border-radius:10px;padding:8px 10px}
+  .sTop{display:flex; align-items:center; gap:8px}
+  .sTitle{
+    background:transparent; border:0; border-bottom:1px dashed #69707c; color:#fff; outline:none; font-weight:700; width:46%;
+  }
+  .sDetail{display:none; margin:6px 0}
+  .sDetail textarea{
+    width:100%; min-height:80px; background:#0f1320; color:#fff; border:1px dashed var(--stroke); border-radius:10px; padding:8px 10px;
+  }
 
-  /* Si / NO (NO mayor, SÍ menor) */
-  .chips{display:flex;gap:8px;align-items:center;margin:6px 0}
-  .chip{border:1px solid var(--stroke);background:#0e1421;border-radius:999px;color:#fff;display:inline-flex;gap:6px;align-items:center}
-  .chip.no{font-weight:900;padding:7px 12px;background:#000}
-  .chip.si{font-weight:700;padding:4px 9px;background:#0a2c3a;color:#7fe9d4}
-  .subpoints{display:flex;flex-direction:column;gap:6px}
-  .pRow{display:flex;gap:6px;align-items:center}
-  .pRow input[type=text]{flex:1;border:1px dashed var(--stroke);background:#0f1320;color:#fff;border-radius:8px;padding:6px 8px;outline:none}
+  /* chips Si / No (No más grande) */
+  .chips{display:flex; gap:10px; align-items:center; margin:6px 0}
+  .chip{border:1px solid var(--stroke); background:var(--chip); color:#fff; border-radius:999px; padding:5px 10px; display:inline-flex; align-items:center; gap:6px}
+  .chip.no{font-weight:800; padding:6px 13px; background:#000; border-color:#333}
+  .chip.si{font-weight:700; padding:4px 9px; background:#0a2c3a}
+  .chip small{opacity:.7}
+  .subpoints{margin-left:10px; display:flex; flex-direction:column; gap:6px}
+  .pRow{display:flex; gap:6px; align-items:center}
+  .pRow input[type=text]{flex:1; border:1px dashed var(--stroke); background:#0f1320; color:#fff; border-radius:8px; padding:6px 8px; outline:none}
   .flag{padding:4px 8px;border:1px solid var(--stroke);border-radius:10px;background:#ffffff12}
   .goto{font-weight:800}
+  .helpers{display:flex; gap:8px; align-items:center; margin-top:6px}
+  .linkShow, .docShow{display:none; gap:6px; align-items:center; padding:4px 8px; border:1px dashed var(--stroke); border-radius:10px; background:#ffffff0d}
+  .linkShow a, .docShow a{color:#8ad2ff; text-decoration:none}
+  .endRow{display:flex; justify-content:flex-end; margin-top:10px}
 
-  /* Adjuntos por proceso */
-  .attach{margin:6px 0 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .alnk,.adoc{display:inline-flex;gap:6px;align-items:center;border:1px dashed var(--stroke);background:#111622;color:#fff;border-radius:10px;padding:6px 8px}
-  .alnk a{color:#8ad2ff;text-decoration:none}
-
-  /* Mostrar/ocultar iconos según modo edición (tú pediste ocultarlos en EDITAR) */
-  body.edit-on .iconBtn{display:none !important;}
-
+  /* Impresión por proceso */
   @media print{
-    header,.procHead,.rBtns,.iconBtn{display:none!important}
+    header, .procHead, .rBtns, .helpers, .endRow{display:none !important}
     .grid{grid-template-columns:100%}
     .left{display:none}
     .spBlock{break-inside:avoid}
+    .pBreak{page-break-after:always}
   }
 </style>
 </head>
 <body>
+
 <header>
-  <h1>PROCESOS AUDIO</h1>
+  <h1><span class="headset">🎧</span>PROCESOS AUDIO</h1>
   <div class="spacer"></div>
-  <input id="search" type="search" placeholder="Buscar procesos…"/>
-  <button class="hbtn" id="toggleEdit">✏ Editar (oculta iconos)</button>
-  <button class="hbtn" id="exportData">⬇ Datos</button>
-  <button class="hbtn" id="printAll" onclick="window.print()">🖨 PDF</button>
+  <input type="search" id="search" placeholder="Buscar…"/>
+  <button class="hbtn" id="toHtml">⬇ HTML</button>
+  <button class="hbtn" id="toPdf" onclick="window.print()">🖨 PDF</button>
+  <button class="hbtn" id="saveCloud">☁ Guardar</button>
 </header>
 
 <div class="grid">
-  <!-- IZQUIERDA -->
+  <!-- LEFT -->
   <aside class="left">
     <div class="procHead">
-      <button class="hbtn" id="addProc">+ Procesos</button>
+      <button class="procAdd" id="addProc">+ Procesos</button>
     </div>
-    <div id="plist" class="plist"></div>
+    <div class="plist" id="plist"></div>
   </aside>
 
-  <!-- DERECHA -->
+  <!-- RIGHT -->
   <main class="right">
     <div class="rHead">
       <div id="currentProcTag" class="tag">Sin proceso</div>
-      <div id="updatedAt" class="pill">–</div>
+      <div class="pill" id="updatedAt">–</div>
       <div class="rBtns">
-        <button class="btn" id="addPair">➕ Subproceso + Paso</button>
+        <button class="btn pastel" id="addPair">➕ Subproceso + Paso</button>
         <button class="btn" id="addSp">+ Subproceso</button>
         <button class="btn" id="addStep">+ Paso</button>
-        <button class="btn" id="saveSub">🎯 Guardar subproceso</button>
+        <button class="btn" id="saveSub">💾 Guardar subproceso</button>
       </div>
     </div>
-
-    <!-- Adjuntos de proceso (única zona) -->
-    <div class="attach" id="attachZone" style="display:none">
-      <label class="alnk">🔗 Enlace
-        <input id="addLink" type="url" placeholder="https://…" style="display:none">
-      </label>
-      <label class="adoc">📎 Documento
-        <input id="addDoc" type="file" style="display:none" />
-      </label>
-      <div id="attList" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-    </div>
-
     <div id="rlist"></div>
   </main>
 </div>
 
 <script>
-/* ================= DATA & HELPERS ================= */
-const PALETTE = ['#ffd9d9','#ffe8d1','#fff8c7','#e6ffd2','#d8fff3','#d9f0ff','#e6d9ff','#ffd9f0','#ffe0db','#f3ffd9','#d9fff5','#d9f3ff','#f2d9ff','#ffe5f6'];
-const key='pa_v4';
-const state = JSON.parse(localStorage.getItem(key)||'null') || {
+/* ================== DATA =================== */
+const PALETTE = [
+  '#ffd9d9','#ffe8d1','#fff8c7','#e6ffd2','#d8fff3','#d9f0ff','#e6d9ff','#ffd9f0',
+  '#ffe0db','#f3ffd9','#d9fff5','#d9f3ff','#f2d9ff','#ffe5f6'
+];
+const state = JSON.parse(localStorage.getItem('pa_data_v3')||'null') || {
   seq:1,
-  processes:[{id:1,name:'Revisión auditiva',color:'#ffd9d9',desc:'',links:[],files:[],subflows:[]}]
+  processes: [{
+    id: 1, name:'Revisión auditiva', color: PALETTE[0], desc:'', subflows:[]
+  }]
 };
 let currentPid = state.processes[0].id;
-let workingSubId = null;
+let workingSubId = null; // subproceso “abierto” para anclar pasos
 
-const $  = (sel,root=document)=>root.querySelector(sel);
+/* =========== HELPERS =========== */
+const $ = (sel,root=document)=>root.querySelector(sel);
 const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
-const uid= ()=> Math.random().toString(36).slice(2,9);
-const now= ()=> new Date().toLocaleString();
-
-const save=()=>{ localStorage.setItem(key, JSON.stringify(state)); $('#updatedAt').textContent='Última actualización '+now(); };
+const save = ()=>{
+  localStorage.setItem('pa_data_v3', JSON.stringify(state));
+  $('#updatedAt').textContent = 'Última actualización ' + new Date().toLocaleString();
+};
+const uid = ()=> Math.random().toString(36).slice(2,9);
 const currentProc = ()=> state.processes.find(p=>p.id===currentPid);
+
+/* Unique pastel per process */
 const nextPastel = ()=>{
-  const used=new Set(state.processes.map(p=>p.color));
+  const used = new Set(state.processes.map(p=>p.color));
   for(const c of PALETTE){ if(!used.has(c)) return c; }
-  return PALETTE[Math.floor(Math.random()*PALETTE.length)];
+  return '#ffe8d1';
 };
 
-/* ================= LEFT ================= */
-function iconBtn(txt){ const b=document.createElement('button'); b.className='iconBtn'; b.textContent=txt; return b; }
-
+/* =========== LEFT RENDER & INTERACTIONS =========== */
 function renderLeft(){
-  const list=$('#plist'); list.innerHTML='';
+  const list = $('#plist');
+  list.innerHTML = '';
   state.processes.forEach((p,i)=>{
-    const card=document.createElement('div'); card.className='pCard'; card.draggable=true; card.dataset.id=p.id;
-    card.style.background = p.color+'33';
-    const top=document.createElement('div'); top.className='pTop';
-    const dot=document.createElement('div'); dot.className='dot'; dot.style.background=p.color;
-    const name=document.createElement('div'); name.className='pName'; name.textContent=`${i+1}. ${p.name}`;
-    const act=document.createElement('div'); act.className='pAct';
-    const ed=iconBtn('✏️'), tg=iconBtn('▾'), tr=iconBtn('🗑️'); tr.classList.add('trash');
-    act.append(ed,tg,tr); top.append(dot,name,act); card.append(top);
-    const desc=document.createElement('div'); desc.className='pDesc';
-    const ta=document.createElement('textarea'); ta.value=p.desc||''; desc.append(ta); card.append(desc);
+    const card = document.createElement('div');
+    card.className='pCard';
+    card.draggable = true;
+    card.dataset.id=p.id;
+    card.style.setProperty('--pc', p.color);
+    card.style.background = p.color + '33';
+
+    const top = document.createElement('div'); top.className='pTop';
+    const dot = document.createElement('div'); dot.className='dot'; dot.style.background=p.color;
+    const name = document.createElement('div'); name.className='pName'; name.textContent = `${i+1}. ${p.name}`;
+    const act = document.createElement('div'); act.className='pAct';
+
+    const btnEdit = iconBtn('✏️'); // lapiz
+    const btnDetail = iconBtn('▾'); // despliegue
+    const btnTrash = iconBtn('🗑'); btnTrash.classList.add('trash');
+
+    act.append(btnEdit, btnDetail, btnTrash);
+    top.append(dot,name,act);
+    card.append(top);
+
+    const detail = document.createElement('div'); detail.className='pDesc';
+    const ta = document.createElement('textarea'); ta.value = p.desc||'';
+    detail.append(ta);
+    card.append(detail);
 
     if(p.id===currentPid) card.classList.add('active');
 
-    // clicks
-    card.addEventListener('click',e=>{ if(e.target.closest('.iconBtn')) return; currentPid=p.id; workingSubId=null; highlightCurrent(); renderRight(); });
-    tg.onclick=(e)=>{ e.stopPropagation(); desc.style.display = desc.style.display==='block'?'none':'block'; };
-    ed.onclick=(e)=>{ e.stopPropagation(); const n=prompt('Nombre del proceso',p.name)||p.name; p.name=n; save(); renderLeft(); renderRight(); };
-    tr.onclick=(e)=>{ e.stopPropagation(); if(!confirm('¿Borrar proceso?')) return; const ix=state.processes.findIndex(x=>x.id===p.id); state.processes.splice(ix,1); if(!state.processes.length){ state.processes.push({id:++state.seq,name:'Nuevo proceso',color:nextPastel(),desc:'',links:[],files:[],subflows:[]}); } currentPid=state.processes[0].id; save(); renderLeft(); renderRight(); };
-    ta.oninput=()=>{ p.desc=ta.value; save(); };
+    /* clicks */
+    card.addEventListener('click',(e)=>{
+      if(e.target.closest('.iconBtn')) return;
+      currentPid = p.id; workingSubId = null;
+      highlightCurrent();
+      renderRight();
+    });
+    btnDetail.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      detail.style.display = detail.style.display==='block' ? 'none' : 'block';
+    });
+    btnEdit.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const newName = prompt('Nombre del proceso:', p.name) || p.name;
+      p.name = newName;
+      save(); renderLeft(); renderRight();
+    });
+    btnTrash.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(!confirm('¿Borrar proceso?')) return;
+      const idx = state.processes.findIndex(x=>x.id===p.id);
+      state.processes.splice(idx,1);
+      if(state.processes.length===0){
+        state.processes.push({id: ++state.seq, name:'Nuevo proceso', color:nextPastel(), desc:'', subflows:[]});
+      }
+      currentPid = state.processes[0].id;
+      save(); renderLeft(); renderRight();
+    });
+    ta.addEventListener('input',()=>{ p.desc = ta.value; save(); });
 
-    // drag
-    card.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain',p.id); card.style.opacity=.5; });
-    card.addEventListener('dragend',()=> card.style.opacity=1);
-    card.addEventListener('dragover',e=>{ e.preventDefault(); card.style.outline='2px dashed #fff3'; });
+    /* drag */
+    card.addEventListener('dragstart',(e)=>{ e.dataTransfer.setData('text/plain',p.id); card.style.opacity=.5; });
+    card.addEventListener('dragend',()=>{ card.style.opacity=1; });
+    card.addEventListener('dragover',(e)=>{ e.preventDefault(); card.style.outline='2px dashed #fff3'; });
     card.addEventListener('dragleave',()=> card.style.outline='');
-    card.addEventListener('drop',e=>{
-      e.preventDefault(); card.style.outline='';
-      const dragId=+e.dataTransfer.getData('text/plain'); if(dragId===p.id) return;
-      const arr=state.processes; const from=arr.findIndex(x=>x.id===dragId); const to=arr.findIndex(x=>x.id===p.id);
-      const [m]=arr.splice(from,1); arr.splice(to,0,m); save(); renderLeft(); renderRight();
+    card.addEventListener('drop',(e)=>{
+      e.preventDefault();
+      card.style.outline='';
+      const dragId = +e.dataTransfer.getData('text/plain');
+      if(dragId===p.id) return;
+      const arr = state.processes;
+      const from = arr.findIndex(x=>x.id===dragId);
+      const to = arr.findIndex(x=>x.id===p.id);
+      const [m]=arr.splice(from,1);
+      arr.splice(to,0,m);
+      save(); renderLeft(); renderRight();
     });
 
     list.append(card);
   });
 }
 
-function highlightCurrent(){ $$('#plist .pCard').forEach(el=> el.classList.toggle('active', +el.dataset.id===currentPid)); }
-
-/* ================= RIGHT ================= */
-function renderRight(){
-  const p=currentProc(); if(!p){ $('#rlist').innerHTML=''; return; }
-  $('#currentProcTag').textContent=p.name;
-
-  // Adjuntos visibles si hay
-  const az=$('#attachZone'), lst=$('#attList'); lst.innerHTML='';
-  const links=p.links||[], files=p.files||[];
-  if(links.length||files.length){ az.style.display='flex'; }
-  else{ az.style.display='flex'; } // visible para poder añadir
-  // pintar existentes
-  links.forEach((u,i)=>{ const a=document.createElement('a'); a.href=u; a.target='_blank'; a.textContent=`Enlace ${i+1}`; const pill=document.createElement('span'); pill.className='alnk'; pill.append('🔗 ',a); lst.append(pill); });
-  files.forEach((f,i)=>{ const a=document.createElement('a'); a.href=f.url||'#'; a.target='_blank'; a.textContent=f.name||('Doc '+(i+1)); const pill=document.createElement('span'); pill.className='adoc'; pill.append('📎 ',a); lst.append(pill); });
-  // inputs ocultos
-  $('#attachZone .alnk').onclick=()=>{ const v=prompt('Pega un enlace http(s)://'); if(v){ (p.links||(p.links=[])).push(v.trim()); save(); renderRight(); } };
-  $('#attachZone .adoc').onclick=()=>{ const v=prompt('Pega URL del documento'); const n=prompt('Nombre para mostrar (opcional)')||'Documento'; if(v){ (p.files||(p.files=[])).push({url:v.trim(),name:n}); save(); renderRight(); } };
-
-  const r=$('#rlist'); r.innerHTML='';
-  p.subflows.forEach((sp,idx)=> r.append(renderSubBlock(p,sp,idx)) );
+function iconBtn(ch){
+  const b = document.createElement('button');
+  b.className='iconBtn';
+  b.textContent = ch;
+  return b;
+}
+function highlightCurrent(){
+  $$('#plist .pCard').forEach(el=>{
+    el.classList.toggle('active', +el.dataset.id===currentPid);
+  });
 }
 
-function selectResp(val){
-  const s=document.createElement('select'); s.innerHTML='<option>Audiólogo</option><option>Responsable</option><option>Otros</option>'; s.value=val||'Audiólogo'; return s;
+/* =========== RIGHT (SUBPROCESOS + PASOS) =========== */
+function renderRight(){
+  const p = currentProc();
+  $('#currentProcTag').textContent = p ? p.name : 'Sin proceso';
+  const r = $('#rlist'); r.innerHTML='';
+
+  // pintar todos los subprocesos
+  p.subflows.forEach((sp,idx)=>{
+    r.append(renderSubBlock(p, sp, idx));
+  });
 }
 
 function renderSubBlock(proc, sp, idx){
-  const block=document.createElement('section'); block.className='spBlock';
-  const title=document.createElement('div'); title.className='spTitle';
-  const c=document.createElement('span'); c.className='c'; c.textContent='●'; c.style.color=proc.color;
-  const inp=document.createElement('input'); inp.value=sp.title||'Sub-proceso';
-  const show=iconBtn('▾'), edit=iconBtn('✏️'), resp=selectResp(sp.owner||'Audiólogo'), del=iconBtn('–');
-  title.append(c,inp,show,edit,resp,del);
-  const body=document.createElement('div'); body.className='spBody';
+  const block = document.createElement('section');
+  block.className='spBlock';
+  // título oscurecido degradado (menos duro)
+  const title = document.createElement('div');
+  title.className='spTitle';
+  title.style.background = 'linear-gradient(90deg,#1d1f26,#3a3f49)';
+  const dot = document.createElement('span'); dot.textContent='●'; dot.style.color=proc.color;
+  const inpt = document.createElement('input'); inpt.value=sp.title||'Nuevo subproceso';
+  const show = iconBtn('▾');
+  const edit = iconBtn('✏️');
+  const resp = selectResp(sp.owner||'Audiólogo');
+  const del  = iconBtn('–');
+  title.append(dot, inpt, show, edit, resp, del);
+  block.append(title);
 
-  const sdet=document.createElement('div'); sdet.className='spDetail';
-  const tda=document.createElement('textarea'); tda.placeholder='Descripción del subproceso…'; tda.value=sp.desc||'';
-  sdet.append(tda); body.append(sdet);
+  const body = document.createElement('div'); body.className='spBody'; block.append(body);
 
-  sp.steps.forEach((st,i)=> body.append(renderStep(proc,sp,st,i)));
+  // detalle (siempre debajo del título; oculto por defecto)
+  const sdet = document.createElement('div'); sdet.className='spDetail';
+  const tda = document.createElement('textarea'); tda.placeholder='Descripción del subproceso…'; tda.value=sp.desc||'';
+  sdet.append(tda);
+  body.append(sdet);
 
+  // pasos
+  sp.steps.forEach((st, i)=> body.append(renderStep(proc, sp, st, i)) );
+
+  // “Guardar subproceso” al final si es el subproceso “working”
   if(workingSubId===sp.id){
-    const end=document.createElement('div'); end.style.textAlign='right';
-    const saveBtn=document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent='🎯 Guardar subproceso';
-    saveBtn.onclick=()=>{ workingSubId=null; save(); renderRight(); };
+    const end = document.createElement('div'); end.className='endRow';
+    const saveBtn = document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent='🎯 Guardar';
+    saveBtn.onclick = ()=>{ workingSubId=null; save(); renderRight(); };
     end.append(saveBtn); body.append(end);
   }
 
-  block.append(title,body);
-
-  // events
-  show.onclick = ()=> sdet.style.display = sdet.style.display==='block'?'none':'block';
-  edit.onclick = ()=>{ inp.focus(); inp.select(); };
-  inp.oninput  = ()=>{ sp.title=inp.value; save(); };
-  tda.oninput  = ()=>{ sp.desc=tda.value; save(); };
-  del.onclick  = ()=>{ if(!confirm('¿Eliminar subproceso y sus pasos?')) return; const arr=currentProc().subflows; const i=arr.indexOf(sp); if(i>-1) arr.splice(i,1); if(workingSubId===sp.id) workingSubId=null; save(); renderRight(); };
+  // handlers
+  show.onclick = ()=>{ sdet.style.display = sdet.style.display==='block' ? 'none':'block'; };
+  edit.onclick = ()=>{ inpt.focus(); inpt.select(); };
+  inpt.oninput = ()=>{ sp.title = inpt.value; save(); };
+  tda.oninput = ()=>{ sp.desc = tda.value; save(); };
+  del.onclick = ()=>{
+    if(!confirm('¿Borrar subproceso y sus pasos?')) return;
+    const arr = proc.subflows;
+    const pos = arr.findIndex(x=>x.id===sp.id);
+    arr.splice(pos,1);
+    if(workingSubId===sp.id) workingSubId=null;
+    save(); renderRight();
+  };
 
   return block;
 }
 
 function renderStep(proc, sp, st, idx){
-  const wrap=document.createElement('div'); wrap.className='step';
-  const line=document.createElement('div'); line.className='connector'; line.style.background=proc.color; wrap.append(line);
-  const bub =document.createElement('div'); bub.className='bubble'; bub.textContent=(idx+1); wrap.append(bub);
+  const wrap = document.createElement('div'); wrap.className='step';
+  // línea vertical detrás del número
+  const line = document.createElement('div'); line.className='connector'; line.style.background = proc.color+'99';
+  wrap.append(line);
 
-  const top =document.createElement('div'); top.className='sTop';
-  const ttl =document.createElement('input'); ttl.className='sTitle'; ttl.value=st.title||'Paso';
-  const detBtn=iconBtn('▾'), del=iconBtn('–'), q=iconBtn('?'); // ? abre si/no
-  const who =selectResp(st.owner||'Audiólogo');
-  top.append(ttl,detBtn,del,q,who); wrap.append(top);
+  const bub = document.createElement('div'); bub.className='bubble'; bub.textContent = (idx+1);
+  wrap.append(bub);
 
-  const det =document.createElement('div'); det.className='sDetail';
-  const ta  =document.createElement('textarea'); ta.placeholder='Detalle…'; ta.value=st.detail||'';
-  det.append(ta); wrap.append(det);
+  // fila superior
+  const top = document.createElement('div'); top.className='sTop';
+  const title = document.createElement('input'); title.className='sTitle'; title.value=st.title||'Nuevo paso';
+  const show = iconBtn('▾');
+  const del  = iconBtn('–');
+  const q    = iconBtn('?'); // botón “si/no”
+  const who  = selectResp(st.owner||'Audiólogo');
+  top.append(title, show, del, q, who);
+  wrap.append(top);
 
-  // Si/No DESPUÉS del detalle, con NO mayor y SÍ menor
-  const chips=document.createElement('div'); chips.className='chips';
-  const no   =document.createElement('span'); no.className='chip no'; no.textContent='NO';
-  const noAdd=iconBtn('+'); noAdd.style.borderRadius='10px';
-  const si   =document.createElement('span'); si.className='chip si'; si.textContent='SÍ';
-  const siAdd=iconBtn('+'); siAdd.style.borderRadius='10px';
-  chips.append(no,noAdd,si,siAdd); wrap.append(chips);
+  // detalle (inmediatamente tras el título)
+  const det = document.createElement('div'); det.className='sDetail';
+  const ta = document.createElement('textarea'); ta.placeholder='Detalle…'; ta.value=st.detail||'';
+  det.append(ta);
+  wrap.append(det);
 
-  const noBox=document.createElement('div'); noBox.className='subpoints';
-  const siBox=document.createElement('div'); siBox.className='subpoints';
-  wrap.append(noBox,siBox);
+  // SI / NO (después del detalle)
+  const chips = document.createElement('div'); chips.className='chips';
+  const no = document.createElement('span'); no.className='chip no'; no.textContent='NO';
+  const noPlus = iconBtn('+'); noPlus.style.borderRadius='10px';
+  const si = document.createElement('span'); si.className='chip si'; si.innerHTML='SÍ';
+  const siPlus = iconBtn('+'); siPlus.style.borderRadius='10px';
+  chips.append(no, noPlus, si, siPlus);
+  wrap.append(chips);
 
-  // helpers adjuntos específicos del paso
-  const helpers=document.createElement('div'); helpers.className='attach';
-  const lnk=iconBtn('🔗'), doc=iconBtn('📄');
-  const linkShow=document.createElement('span'); linkShow.className='alnk'; linkShow.style.display='none'; linkShow.innerHTML='🔗 <a target="_blank"></a>';
-  const docShow =document.createElement('span'); docShow.className='adoc'; docShow .style.display='none'; docShow .innerHTML='📄 <a target="_blank"></a>';
-  helpers.append(lnk,doc,linkShow,docShow); wrap.append(helpers);
+  // contenedores de puntos 10.1 etc.
+  const noBox = document.createElement('div'); noBox.className='subpoints';
+  const siBox = document.createElement('div'); siBox.className='subpoints';
+  wrap.append(noBox, siBox);
 
-  // bindings
-  ttl.oninput=()=>{ st.title=ttl.value; save(); };
-  detBtn.onclick=()=>{ det.style.display=det.style.display==='block'?'none':'block'; };
-  del.onclick=()=>{ if(!confirm('¿Borrar paso?')) return; const i=sp.steps.indexOf(st); sp.steps.splice(i,1); save(); renderRight(); };
-  q.onclick=()=>{ det.style.display='block'; /* no se pliega durante edición */ };
+  // helpers (adjuntos)
+  const helpers = document.createElement('div'); helpers.className='helpers';
+  const pickLink = iconBtn('🔗');
+  const pickDoc  = iconBtn('📄');
+  const linkShow = document.createElement('div'); linkShow.className='linkShow'; linkShow.innerHTML='🔗 <a target="_blank"></a>';
+  const docShow  = document.createElement('div'); docShow.className='docShow'; docShow.innerHTML='📄 <a target="_blank"></a>';
+  helpers.append(pickLink, pickDoc, linkShow, docShow);
+  wrap.append(helpers);
 
-  ta.oninput=()=>{ st.detail=ta.value; save(); };
-  who.onchange=()=>{ st.owner=who.value; save(); };
+  /* bindings */
+  title.oninput = ()=>{ st.title = title.value; save(); };
+  show.onclick  = ()=>{ det.style.display = det.style.display==='block'?'none':'block'; };
+  del.onclick   = ()=>{ if(!confirm('¿Borrar paso?')) return; const i=sp.steps.indexOf(st); sp.steps.splice(i,1); save(); renderRight(); };
+  q.onclick     = ()=>{ // NO recoge; queda visible hasta terminar edición
+    det.style.display = 'block';
+    chips.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+  who.onchange  = ()=>{ st.owner = who.value; save(); };
+  ta.oninput    = ()=>{ st.detail = ta.value; save(); };
 
-  // puntos Si/No (10.1, 10.2, etc.)
-  st.yes=st.yes||[]; st.no=st.no||[];
-  const base=(idx+1);
+  /* puntos yes/no numeración 10.1 etc */
+  st.yes = st.yes||[]; st.no = st.no||[];
+  const baseN = (idx+1);
+
   function addPoint(arr, box){
-    const it={id:uid(),text:'',next:null};
-    arr.push(it); drawPoints();
+    const item = { id: uid(), text:'', next:null, kind: (box===siBox?'S':'N') };
+    arr.push(item); drawPoints();
   }
-  function delPoint(arr, it){ const i=arr.indexOf(it); if(i>-1){ arr.splice(i,1); drawPoints(); } }
-  function pickNext(target){
-    const names=state.processes.map(p=>p.name);
-    const sel=prompt('Ir al proceso…\n'+names.map((n,i)=>`${i+1}. ${n}`).join('\n'), target.next||'');
-    if(sel){ target.next=sel; drawPoints(); }
-  }
+  function rmPoint(arr, it){ const i=arr.indexOf(it); if(i>-1){ arr.splice(i,1); drawPoints(); } }
+
   function drawPoints(){
     noBox.innerHTML=''; siBox.innerHTML='';
-    st.no.forEach((it,i)=>{
-      const row=document.createElement('div'); row.className='pRow';
-      const lab=document.createElement('span'); lab.className='flag'; lab.textContent=`${base}.${i+1}`;
-      const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Si NO…'; inp.value=it.text;
-      const go=iconBtn('🚩'); const rm=iconBtn('–');
-      row.append(lab,inp,go,rm);
-      if(it.next){ const goto=document.createElement('span'); goto.className='goto'; goto.style.color=proc.color; goto.textContent = ` → Ir al proceso: ${it.next}`; row.append(goto); }
-      inp.oninput=()=>{ it.text=inp.value; save(); };
-      rm.onclick=()=>delPoint(st.no,it);
-      go.onclick=()=>pickNext(it);
+    st.no.forEach((it, i)=>{
+      const row = document.createElement('div'); row.className='pRow';
+      const lab = document.createElement('span'); lab.className='flag'; lab.textContent = `${baseN}.${i+1}`;
+      const input=document.createElement('input'); input.type='text'; input.placeholder='Si NO…'; input.value=it.text;
+      const linkBtn = iconBtn('🚩'); linkBtn.title='Vincular próximo proceso';
+      const delBtn  = iconBtn('–');
+      row.append(lab,input,linkBtn,delBtn);
+      if(it.next){
+        const goto = document.createElement('span'); goto.className='goto'; goto.style.color=proc.color;
+        goto.textContent = ` → Ir al proceso: ${it.next}`;
+        row.append(goto);
+      }
+      input.oninput=()=>{ it.text=input.value; save(); };
+      delBtn.onclick=()=>rmPoint(st.no,it);
+      linkBtn.onclick=()=> pickNextProcess(it);
       noBox.append(row);
     });
-    st.yes.forEach((it,i)=>{
-      const row=document.createElement('div'); row.className='pRow';
-      const lab=document.createElement('span'); lab.className='flag'; lab.textContent=`${base}.${i+1}`;
-      const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Si SÍ…'; inp.value=it.text;
-      const go=iconBtn('🚩'); const rm=iconBtn('–');
-      row.append(lab,inp,go,rm);
-      if(it.next){ const goto=document.createElement('span'); goto.className='goto'; goto.style.color=proc.color; goto.textContent = ` → Ir al proceso: ${it.next}`; row.append(goto); }
-      inp.oninput=()=>{ it.text=inp.value; save(); };
-      rm.onclick=()=>delPoint(st.yes,it);
-      go.onclick=()=>pickNext(it);
+    st.yes.forEach((it, i)=>{
+      const row = document.createElement('div'); row.className='pRow';
+      const lab = document.createElement('span'); lab.className='flag'; lab.textContent = `${baseN}.${i+1}`;
+      const input=document.createElement('input'); input.type='text'; input.placeholder='Si SÍ…'; input.value=it.text;
+      const linkBtn = iconBtn('🚩'); linkBtn.title='Vincular próximo proceso';
+      const delBtn  = iconBtn('–');
+      row.append(lab,input,linkBtn,delBtn);
+      if(it.next){
+        const goto = document.createElement('span'); goto.className='goto'; goto.style.color=proc.color;
+        goto.textContent = ` → Ir al proceso: ${it.next}`;
+        row.append(goto);
+      }
+      input.oninput=()=>{ it.text=input.value; save(); };
+      delBtn.onclick=()=>rmPoint(st.yes,it);
+      linkBtn.onclick=()=> pickNextProcess(it);
       siBox.append(row);
     });
-    // adjuntos visibles si existen
+    // adjuntos visibles
     linkShow.style.display = st.link ? 'inline-flex':'none';
-    docShow .style.display = st.doc  ? 'inline-flex':'none';
+    docShow.style.display  = st.doc  ? 'inline-flex':'none';
     if(st.link){ linkShow.querySelector('a').href=st.link; linkShow.querySelector('a').textContent=st.link; }
-    if(st.doc ){ docShow .querySelector('a').href=st.doc ; docShow .querySelector('a').textContent=st.doc ; }
+    if(st.doc ){ docShow.querySelector('a').href=st.doc;  docShow.querySelector('a').textContent=st.doc;  }
     save();
   }
-  noAdd.onclick=()=>addPoint(st.no,noBox);
-  siAdd.onclick=()=>addPoint(st.yes,siBox);
-  lnk.onclick=()=>{ const v=prompt('Pega un enlace http(s)://', st.link||''); if(v!==null){ st.link=v.trim(); drawPoints(); } };
-  doc.onclick=()=>{ const v=prompt('Pega URL del documento', st.doc||''); if(v!==null){ st.doc=v.trim(); drawPoints(); } };
+  function pickNextProcess(target){
+    const names = state.processes.map(p=>p.name);
+    const sel = prompt('Ir al proceso…\n'+names.map((n,i)=>`${i+1}. ${n}`).join('\n'), target.next||'');
+    if(sel){ target.next=sel; drawPoints(); }
+  }
+
+  noPlus.onclick = ()=> addPoint(st.no, noBox);
+  siPlus.onclick = ()=> addPoint(st.yes, siBox);
+
+  pickLink.onclick = ()=>{
+    const v = prompt('Pega un enlace http(s)://', st.link||'');
+    if(v!==null){ st.link=v.trim(); drawPoints(); }
+  };
+  pickDoc.onclick = ()=>{
+    const v = prompt('Pega URL de documento', st.doc||'');
+    if(v!==null){ st.doc=v.trim(); drawPoints(); }
+  };
 
   drawPoints();
   return wrap;
 }
 
-/* ================= ACTIONS ================= */
-$('#toggleEdit').onclick=()=>{ document.body.classList.toggle('edit-on'); };
-$('#exportData').onclick=()=>{
-  const blob=new Blob([localStorage.getItem(key)||'{}'],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='procesos-audio-data.json'; a.click(); URL.revokeObjectURL(a.href);
+function selectResp(val){
+  const s = document.createElement('select');
+  ['Audiólogo','Responsable','Otros'].forEach(v=>{
+    const o=document.createElement('option'); o.value=v; o.textContent=v; s.append(o);
+  });
+  s.value = val||'Audiólogo';
+  return s;
+}
+
+/* =========== COMMANDS =========== */
+$('#addProc').onclick = ()=>{
+  state.processes.push({id:++state.seq,name:'Nuevo proceso',color:nextPastel(),desc:'',subflows:[]});
+  currentPid = state.processes[state.processes.length-1].id;
+  save(); renderLeft(); renderRight(); highlightCurrent();
 };
-$('#addProc').onclick=()=>{
-  state.processes.push({id:++state.seq,name:'Nuevo proceso',color:nextPastel(),desc:'',links:[],files:[],subflows:[]});
-  currentPid=state.processes[state.processes.length-1].id; save(); renderLeft(); renderRight(); highlightCurrent();
-};
-$('#addSp').onclick=()=>{
-  const p=currentProc(); if(!p) return;
-  const sp={id:uid(),title:'Sub-proceso',desc:'',owner:'Audiólogo',steps:[]};
-  p.subflows.push(sp); workingSubId=sp.id; save(); renderRight();
-};
-$('#addStep').onclick=()=>{
-  const p=currentProc(); if(!p) return;
-  if(!p.subflows.length){ $('#addSp').click(); }
-  const target = workingSubId ? p.subflows.find(s=>s.id===workingSubId) : p.subflows[p.subflows.length-1];
-  if(!target) return;
-  target.steps.push({id:uid(),title:'Paso',detail:'',owner:'Audiólogo',yes:[],no:[],link:'',doc:''});
+
+$('#addSp').onclick = ()=>{
+  const p = currentProc();
+  const sp = {id:uid(), title:'Nuevo subproceso', desc:'', owner:'Audiólogo', steps:[]};
+  p.subflows.push(sp);
+  workingSubId = sp.id;
   save(); renderRight();
 };
-$('#addPair').onclick=()=>{ $('#addSp').click(); setTimeout(()=>$('#addStep').click(), 50); };
-$('#saveSub').onclick =()=>{ workingSubId=null; save(); renderRight(); };
 
+$('#addPair').onclick = ()=>{
+  $('#addSp').click();
+  setTimeout(()=>$('#addStep').click(), 20);
+};
+
+$('#addStep').onclick = ()=>{
+  const p = currentProc();
+  if(!p.subflows.length){ $('#addSp').click(); }
+  const target = workingSubId ? p.subflows.find(s=>s.id===workingSubId) : p.subflows[p.subflows.length-1];
+  if(!target){ return; }
+  target.steps.push({id:uid(),title:'Nuevo paso',detail:'',owner:'Audiólogo',yes:[],no:[],link:'',doc:''});
+  save(); renderRight();
+};
+$('#saveSub').onclick = ()=>{
+  workingSubId = null;
+  save(); renderRight();
+};
+
+/* =========== SEARCH =========== */
 $('#search').addEventListener('input', (e)=>{
-  const q=e.target.value.toLowerCase().trim();
+  const q = e.target.value.toLowerCase().trim();
   $$('#plist .pCard').forEach(card=>{
-    const nm=card.querySelector('.pName').textContent.toLowerCase(); card.style.display = nm.includes(q) ? '' : 'none';
+    const nm = card.querySelector('.pName').textContent.toLowerCase();
+    card.style.display = nm.includes(q) ? '' : 'none';
   });
 });
 
-/* ================= INIT ================= */
-if(!state.processes.length){
-  state.processes.push({id:++state.seq,name:'Proceso',color:nextPastel(),desc:'',links:[],files:[],subflows:[]});
-  currentPid=state.processes[0].id;
-}
-save(); renderLeft(); highlightCurrent(); renderRight();
+/* Export HTML (simple) */
+$('#toHtml').onclick = ()=>{
+  const data = localStorage.getItem('pa_data_v3')||'';
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'procesos-audio-data.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+/* “Guardar nube” → sólo marca hora (puedes conectar backend cuando quieras) */
+$('#saveCloud').onclick = ()=>{ save(); alert('Guardado local. (Conecta tu backend si quieres subirlo a la nube)'); };
 
-/* ================= MINITESTS (no rompen UI) ================= */
-console.assert(typeof currentProc()==='object','TEST proc actual');
-(() => {
-  const p=currentProc(); const baseLen=p.subflows.length;
-  const sp={id:uid(),title:'t',desc:'',owner:'Audiólogo',steps:[]}; p.subflows.push(sp);
-  const stLen0=sp.steps.length; sp.steps.push({id:uid(),title:'Paso',detail:'',owner:'Audiólogo',yes:[],no:[]});
-  console.assert(p.subflows.length===baseLen+1,'TEST sub +1');
-  console.assert(sp.steps.length===stLen0+1,'TEST paso +1');
-  p.subflows.pop();
-})();
+/* Init */
+renderLeft(); highlightCurrent(); renderRight();
+$('#updatedAt').textContent = 'Última actualización ' + new Date().toLocaleString();
 </script>
 </body>
 </html>
