@@ -88,10 +88,13 @@
   .modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:10px}
   .module{border:1px solid #dcdfe7;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
   .moduleHead{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .headTools{display:flex;gap:4px;margin-left:auto}
+  .headTools .ico{min-width:22px;height:22px;font-size:12px}
+  .headTools .ico.trash{background:#fee2e2;border-color:#fecaca;color:#7c2d12}
 
   /* LOCK UI */
   body.locked .editOnly, body.locked .adder, body.locked .ico.del, body.locked .editBar { display:none !important; }
-  body.locked input.title, body.locked input.pTitle, body.locked textarea { pointer-events:none; background:linear-gradient(180deg,#f2f36,#e9ecf3); color:#555; }
+  body.locked input.title, body.locked input.pTitle, body.locked textarea { pointer-events:none; background:linear-gradient(180deg,#f2f3f6,#e9ecf3); color:#555; }
   body.locked select.miniSel { pointer-events:none; opacity:.6; }
 </style>
 </head>
@@ -175,7 +178,7 @@ function toggleDesc(pid,mode){ const el=byId('d_'+pid); if(!el) return; if(mode=
 
 /* DERECHA */
 function addSub(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); p.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]}); ctxSubId=p.sub[p.sub.length-1].id; renderRight(); }
-function addStepProcess(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); p.steps.push({id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]}); ctxSubId=null; renderRight(); }
+function addStepProcess(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); const st={id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]}; if(p.defaultNextPid) st.nextPid=p.defaultNextPid; p.steps.push(st); ctxSubId=null; renderRight(); }
 
 function toggleView(){ modulesMode=!modulesMode; localStorage.setItem(LS+'_VMODE', modulesMode?'1':'0'); renderRight(); const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; }
 
@@ -186,26 +189,29 @@ function renderRightLinear(p){ const body=byId('rightBody'); const card=document
 
 /* MÓDULOS (subprocesos + pasos repetidos en la misma pantalla) */
 function renderRightModules(p){ const body=byId('rightBody'); const grid=document.createElement('div'); grid.className='modules';
-  // módulo para pasos del proceso (si hay)
   if(p.steps && p.steps.length){ grid.appendChild(buildModule(p,'Pasos del proceso',null,p.steps)); }
-  // módulo por cada subproceso con sus pasos
   (p.sub||[]).forEach(s=>{ grid.appendChild(buildModule(p,s.title||'Sub-proceso',s,(s.steps||[]))); });
   body.appendChild(grid);
-  // alinear conectores por cada módulo
   body.querySelectorAll('.module').forEach(mod=>alignConnectors(mod));
 }
-function buildModule(proc,titleOrSub,sub,list){ const mod=document.createElement('div'); mod.className='module flow'; mod.style.setProperty('--conn-color', proc.color);
+function buildModule(proc,titleOrSub,sub,list){
+  const mod=document.createElement('div'); mod.className='module flow'; mod.style.setProperty('--conn-color', proc.color);
   const head=document.createElement('div'); head.className='moduleHead';
-  let titleEl;
-  if(sub){ titleEl=document.createElement('input'); titleEl.className='title subTitle'; titleEl.value=sub.title||'Subproceso'; titleEl.oninput=e=>{ if(!canEdit()) return; sub.title=e.target.value; save(); }; }
+  let titleEl; if(sub){ titleEl=document.createElement('input'); titleEl.className='title subTitle'; titleEl.value=sub.title||'Subproceso'; titleEl.oninput=e=>{ if(!canEdit()) return; sub.title=e.target.value; save(); }; }
   else { titleEl=document.createElement('div'); titleEl.className='subTitle'; titleEl.textContent=titleOrSub; }
-  const right=document.createElement('div'); right.className='rightPack';
-  const role=miniSel(sub||proc); right.appendChild(role);
-  head.append(titleEl,right); mod.appendChild(head);
+  const role=miniSel(sub||proc);
+  const tools=document.createElement('div'); tools.className='headTools';
+  const bAddSub=ico('+','Añadir subproceso',()=>{ if(!canEdit()) return; proc.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]}); save(); renderRight(); }, true);
+  const bAddPaso=ico('+','Añadir paso',()=>{ if(!canEdit()) return; const tgt=sub||proc; const st={id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}; if(tgt.defaultNextPid) st.nextPid=tgt.defaultNextPid; (tgt.steps||(tgt.steps=[])).push(st); save(); renderRight(); }, true);
+  const bFlag=ico('🚩','Próximo proceso por defecto',()=>{ if(!canEdit()) return; pick((sub||proc).defaultNextPid, v=>{ (sub||proc).defaultNextPid=v; save(); renderRight(); }); }, true);
+  const bSiNo=ico('❓','Mostrar Si/No',()=>{ mod.querySelectorAll('.condWrap').forEach(el=>{ if(el.dataset.inited!=='1'){ const row=el.closest('.row'); const i=[...row.parentNode.children].indexOf(row)+1; const stepIdx=i; const st=(sub?(sub.steps||[]):proc.steps)[stepIdx-1]; if(st){ el.appendChild(condBlock(st, stepIdx)); el.dataset.inited='1'; } }
+    el.style.display='block';
+  }); }, false);
+  const bDel=ico('−','Eliminar módulo',()=>{ if(!canEdit()) return; if(sub){ if(confirm('¿Eliminar subproceso?')){ proc.sub=proc.sub.filter(x=>x!==sub); save(); renderRight(); } } else { if(confirm('¿Vaciar pasos del proceso?')){ proc.steps=[]; save(); renderRight(); } } }, true); bDel.classList.add('trash');
+  tools.append(bAddSub,bAddPaso,bFlag,bSiNo,bDel);
+  head.append(titleEl,role,tools); mod.appendChild(head);
   const listBox=document.createElement('div'); list.forEach((st,i)=> listBox.appendChild(stepRow(proc,sub,st,i)) ); mod.appendChild(listBox);
-  // controles de módulo
   const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='space-between'; bar.style.gap='6px'; bar.style.marginTop='6px';
-  if(sub){ const add=document.createElement('button'); add.textContent='+ Paso'; add.className='btnTop editOnly'; add.onclick=()=>{ if(!canEdit()) return; (sub.steps||(sub.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); save(); renderRight(); }; bar.appendChild(add); }
   const close=document.createElement('button'); close.textContent='🎯 Guardar (cerrar pasos)'; close.className='btnTop'; close.onclick=()=>{ if(!canEdit()) return; const arr=list; if(arr.length){ arr.forEach((s,k)=>s.meta=(k===arr.length-1)); save(); renderRight(); } }; bar.appendChild(close);
   mod.appendChild(bar);
   return mod;
@@ -215,7 +221,7 @@ function buildModule(proc,titleOrSub,sub,list){ const mod=document.createElement
 function miniSel(obj){ const sel=document.createElement('select'); sel.className='miniSel'; ROLES.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o)}); sel.value=obj.resp||ROLES[0]; sel.onchange=e=>{ if(!canEdit()) return; obj.resp=e.target.value; save(); }; return sel; }
 function ico(g,t,fn,editOnly){ const b=document.createElement('button'); b.className='ico sm'; if(editOnly) b.classList.add('editOnly'); b.title=t; b.textContent=g; if(fn){ b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();fn(ev);}); } return b; }
 
-/* Paso + Si/No (igual que base) */
+/* Paso + Si/No */
 function normalize(list){if(!Array.isArray(list))return [];return list.map(x=>typeof x==='string'?{id:uid(),text:x}:(x.id?x:{id:uid(),...x}))}
 function removePointFromStep(step,id){ function rec(lst){ if(!Array.isArray(lst)) return false; const i=lst.findIndex(n=>n&&n.id===id); if(i>-1){ lst.splice(i,1); return true; } for(const n of lst){ if(n && n.children && rec(n.children)) return true; } return false; } return rec(step.yes)||rec(step.no); }
 function badge(pid,prefix){ prefix=(typeof prefix==='string'?prefix:'IR AL PROCESO: '); const tgt=data.find(p=>p.id===pid); if(!tgt) return null; const el=document.createElement('span'); el.className='nextBadge'; el.textContent=prefix+tgt.name; el.style.background=lighten(tgt.color,.55); el.style.border='1px solid '+lighten(tgt.color,.35); return el; }
@@ -244,7 +250,18 @@ function condBlock(st, stepNum){ const wrap=document.createElement('div'); wrap.
 function oneSide(title,branch,st,stepNum){ const b=document.createElement('div'); b.classList.add(branch==='yes' ? 'branch-yes' : 'branch-no'); const hdr=document.createElement('div'); hdr.className='condHdr'; const t=document.createElement('div'); t.className='condTitle'; t.textContent=title; const plus=document.createElement('button'); plus.className='adder editOnly'; plus.textContent='+'; plus.title='Añadir punto a '+title; const list=(st[branch]||(st[branch]=[])); plus.addEventListener('click',()=>{ if(!canEdit()) return; list.push({id:uid(),text:'',children:[]}); save(); renderRight(); }); hdr.append(t,plus); b.appendChild(hdr); function renderPoints(arr, base, container){ (arr||[]).forEach((it,idx)=>{ it.children=it.children||[]; const numStr=base+'.'+(idx+1); const r=document.createElement('div'); r.className='condItem'; const num=document.createElement('span'); num.className='condNum'; num.textContent=numStr; const tx=document.createElement('textarea'); tx.className='condText'; tx.placeholder='Escribe…'; tx.value=it.text||''; tx.oninput=e=>{ if(!canEdit()) return; it.text=e.target.value; autoGrow(tx); save(); }; autoGrow(tx); const flag=ico('🚩','Próximo proceso',()=>{ if(!canEdit()) return; pick(it.nextPid,v=>{ it.nextPid=v; save(); renderRight(); }); }, true); const addChild=ico('+','Añadir subpunto',()=>{ if(!canEdit()) return; it.children.push({id:uid(),text:'',children:[]}); save(); renderRight(); }, true); const del=document.createElement('button'); del.className='condDel editOnly'; del.textContent='−'; del.addEventListener('click',()=>{ if(!canEdit()) return; if(removePointFromStep(st,it.id)){ save(); renderRight(); } }); r.append(num,tx,flag,addChild,del); if(it.nextPid){ const bb=badge(it.nextPid,'IR AL PROCESO: '); if(bb) r.appendChild(bb); } container.appendChild(r); if(it.children && it.children.length){ const kids=document.createElement('div'); kids.className='condChildren'; container.appendChild(kids); renderPoints(it.children, numStr, kids); } }); } renderPoints(list, String(stepNum), b); return b; }
 
 /* Subprocesos mini (para vista lineal) */
-function subMini(proc,s,idx){ const row=document.createElement('div'); row.className='row'; const chip=document.createElement('div'); chip.className='chip'; const b=document.createElement('div'); b.className='bubble'; b.textContent=idx+1; const t=document.createElement('input'); t.className='title subTitle'; t.value=s.title||'Subproceso'; t.oninput=e=>{ if(!canEdit()) return; s.title=e.target.value; save(); }; const right=document.createElement('div'); right.className='rightPack'; const edit=ico('🖉','Editar',()=>{ if(!canEdit()) return; t.focus();t.select(); }, true); const del=ico('−','Eliminar',()=>{ if(!canEdit()) return; if(confirm('¿Eliminar subproceso?')){proc.sub=proc.sub.filter(x=>x!==s); if(ctxSubId===s.id)ctxSubId=null; renderRight();} }, true); const role=miniSel(s); right.append(edit,del,role); chip.append(b,t,right); row.appendChild(chip); const add=document.createElement('button'); add.textContent='+ Paso'; add.className='adder editOnly'; add.style.margin='5px 0 0 26px'; add.addEventListener('click',()=>{ if(!canEdit()) return; (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); ctxSubId=s.id; save(); renderRight(); }); row.appendChild(add); chip.addEventListener('click',()=>{ ctxSubId=s.id; renderRight(); }); return row; }
+function subMini(proc,s,idx){
+  const row=document.createElement('div'); row.className='row'; row.style.setProperty('--conn-color', proc.color);
+  const chip=document.createElement('div'); chip.className='chip';
+  const num=document.createElement('div'); num.className='bubble'; num.textContent=idx+1; const title=document.createElement('input'); title.className='title'; title.value=s.title||'Subproceso'; title.oninput=e=>{ if(!canEdit()) return; s.title=e.target.value; save(); };
+  const right=document.createElement('div'); right.className='rightPack';
+  const add=ico('+','Añadir paso',()=>{ if(!canEdit()) return; (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); save(); renderRight(); }, true);
+  right.append(add, miniSel(s));
+  chip.append(num,title,right); row.appendChild(chip);
+  // pasos contenidos (vista previa corta)
+  (s.steps||[]).forEach((st,i)=> row.appendChild(stepRow(proc,s,st,i)) );
+  return row;
+}
 
 /* picker proceso destino */
 function pick(current,onPick){ const o=document.createElement('div'); Object.assign(o.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990}); const card=document.createElement('div'); Object.assign(card.style,{background:'#fff',padding:'12px',borderRadius:'10px',boxShadow:'0 14px 38px rgba(0,0,0,.2)',width:'min(92vw,420px)'}); const h=document.createElement('div'); h.textContent='Selecciona proceso de destino'; h.style.fontWeight='800'; h.style.marginBottom='6px'; const sel=document.createElement('select'); sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px'; data.forEach(p=>{const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; sel.appendChild(opt);}); sel.value=current||data[0].id; const preview=document.createElement('div'); preview.style.display='flex'; preview.style.alignItems='center'; preview.style.gap='8px'; preview.style.margin='8px 0 4px'; const badgePreview=document.createElement('span'); badgePreview.className='nextBadge'; function updatePreview(){ const id=sel.value; const tgt=data.find(p=>p.id===id)||data[0]; if(!tgt) return; badgePreview.textContent='IR AL PROCESO: '+tgt.name; badgePreview.style.background=lighten(tgt.color,.55); badgePreview.style.border='1px solid '+lighten(tgt.color,.35); } sel.addEventListener('change',updatePreview); updatePreview(); preview.append(badgePreview); const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='8px'; const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.addEventListener('click',()=>document.body.removeChild(o)); const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; ok.addEventListener('click',()=>{onPick(sel.value); document.body.removeChild(o);}); bar.append(cancel,ok); card.append(h,sel,preview,bar); o.appendChild(card); document.body.appendChild(o); }
