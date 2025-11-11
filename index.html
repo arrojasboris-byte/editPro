@@ -1,514 +1,260 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PROCESOS AUDIO</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>🎧 PROCESOS AUDIO</title>
 <style>
-:root{
-  --bg:#f5f6f9;        /* fondo gris claro */
-  --bg-soft:#eef0f4;   /* panel lateral */
-  --card:#ffffff;      /* tarjetas */
-  --ink:#1f2328;       /* texto */
-  --muted:#6b717c;
-  --shadow:0 6px 18px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.9);
-  --btnA:#ffffff; --btnB:#eceff3; /* botones 3D */
-  --radius:14px;
-  --accent:#e25a5a;
-}
+  :root{
+    --bg:#eceff3; --ink:#0f1115; --mut:#6b7280;
+    --grad:linear-gradient(90deg,#6a6a6a,#b63a3a,#2e2e2e);
+    --panel:#f3f4f8; --card:#f7f8fb; --inset:#f5f7fb; --line:#cfcfd4;
+    --sh-l1:0 1px 0 #fff inset, 0 1px 2px rgba(0,0,0,.08);
+    --sh-l2:0 2px 0 #e8eaf0, 0 8px 16px rgba(0,0,0,.08);
+    --sh-in:0 2px 6px rgba(0,0,0,.06) inset;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-}
+  /* TOPBAR */
+  .top{display:flex;gap:0;align-items:center;padding:8px 10px;background:var(--grad);color:#fff;box-shadow:var(--sh-l2)}
+  .top h1{margin:0 8px 0 0;font-size:20px;font-weight:900;text-shadow:0 1px 0 rgba(0,0,0,.35);display:flex;align-items:center;gap:8px}
+  .top h1 .logo{font-size:36px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+  .top h1 .title-text{letter-spacing:.2px}
+  .search{flex:1 1 520px;max-width:740px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.18);padding:6px 12px;color:#fff;box-shadow:var(--sh-l1)}
+  .last{margin:0 8px;font-size:12px;opacity:.85}
+  .iconbar{display:flex;gap:6px;margin-left:auto}
+  .ticon,.btnTop{border:1px solid rgba(255,255,255,.35);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.12));color:#fff;padding:6px 9px;cursor:pointer;line-height:1;box-shadow:var(--sh-l2)}
+  .btnTop{padding:6px 12px}
 
-/* -------- Header -------- */
-.header{
-  position:sticky; top:0; z-index:10;
-  padding:14px 18px;
-  background:linear-gradient(90deg,#915b5b 0,#c74f4f 25%,#9a3a3a 50%,#7e2e2e 100%);
-  display:flex; gap:12px; align-items:center; color:#fff;
-}
-.h-title{display:flex;align-items:center;gap:10px;font-weight:800;font-size:26px;letter-spacing:.3px}
-.h-title .ear{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ffffff22;box-shadow:var(--shadow)}
-.search{flex:1;max-width:640px}
-.search input{width:100%;padding:10px 14px;border-radius:999px;border:1px solid #ffffff22;background:#ffffff15;color:#fff;outline:none;box-shadow:inset 0 1px 0 #fff4,0 4px 10px rgba(0,0,0,.2)}
-.btn{
-  padding:10px 14px;border-radius:999px;border:1px solid #00000028;
-  background:linear-gradient(180deg,var(--btnA),var(--btnB)); box-shadow:var(--shadow);
-  display:inline-flex;gap:8px;align-items:center;cursor:pointer;color:var(--ink);
-}
-.badge{opacity:.9}
+  /* LAYOUT */
+  .layout{display:grid;grid-template-columns:1fr 2fr;min-height:calc(100vh - 48px);background:var(--grad)}
+  @media(max-width:1024px){.layout{grid-template-columns:1fr}}
+  .panel{display:flex;flex-direction:column;min-width:0}
+  .panel>header{padding:6px 8px;background:transparent;color:#fff;display:flex;justify-content:space-between;align-items:center;font-weight:800;min-height:44px}
+  #procList{padding-top:12px}
+  .body{padding:6px;overflow:auto;flex:1;background:var(--panel);border-radius:12px;box-shadow:var(--sh-l2)}
 
-/* -------- Layout -------- */
-.app{display:flex;flex-direction:column;height:100%}
-.body{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:14px}
-.left{background:var(--bg-soft);border-right:1px solid #dde2ea;border-radius:12px;padding:12px;overflow:auto}
-.right{background:var(--bg);border-radius:12px;overflow:auto}
+  /* PROCESOS IZQ */
+  .procRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e0e4ec;border-radius:12px;background:linear-gradient(180deg,#fdfefe,#eef1f6);margin-bottom:9px;cursor:grab;box-shadow:var(--sh-l2);position:relative}
+  .procRow.active{border-width:2px;box-shadow:0 0 0 2px rgba(0,0,0,.06), var(--sh-l2)}
+  .pTitle{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;font-size:14px;flex:1 1 92%;min-width:0;line-height:1.2;border-radius:8px;padding:4px 6px}
+  .tiny{display:flex;gap:4px}
+  .ico{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:8px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
+  .ico.xs{min-width:18px;height:18px;font-size:10px}
+  .ico.trash{background:#fee2e2;border-color:#fecaca;color:#7c2d12}
+  .ico:active{transform:translateY(1px)}
+  .ico:focus-visible{outline:2px solid #b63a3a}
 
-/* -------- Procesos (izquierda) -------- */
-.left h3{margin:6px 8px 10px;font-size:18px}
-.proc{
-  background:var(--card); border-radius:var(--radius); padding:10px 10px;
-  border:1px solid #e6ebf2; display:flex; flex-direction:column; gap:6px;
-  margin:10px; box-shadow:var(--shadow);
-}
-.proc .top{display:flex;align-items:center;gap:8px}
-.proc .dot{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 1px 0 #fff}
-.proc .name{flex:1;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.proc .acts{display:flex;gap:6px}
-.ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;cursor:pointer;background:#0000000a;border:1px solid #00000014}
-.proc .min{font-size:12px;color:var(--muted)}
-.proc.dragging{opacity:.6}
-.proc.dragover{outline:2px dashed #c4c9d2}
+  /* DERECHA / TARJETAS */
+  .card{border-radius:12px;border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
+  .card.green{border-color:#cfe9df;background:linear-gradient(180deg,#ffffff,#eef7f5)}
 
-/* -------- Hoja derecha -------- */
-.sheet-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 14px;background:var(--bg-soft);border-bottom:1px solid #e6ebf2;border-radius:12px 12px 0 0
-}
-.sheet-title{font-weight:800;font-size:18px}
-.head-actions{display:flex;gap:10px;align-items:center}
-.pill{
-  padding:8px 12px;border-radius:999px;border:1px solid #d9dee6;
-  background:linear-gradient(180deg,var(--btnA),var(--btnB)); box-shadow:var(--shadow);
-  display:inline-flex;gap:8px;align-items:center;color:var(--ink);cursor:pointer
-}
+  /* PASOS */
+  .row{border:1px solid #dcdfe7;background:linear-gradient(180deg,#ffffff,#eef1f7);border-radius:10px;padding:3px 4px;margin:4px 0;cursor:grab;box-shadow:var(--sh-l2);position:relative}
+  .chip{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;padding:5px 6px;border:1px solid #e6e8ec;border-radius:10px;background:linear-gradient(180deg,#ffffff,#f3f4f6);box-shadow:var(--sh-l1)}
+  .bubble{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:linear-gradient(180deg,#1f2937,#0b1020);border:1px solid #0b0f18;color:#fff;font-weight:900;font-size:10px;box-shadow:var(--sh-l2);position:relative;z-index:2}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;color:#fff;font-weight:800;font-size:11px;box-shadow:var(--sh-l2)}
+  .title{border:1px solid #dfe3ea;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in);font-weight:800;width:100%;min-width:0;font-size:13px;border-radius:8px;padding:4px 6px}
+  .subTitle{background:linear-gradient(180deg,#4b4b4b,#2b2b2b);border:1px solid #5a5a5a;border-radius:8px;padding:6px 8px;color:#fff;box-shadow:var(--sh-l2)}
+  .rightPack{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-self:end}
+  .miniSel{border:1px solid #dfe3ea;border-radius:999px;padding:3px 8px;font-size:11px;background:linear-gradient(180deg,#ffffff,#f4f6f9);box-shadow:var(--sh-in)}
+  .nextBadge{font-weight:800;border-radius:999px;padding:2px 6px;border:1px solid #bbb;background:linear-gradient(180deg,#ffffff,#eef0f3);color:#111;max-width:clamp(160px,50vw,640px);white-space:normal;word-break:break-word;line-height:1.1;box-shadow:var(--sh-l1)}
+  .detail{display:none;padding:4px 2px 2px}
+  .detail textarea{width:100%;min-height:40px;border:1px solid #dfe3ea;border-radius:8px;padding:6px 7px;overflow:hidden;resize:none;font-size:13px;background:var(--inset);box-shadow:var(--sh-in)}
 
-.sheet-body{padding:12px}
+  /* Si/No */
+  .condWrap{display:none;padding:5px 0 2px;border-top:1px dashed #e2e2e7;margin-top:3px;margin-left:calc(var(--line-x,42px) + 14px)}
+  .condHdr{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+  .condTitle{font-weight:800;font-size:12px}
+  .adder{border:1px solid #dfe3ea;border-radius:999px;background:linear-gradient(180deg,#ffffff,#f4f6f9);color:#111;min-width:22px;height:22px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
+  .condItem{display:flex;gap:4px;align-items:center;margin:3px 0}
+  .condText{flex:1;border:1px solid #dfe3ea;border-radius:8px;padding:6px 7px;min-height:28px;font-size:12px;overflow:hidden;resize:none;background:var(--inset);box-shadow:var(--sh-in)}
+  .condDel{border:1px solid #dfe3ea;background:linear-gradient(180deg,#fafbfc,#eceff4);border-radius:999px;min-width:18px;height:18px;cursor:pointer;box-shadow:var(--sh-l2);user-select:none}
+  .condNum{font-weight:900;margin-right:6px;color:#111;font-size:10px}
+  .condChildren{margin-left:16px;border-left:2px dashed #c7ccd4;padding-left:10px}
+  .branch-yes .condChildren{border-left-color:#a7f3d0}
+  .branch-no .condChildren{border-left-color:#fecaca}
+  .branch-yes .condNum{color:#166534}
+  .branch-no .condNum{color:#7c2d12}
 
-/* Subproceso tarjeta */
-.sub{background:var(--card);border-radius:var(--radius);margin-bottom:14px;box-shadow:var(--shadow);border:1px solid #e6ebf2}
-.sub-head{display:flex;align-items:center;gap:10px;padding:10px;background:linear-gradient(180deg,#f9fafc,#eef1f6);border-bottom:1px solid #e3e7ee;border-radius:var(--radius) var(--radius) 0 0}
-.sub-name{flex:1;font-weight:800;padding:8px 10px;border-radius:10px;border:1px solid #dfe4ec;background:#fff}
-.sub-acts{display:flex;gap:8px;align-items:center}
+  /* Conectores verticales */
+  .flow .row .bubble{position:relative;z-index:2}
+  .flow .row .bubble::after{ content:""; position:absolute; left:50%; transform:translateX(-50%); top:50%; width:2px; height:var(--conn-len,22px); background:var(--conn-color, var(--line)); border-radius:2px; pointer-events:none; z-index:1; }
+  .flow .row:last-child .bubble::after{content:none}
 
-/* Pasos */
-.sub-body{padding:10px}
-.step{
-  position:relative;background:#fff;border:1px solid #e9edf3;border-radius:14px;padding:12px 12px 12px 62px;
-  margin:8px 0; box-shadow:0 6px 16px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.9)
-}
-.step:before{
-  content:""; position:absolute; left:38px; top:-8px; bottom:-8px; width:8px; border-radius:999px;
-  background:var(--line); box-shadow:inset 0 0 0 1px rgba(255,255,255,.35), 0 1px 0 rgba(0,0,0,.05)
-}
-.bubble{
-  position:absolute; left:16px; top:10px; width:38px; height:38px; border-radius:50%;
-  display:grid; place-items:center; background:#fff; border:1px solid #d9dee6; color:#111; font-weight:800;
-  box-shadow:0 8px 14px rgba(0,0,0,.05), inset 0 1px 0 #fff;
-}
-.step-row{display:flex;gap:8px;align-items:center}
-.step-title input{border:0;background:#0000;font-weight:800;width:100%}
+  /* VISTA MÓDULOS */
+  .modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:10px}
+  .module{border:1px solid #dcdfe7;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f0f2f7);padding:6px;box-shadow:var(--sh-l2)}
+  .moduleHead{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 
-.btn-icon{padding:6px 8px;border-radius:10px;border:1px solid #00000018;background:#00000006;display:grid;place-items:center;cursor:pointer}
-.resp{margin-left:auto;padding:6px 10px;border-radius:999px;border:1px solid #00000018;background:#00000006}
-
-/* Detalle inmediatamente debajo del título */
-.detail{margin-top:8px}
-.detail textarea{width:100%;min-height:64px;border-radius:10px;border:1px solid #00000018;background:#00000006;padding:10px;color:var(--ink);resize:vertical}
-
-/* Adjuntos */
-.attach{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
-.attach .pill{font-size:12px}
-.attach a{text-decoration:none}
-
-/* Si/No */
-.cond{display:flex;gap:14px;margin-top:10px;align-items:flex-start}
-.cond-col{flex:1}
-.tag-no{background:#111;color:#fff;border-radius:999px;padding:6px 12px;font-weight:900}
-.tag-si{background:#0bbbd0;color:#fff;border-radius:999px;padding:4px 10px;font-weight:700;font-size:12px}
-.cond-col .add{margin-left:8px}
-.point{background:#fafbfe;border:1px solid #e6ebf2;border-radius:10px;padding:6px 8px;margin:6px 0}
-.point .row{display:flex;gap:8px;align-items:center}
-.point .idx{font-weight:800;width:56px}
-.point input{flex:1;border:0;border-bottom:1px dashed #cfd5de;background:transparent;padding:4px 2px}
-.point .mini{display:flex;gap:6px}
-.flag{border:1px solid #00000018;background:#fff;border-radius:10px;padding:4px 8px}
-
-/* Dock inferior */
-.dock{position:sticky;bottom:0;padding:10px;border-top:1px solid #e6ebf2;background:#ffffffd9;display:flex;gap:8px;justify-content:flex-end}
-
-/* Mostrar/ocultar iconos en modo vista */
-.hide-icons .btn-icon,
-.hide-icons .pill.icon-only,
-.hide-icons .ico.action{display:none}
-
-/* Compactación */
-.compact .step{margin:6px 0;padding:10px 10px 10px 60px}
-.compact .bubble{width:36px;height:36px;left:15px}
-.compact .sub{margin-bottom:10px}
-
-.small{font-size:12px;color:var(--muted)}
+  /* LOCK UI */
+  body.locked .editOnly, body.locked .adder, body.locked .ico.del, body.locked .editBar { display:none !important; }
+  body.locked input.title, body.locked input.pTitle, body.locked textarea { pointer-events:none; background:linear-gradient(180deg,#f2f36,#e9ecf3); color:#555; }
+  body.locked select.miniSel { pointer-events:none; opacity:.6; }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-
-  <!-- HEADER -->
-  <div class="header">
-    <div class="h-title"><span class="ear">🎧</span> PROCESOS AUDIO</div>
-    <div class="search"><input id="q" placeholder="Buscar procesos…"></div>
-
-    <button class="btn" id="btnAddProc">+ Procesos</button>
-    <button class="btn" id="btnAddSubStep">+ Subproceso + Paso</button>
-    <button class="btn" id="btnToggleEdit">✏️ Editar</button>
-    <button class="btn" id="btnCompact">🧩 Compacto</button>
-    <button class="btn" id="btnExport">⬇️ HTML</button>
-    <div class="badge small" id="last"></div>
-  </div>
-
-  <!-- BODY -->
-  <div class="body">
-    <!-- LEFT -->
-    <div class="left">
-      <h3>Procesos</h3>
-      <div id="procList"></div>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="right">
-      <div id="sheet"></div>
+  <div class="top">
+    <h1><span class="logo" aria-hidden="true">🎧</span><span class="title-text">PROCESOS AUDIO</span></h1>
+    <input class="search" placeholder="Buscar…" oninput="doSearch(this.value)"> <span id="lastSaved" class="last">Última actualización: —</span>
+    <div class="iconbar">
+      <button class="ticon" title="Descargar HTML" onclick="downloadHTML()">⬇️ HTML</button>
+      <button class="ticon" title="Imprimir / PDF" onclick="printAll()">🖨️</button>
+      <button class="ticon" title="Guardar en nube" onclick="saveCloud()">☁️⬆️</button>
+      <button class="ticon" title="Actualizar desde nube" onclick="loadCloud()">☁️🔄</button>
+      <button id="pinBtn" class="ticon" title="PIN" onclick="togglePin()">🔒</button>
+      <button id="saveBtn" class="btnTop editOnly" onclick="saveMeta()">💾 Guardar</button>
     </div>
   </div>
 
-  <!-- DOCK -->
-  <div class="dock">
-    <span class="small">Consejo: usa “Editar” para mostrar iconos, arrastra procesos para reordenar.</span>
+  <div class="layout">
+    <div class="panel">
+      <header class="leftHdr">
+        <div style="justify-content:flex-end;width:100%;display:flex">
+          <button class="btnTop editOnly" onclick="addProcess()">+Procesos</button>
+        </div>
+      </header>
+      <div class="body" id="procList"></div>
+    </div>
+
+    <div class="panel">
+      <header id="rHeader">
+        <span></span>
+        <div class="right-actions" style="display:flex;gap:6px;align-items:center">
+          <button class="btnTop editOnly" onclick="addSub()">+ Subproceso</button>
+          <button class="btnTop editOnly" onclick="addStepProcess()">+ Paso</button>
+          <button class="btnTop" id="viewBtn" onclick="toggleView()">Vista módulos</button>
+        </div>
+      </header>
+      <div class="body" id="rightBody"></div>
+    </div>
   </div>
-</div>
 
 <script>
-/* ========= STATE ========= */
-const LSKEY='pa_full_v7';
-const PALETTE=['#ffc9c9','#ffe0c9','#fff3bf','#e9fac8','#d2f4ea','#c5f6fa','#e7f5ff','#e5dbff','#ffd6e8','#ffe5cc'];
-let data = JSON.parse(localStorage.getItem(LSKEY)||'null') || {
-  selected:null,
-  processes:[{id:uid(),name:'Revisión auditiva',color:PALETTE[0],sub:[]}]
-};
-if(data.selected==null) data.selected=data.processes[0]?.id||null;
+const LS='PROC_COMPACT_PRO_V18_SOLID';
+const PIN_CODE='AR4321';
+const ROLES=['Audiólogo','Responsable','Otros'];
+const PASTEL=['#ffc6b3','#ffd1dc','#ffb3b3','#caffb7','#b56576','#c6e2ff','#b3e5ff','#ffdb58','#c8b3ff','#d6b3ff','#ffe8b3','#b3ffd9','#ffd3b6','#e6b3ff','#b3c7ff','#ffd6a5','#a0e7e5','#c0f7a6','#f6c1ff','#fcd5ce'];
+const byId=id=>document.getElementById(id);
+function uid(){return Math.random().toString(36).slice(2,9);} 
+function lighten(hex,f=0.86){const c=hex.replace('#','');const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);const nr=Math.round(r+(255-r)*f),ng=Math.round(g+(255-g)*f),nb=Math.round(b+(255-b)*f);return `rgb(${nr},${ng},${nb})`;}
+// 👉 Auto-ajuste de altura de <textarea>
+function autoGrow(el){ if(!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
 
-/* ========= UTILS ========= */
-function uid(){return Math.random().toString(36).slice(2,9)}
-function save(){ localStorage.setItem(LSKEY,JSON.stringify(data)); stamp(); }
-function stamp(){ document.getElementById('last').textContent='Última actualización '+new Date().toLocaleString(); }
-function current(){ return data.processes.find(p=>p.id===data.selected) || null; }
+/* --- Estado --- */
+let data=safeLoad();
+let selPid=(data[0]&&data[0].id)||null;
+let ctxSubId=null; let q='';
+let modulesMode=localStorage.getItem(LS+'_VMODE')==='1';
 
-/* ========= LEFT (procesos) ========= */
-function renderLeft(){
-  const list=document.getElementById('procList'); list.innerHTML='';
-  const q=document.getElementById('q').value.toLowerCase();
-  data.processes.forEach((p,idx)=>{
-    if(q && !p.name.toLowerCase().includes(q)) return;
-    const card=document.createElement('div');
-    card.className='proc'; card.draggable=true; card.dataset.id=p.id;
-    card.innerHTML=`
-      <div class="top">
-        <span class="dot" style="background:${p.color}"></span>
-        <div class="name">${p.name}</div>
-        <div class="acts">
-          <span class="ico action" title="Editar" onclick="editProcess('${p.id}')">✏️</span>
-          <span class="ico action" title="Eliminar" onclick="delProcess('${p.id}')">🗑️</span>
-        </div>
-      </div>
-      <div class="min">${p.sub.length} subprocesos</div>
-    `;
-    if(p.id===data.selected) card.style.outline=`2px solid ${p.color}`;
+function canEdit(){return sessionStorage.getItem(LS+'_PIN')==='1'}
+function save(){ localStorage.setItem(LS,JSON.stringify(data)); updateLastSaved(); }
+function updateLastSaved(){ const el=byId('lastSaved'); if(!el) return; const d=new Date(); const pad=n=>String(n).padStart(2,'0'); const ts=`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; el.textContent='Última actualización: '+ts; localStorage.setItem(LS+'_STAMP', ts); }
+function doSearch(v){q=(v||'').toLowerCase();render();}
+function getUsedColors(){ return new Set(data.map(p=>p.color)); }
+function nextColor(){ const used=getUsedColors(); for(const c of PASTEL){ if(!used.has(c)) return c; } return '#ffd1dc'; }
 
-    // drag & drop
-    card.addEventListener('dragstart',e=>{card.classList.add('dragging'); e.dataTransfer.setData('text/plain',p.id)})
-    card.addEventListener('dragend',()=>card.classList.remove('dragging'))
-    card.addEventListener('dragover',e=>{
-      e.preventDefault(); card.classList.add('dragover');
-    });
-    card.addEventListener('dragleave',()=>card.classList.remove('dragover'));
-    card.addEventListener('drop',e=>{
-      e.preventDefault(); card.classList.remove('dragover');
-      const from=e.dataTransfer.getData('text/plain');
-      if(!from || from===p.id) return;
-      moveProcess(from,p.id);
-    });
+function safeLoad(){ try{ const raw=localStorage.getItem(LS); if(!raw){ const seed=[{id:uid(),name:'Revisión auditiva',color:PASTEL[0],desc:'',sub:[],steps:[]}]; localStorage.setItem(LS,JSON.stringify(seed)); return seed;} const o=JSON.parse(raw); o.forEach(p=>{p.sub=p.sub||[];p.steps=p.steps||[]}); return o; }catch(e){ return [{id:uid(),name:'Proceso',color:PASTEL[0],desc:'',sub:[],steps:[]}]; } }
 
-    card.onclick=(e)=>{ if(e.target.closest('.acts')) return; data.selected=p.id; renderRight(); save(); }
-    list.appendChild(card);
-  });
+/* PIN */
+function togglePin(){ const ok=canEdit(); if(ok){ sessionStorage.removeItem(LS+'_PIN'); byId('pinBtn').textContent='🔒'; applyLockState(); return; } const p=prompt('Introduce PIN'); if(p===PIN_CODE){ sessionStorage.setItem(LS+'_PIN','1'); byId('pinBtn').textContent='🔓'; applyLockState(); } else alert('PIN incorrecto'); }
+function applyLockState(){ const locked=!canEdit(); document.body.classList.toggle('locked', locked); }
+
+/* TOPBAR */
+function downloadHTML(){ const html=document.documentElement.outerHTML; const payload=JSON.stringify(data).replace(/</g,'\\u003C'); const stamp=localStorage.getItem(LS+'_STAMP')||new Date().toISOString(); const injector='<script>(function(){try{localStorage.setItem("'+LS+'",'+payload+');localStorage.setItem("'+LS+'_STAMP","'+stamp.replace(/</g,'\\u003C').replace(/"/g,'\\"')+'");}catch(e){}})();<'+'\/script>'; let final; if(html.includes('<head>')) final=html.replace('<head>','<head>'+injector); else if(html.includes('</body>')) final=html.replace('</body>',injector+'</body>'); else final=injector+html; const blob=new Blob([final],{type:'text/html'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='procesos.html'; a.click(); URL.revokeObjectURL(a.href); }
+function printAll(){window.print()}
+function saveCloud(){ if(!canEdit()) return alert('Modo lectura'); localStorage.setItem(LS+'_CLOUD',JSON.stringify({ts:Date.now(),data})); alert('Guardado'); }
+function loadCloud(){ if(!canEdit()) return alert('Modo lectura'); const raw=localStorage.getItem(LS+'_CLOUD'); if(!raw) return alert('No hay copia'); const obj=JSON.parse(raw); data=obj.data; selPid=data[0]&&data[0].id||null; render(); }
+
+/* IZQUIERDA */
+function addProcess(){ if(!canEdit()) return alert('Modo lectura'); data.push({id:uid(),name:'Nuevo proceso',color:nextColor(),desc:'',sub:[],steps:[]}); selPid=data[data.length-1].id; ctxSubId=null; render(); }
+function renderLeft(){ const box=byId('procList'); box.innerHTML=''; let list=data.slice(); if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q)); list.forEach(p=>{ const row=document.createElement('div'); row.className='procRow'+(p.id===selPid?' active':''); row.style.background='linear-gradient(180deg,#fdfefe,'+lighten(p.color,.9)+')'; row.style.borderColor=p.color; row.style.borderLeft='6px solid '+p.color; const title=document.createElement('input'); title.className='pTitle'; title.value=p.name; title.oninput=e=>{ if(!canEdit()) return; p.name=e.target.value; save(); }; row.appendChild(title); const tiny=document.createElement('div'); tiny.className='tiny'; const editIco=ico('🖉','Editar',()=>{ if(!canEdit()) return; title.focus(); title.select(); }, true); const delIco=ico('🗑️','Borrar',()=>{ if(!canEdit()) return; if(confirm('¿Eliminar proceso?')){ const idx=data.findIndex(pp=>pp.id===p.id); if(idx>-1){ data.splice(idx,1); selPid=data[0]?data[0].id:null; ctxSubId=null; render(); } } }, true); delIco.classList.add('xs','trash'); const detailIco=ico('▾','Detalle',()=>toggleDesc(p.id,'toggle'), false); tiny.append(editIco,delIco,detailIco); row.appendChild(tiny); row.onclick=e=>{ if(e.target.closest('.ico')) return; selPid=p.id; ctxSubId=null; renderRight(); document.querySelectorAll('.procRow').forEach(el=>el.classList.remove('active')); row.classList.add('active'); document.querySelectorAll('[id^="d_"]').forEach(el=>el.style.display='none'); const det=byId('d_'+p.id); if(det){ det.style.display='block'; const ta=det.querySelector('textarea'); autoGrow(ta); } }; box.appendChild(row); const detail=document.createElement('div'); detail.id='d_'+p.id; detail.style.display=(p.id===selPid)?'block':'none'; detail.style.margin='4px 0 6px'; detail.style.background=lighten(p.color,.94); detail.style.border='1px solid '+lighten(p.color,.8); detail.style.borderRadius='8px'; const ta=document.createElement('textarea'); ta.style.width='100%'; ta.style.minHeight='96px'; ta.style.border='1px solid #e6e6e6'; ta.style.borderRadius='8px'; ta.style.padding='6px'; ta.value=p.desc||''; ta.oninput=ev=>{ if(!canEdit()) return; p.desc=ev.target.value; autoGrow(ta); save(); }; autoGrow(ta); detail.appendChild(ta); box.appendChild(detail); }); }
+function toggleDesc(pid,mode){ const el=byId('d_'+pid); if(!el) return; if(mode==='toggle') el.style.display=(el.style.display==='block')?'none':'block'; else if(mode==='close') el.style.display='none'; else el.style.display='block'; if(el.style.display==='block'){ const ta=el.querySelector('textarea'); autoGrow(ta); } }
+
+/* DERECHA */
+function addSub(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); p.sub.push({id:uid(),title:'Nuevo subproceso',desc:'',resp:ROLES[0],steps:[]}); ctxSubId=p.sub[p.sub.length-1].id; renderRight(); }
+function addStepProcess(){ if(!canEdit()) return alert('Modo lectura'); const p=data.find(x=>x.id===selPid); if(!p) return alert('Selecciona un proceso'); p.steps.push({id:uid(),name:'Nuevo paso',desc:'',resp:ROLES[0],yes:[],no:[]}); ctxSubId=null; renderRight(); }
+
+function toggleView(){ modulesMode=!modulesMode; localStorage.setItem(LS+'_VMODE', modulesMode?'1':'0'); renderRight(); const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; }
+
+function renderRight(){ const body=byId('rightBody'); body.innerHTML=''; const p=data.find(x=>x.id===selPid); if(!p) return; body.style.background='linear-gradient(180deg,'+lighten(p.color,.985)+',#f1f3f8)'; body.style.borderLeft='4px solid '+lighten(p.color,.78); if(modulesMode){ renderRightModules(p); }else{ renderRightLinear(p); } const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; }
+
+/* LINEAL (como tu vista base) */
+function renderRightLinear(p){ const body=byId('rightBody'); const card=document.createElement('div'); card.className='card flow'; card.style.padding='5px'; const list=p.steps; list.forEach((st,i)=> card.appendChild(stepRow(p,null,st,i)) ); body.appendChild(card); if(p.sub.length){ const g=document.createElement('div'); g.className='card green'; g.style.marginTop='6px'; p.sub.forEach((s,idx)=>g.appendChild(subMini(p,s,idx))); body.appendChild(g); } alignConnectors(card); setTimeout(()=>alignConnectors(card),0); }
+
+/* MÓDULOS (subprocesos + pasos repetidos en la misma pantalla) */
+function renderRightModules(p){ const body=byId('rightBody'); const grid=document.createElement('div'); grid.className='modules';
+  // módulo para pasos del proceso (si hay)
+  if(p.steps && p.steps.length){ grid.appendChild(buildModule(p,'Pasos del proceso',null,p.steps)); }
+  // módulo por cada subproceso con sus pasos
+  (p.sub||[]).forEach(s=>{ grid.appendChild(buildModule(p,s.title||'Sub-proceso',s,(s.steps||[]))); });
+  body.appendChild(grid);
+  // alinear conectores por cada módulo
+  body.querySelectorAll('.module').forEach(mod=>alignConnectors(mod));
 }
-function moveProcess(fromId,toId){
-  const arr=data.processes;
-  const fromIndex=arr.findIndex(x=>x.id===fromId);
-  const toIndex=arr.findIndex(x=>x.id===toId);
-  const [it]=arr.splice(fromIndex,1);
-  arr.splice(toIndex,0,it);
-  renderLeft(); save();
-}
-function addProcess(){
-  const name=prompt('Nombre del proceso','Nuevo proceso'); if(!name) return;
-  const color=PALETTE[(data.processes.length)%PALETTE.length];
-  data.processes.push({id:uid(), name, color, sub:[]});
-  data.selected=data.processes.at(-1).id; renderLeft(); renderRight(); save();
-}
-function editProcess(id){
-  const p=data.processes.find(x=>x.id===id); if(!p) return;
-  const name=prompt('Editar nombre',p.name); if(!name) return;
-  p.name=name; renderLeft(); renderRight(); save();
-}
-function delProcess(id){
-  if(!confirm('¿Eliminar proceso y su contenido?')) return;
-  const i=data.processes.findIndex(x=>x.id===id); if(i>-1) data.processes.splice(i,1);
-  if(data.selected===id) data.selected=data.processes[0]?.id||null;
-  renderLeft(); renderRight(); save();
+function buildModule(proc,titleOrSub,sub,list){ const mod=document.createElement('div'); mod.className='module flow'; mod.style.setProperty('--conn-color', proc.color);
+  const head=document.createElement('div'); head.className='moduleHead';
+  let titleEl;
+  if(sub){ titleEl=document.createElement('input'); titleEl.className='title subTitle'; titleEl.value=sub.title||'Subproceso'; titleEl.oninput=e=>{ if(!canEdit()) return; sub.title=e.target.value; save(); }; }
+  else { titleEl=document.createElement('div'); titleEl.className='subTitle'; titleEl.textContent=titleOrSub; }
+  const right=document.createElement('div'); right.className='rightPack';
+  const role=miniSel(sub||proc); right.appendChild(role);
+  head.append(titleEl,right); mod.appendChild(head);
+  const listBox=document.createElement('div'); list.forEach((st,i)=> listBox.appendChild(stepRow(proc,sub,st,i)) ); mod.appendChild(listBox);
+  // controles de módulo
+  const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='space-between'; bar.style.gap='6px'; bar.style.marginTop='6px';
+  if(sub){ const add=document.createElement('button'); add.textContent='+ Paso'; add.className='btnTop editOnly'; add.onclick=()=>{ if(!canEdit()) return; (sub.steps||(sub.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); save(); renderRight(); }; bar.appendChild(add); }
+  const close=document.createElement('button'); close.textContent='🎯 Guardar (cerrar pasos)'; close.className='btnTop'; close.onclick=()=>{ if(!canEdit()) return; const arr=list; if(arr.length){ arr.forEach((s,k)=>s.meta=(k===arr.length-1)); save(); renderRight(); } }; bar.appendChild(close);
+  mod.appendChild(bar);
+  return mod;
 }
 
-/* ========= RIGHT (hoja) ========= */
-function renderRight(){
-  const p=current(); const sheet=document.getElementById('sheet'); sheet.innerHTML='';
-  if(!p){ sheet.innerHTML='<div class="sheet-head"><div class="sheet-title">Selecciona un proceso</div></div>'; return; }
+/* Helpers compartidos */
+function miniSel(obj){ const sel=document.createElement('select'); sel.className='miniSel'; ROLES.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o)}); sel.value=obj.resp||ROLES[0]; sel.onchange=e=>{ if(!canEdit()) return; obj.resp=e.target.value; save(); }; return sel; }
+function ico(g,t,fn,editOnly){ const b=document.createElement('button'); b.className='ico sm'; if(editOnly) b.classList.add('editOnly'); b.title=t; b.textContent=g; if(fn){ b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();fn(ev);}); } return b; }
 
-  const head=document.createElement('div'); head.className='sheet-head';
-  head.innerHTML=`
-    <div class="sheet-title">Proceso: ${p.name}</div>
-    <div class="head-actions">
-      <span class="pill" onclick="cycleColor()"><b>Color</b> <span class="dot" style="width:12px;height:12px;border-radius:50%;background:${p.color}"></span></span>
-      <span class="pill" onclick="addSubStep()">+ Subproceso + Paso</span>
-    </div>
-  `;
-  sheet.appendChild(head);
+/* Paso + Si/No (igual que base) */
+function normalize(list){if(!Array.isArray(list))return [];return list.map(x=>typeof x==='string'?{id:uid(),text:x}:(x.id?x:{id:uid(),...x}))}
+function removePointFromStep(step,id){ function rec(lst){ if(!Array.isArray(lst)) return false; const i=lst.findIndex(n=>n&&n.id===id); if(i>-1){ lst.splice(i,1); return true; } for(const n of lst){ if(n && n.children && rec(n.children)) return true; } return false; } return rec(step.yes)||rec(step.no); }
+function badge(pid,prefix){ prefix=(typeof prefix==='string'?prefix:'IR AL PROCESO: '); const tgt=data.find(p=>p.id===pid); if(!tgt) return null; const el=document.createElement('span'); el.className='nextBadge'; el.textContent=prefix+tgt.name; el.style.background=lighten(tgt.color,.55); el.style.border='1px solid '+lighten(tgt.color,.35); return el; }
+function stepRow(proc,sub,st,i){ const list=sub?(sub.steps||[]):proc.steps; const row=document.createElement('div'); row.className='row'; row.style.setProperty('--conn-color', proc.color);
+  const chip=document.createElement('div'); chip.className='chip';
+  const num=document.createElement('div'); num.className='bubble'; num.textContent=i+1; const title=document.createElement('input'); title.className='title'; title.value=st.name||'Paso'; title.oninput=e=>{ if(!canEdit()) return; st.name=e.target.value; save(); };
+  const right=document.createElement('div'); right.className='rightPack';
+  const iGoto=ico('🚩','Próximo proceso',()=>{ if(!canEdit()) return; pick(st.nextPid,v=>{st.nextPid=v;save();renderRight();}); }, true);
+  const iDetail=ico('▾','Detalle',toggleDetail,false);
+  const iDel=ico('−','Eliminar',()=>{ if(!canEdit()) return; if(confirm('¿Eliminar paso?')){const pos=list.indexOf(st);list.splice(pos,1);renderRight();} }, true);
+  right.append(iDetail,iGoto,iDel, miniSel(st)); if(st.nextPid){const b=badge(st.nextPid); if(b) right.append(b);} if(st.meta){const m=ico('🎯','Meta cumplida',null,false); m.style.background='#ffe3a6'; right.append(m);} chip.append(num,title,right); row.appendChild(chip);
+  // Si/No
+  st.yes=normalize(st.yes); st.no=normalize(st.no);
+  const condWrap=document.createElement('div'); condWrap.className='condWrap'; row.appendChild(condWrap);
+  const iSiNo=ico('❓','Si/No',()=>{ const active=(st.yes.length>0||st.no.length>0); if(active){ ensureCondVisible(); return; } condWrap.style.display=(condWrap.style.display==='block')?'none':'block'; if(condWrap.style.display==='block') buildCond(); }, false);
+  right.append(iSiNo);
+  function buildCond(){ if(condWrap.dataset.inited==='1') return; condWrap.innerHTML=''; condWrap.appendChild(condBlock(st, i+1)); condWrap.dataset.inited='1'; }
+  function ensureCondVisible(){ buildCond(); condWrap.style.display='block'; }
+  if(st.yes.length||st.no.length) ensureCondVisible();
+  // Detalle
+  const detail=document.createElement('div'); detail.className='detail'; const tx=document.createElement('textarea'); tx.value=st.desc||''; tx.oninput=e=>{ if(!canEdit()) return; st.desc=e.target.value; autoGrow(tx); save(); }; autoGrow(tx); detail.appendChild(tx); function toggleDetail(){ const open=detail.style.display!=='block'; detail.style.display=open?'block':'none'; if(open) autoGrow(tx); }
+  row.appendChild(detail);
+  return row;
+}
+function condBlock(st, stepNum){ const wrap=document.createElement('div'); wrap.className='condBox'; wrap.append(oneSide('Si NO…','no',st,stepNum)); wrap.append(oneSide('Si SÍ…','yes',st,stepNum)); return wrap; }
+function oneSide(title,branch,st,stepNum){ const b=document.createElement('div'); b.classList.add(branch==='yes' ? 'branch-yes' : 'branch-no'); const hdr=document.createElement('div'); hdr.className='condHdr'; const t=document.createElement('div'); t.className='condTitle'; t.textContent=title; const plus=document.createElement('button'); plus.className='adder editOnly'; plus.textContent='+'; plus.title='Añadir punto a '+title; const list=(st[branch]||(st[branch]=[])); plus.addEventListener('click',()=>{ if(!canEdit()) return; list.push({id:uid(),text:'',children:[]}); save(); renderRight(); }); hdr.append(t,plus); b.appendChild(hdr); function renderPoints(arr, base, container){ (arr||[]).forEach((it,idx)=>{ it.children=it.children||[]; const numStr=base+'.'+(idx+1); const r=document.createElement('div'); r.className='condItem'; const num=document.createElement('span'); num.className='condNum'; num.textContent=numStr; const tx=document.createElement('textarea'); tx.className='condText'; tx.placeholder='Escribe…'; tx.value=it.text||''; tx.oninput=e=>{ if(!canEdit()) return; it.text=e.target.value; autoGrow(tx); save(); }; autoGrow(tx); const flag=ico('🚩','Próximo proceso',()=>{ if(!canEdit()) return; pick(it.nextPid,v=>{ it.nextPid=v; save(); renderRight(); }); }, true); const addChild=ico('+','Añadir subpunto',()=>{ if(!canEdit()) return; it.children.push({id:uid(),text:'',children:[]}); save(); renderRight(); }, true); const del=document.createElement('button'); del.className='condDel editOnly'; del.textContent='−'; del.addEventListener('click',()=>{ if(!canEdit()) return; if(removePointFromStep(st,it.id)){ save(); renderRight(); } }); r.append(num,tx,flag,addChild,del); if(it.nextPid){ const bb=badge(it.nextPid,'IR AL PROCESO: '); if(bb) r.appendChild(bb); } container.appendChild(r); if(it.children && it.children.length){ const kids=document.createElement('div'); kids.className='condChildren'; container.appendChild(kids); renderPoints(it.children, numStr, kids); } }); } renderPoints(list, String(stepNum), b); return b; }
 
-  const body=document.createElement('div'); body.className='sheet-body';
-  p.sub.forEach(s=>{
-    const sub=document.createElement('div'); sub.className='sub';
-    sub.innerHTML=`
-      <div class="sub-head">
-        <input class="sub-name" value="${s.name}" oninput="s.name=this.value; save()">
-        <div class="sub-acts">
-          <span class="btn-icon" title="Paso +" onclick="addStep('${s.id}')">➕</span>
-          <select class="resp" onchange="s.resp=this.value; save()">
-            ${['Audiólogo','Responsable','Otros'].map(r=>`<option ${s.resp===r?'selected':''}>${r}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="sub-body" id="sub-${s.id}"></div>
-    `;
-    body.appendChild(sub);
+/* Subprocesos mini (para vista lineal) */
+function subMini(proc,s,idx){ const row=document.createElement('div'); row.className='row'; const chip=document.createElement('div'); chip.className='chip'; const b=document.createElement('div'); b.className='bubble'; b.textContent=idx+1; const t=document.createElement('input'); t.className='title subTitle'; t.value=s.title||'Subproceso'; t.oninput=e=>{ if(!canEdit()) return; s.title=e.target.value; save(); }; const right=document.createElement('div'); right.className='rightPack'; const edit=ico('🖉','Editar',()=>{ if(!canEdit()) return; t.focus();t.select(); }, true); const del=ico('−','Eliminar',()=>{ if(!canEdit()) return; if(confirm('¿Eliminar subproceso?')){proc.sub=proc.sub.filter(x=>x!==s); if(ctxSubId===s.id)ctxSubId=null; renderRight();} }, true); const role=miniSel(s); right.append(edit,del,role); chip.append(b,t,right); row.appendChild(chip); const add=document.createElement('button'); add.textContent='+ Paso'; add.className='adder editOnly'; add.style.margin='5px 0 0 26px'; add.addEventListener('click',()=>{ if(!canEdit()) return; (s.steps||(s.steps=[])).push({id:uid(),name:'Nuevo paso',resp:ROLES[0],yes:[],no:[]}); ctxSubId=s.id; save(); renderRight(); }); row.appendChild(add); chip.addEventListener('click',()=>{ ctxSubId=s.id; renderRight(); }); return row; }
 
-    const list=sub.querySelector(`#sub-${s.id}`);
-    s.steps.forEach((st,i)=>{
-      const step=document.createElement('div'); step.className='step'; step.style.setProperty('--line',p.color);
-      step.innerHTML=`
-        <div class="bubble">${i+1}</div>
-        <div class="step-row">
-          <div class="step-title w100"><input value="${st.title}" oninput="st.title=this.value; save()"></div>
-          <select class="resp" onchange="st.resp=this.value; save()">
-            ${['Audiólogo','Responsable','Otros'].map(r=>`<option ${st.resp===r?'selected':''}>${r}</option>`).join('')}
-          </select>
-          <span class="btn-icon" title="Eliminar paso" onclick="delStep('${s.id}','${st.id}')">🗑️</span>
-        </div>
+/* picker proceso destino */
+function pick(current,onPick){ const o=document.createElement('div'); Object.assign(o.style,{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:9990}); const card=document.createElement('div'); Object.assign(card.style,{background:'#fff',padding:'12px',borderRadius:'10px',boxShadow:'0 14px 38px rgba(0,0,0,.2)',width:'min(92vw,420px)'}); const h=document.createElement('div'); h.textContent='Selecciona proceso de destino'; h.style.fontWeight='800'; h.style.marginBottom='6px'; const sel=document.createElement('select'); sel.style.width='100%'; sel.style.padding='8px'; sel.style.border='1px solid #ddd'; sel.style.borderRadius='8px'; data.forEach(p=>{const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; sel.appendChild(opt);}); sel.value=current||data[0].id; const preview=document.createElement('div'); preview.style.display='flex'; preview.style.alignItems='center'; preview.style.gap='8px'; preview.style.margin='8px 0 4px'; const badgePreview=document.createElement('span'); badgePreview.className='nextBadge'; function updatePreview(){ const id=sel.value; const tgt=data.find(p=>p.id===id)||data[0]; if(!tgt) return; badgePreview.textContent='IR AL PROCESO: '+tgt.name; badgePreview.style.background=lighten(tgt.color,.55); badgePreview.style.border='1px solid '+lighten(tgt.color,.35); } sel.addEventListener('change',updatePreview); updatePreview(); preview.append(badgePreview); const bar=document.createElement('div'); bar.style.display='flex'; bar.style.justifyContent='flex-end'; bar.style.gap='8px'; bar.style.marginTop='8px'; const cancel=document.createElement('button'); cancel.textContent='Cancelar'; cancel.className='btnTop'; cancel.style.background='#ddd'; cancel.style.color='#000'; cancel.addEventListener('click',()=>document.body.removeChild(o)); const ok=document.createElement('button'); ok.textContent='Aceptar'; ok.className='btnTop'; ok.style.background='#b63a3a'; ok.style.color='#fff'; ok.addEventListener('click',()=>{onPick(sel.value); document.body.removeChild(o);}); bar.append(cancel,ok); card.append(h,sel,preview,bar); o.appendChild(card); document.body.appendChild(o); }
 
-        <!-- Detalle inmediatamente después del título -->
-        <div class="detail">
-          <textarea placeholder="Descripción…" oninput="st.desc=this.value; save()">${st.desc||''}</textarea>
-        </div>
+function render(){renderLeft();renderRight();applyLockState();save();}
+function alignConnectors(container){ const rows=container.querySelectorAll('.row'); if(!rows.length) return; if(rows.length===1){ rows[0].style.setProperty('--conn-len','22px'); return; } rows.forEach((row,idx)=>{ const b=row.querySelector('.bubble'); if(!b) return; const rr=row.getBoundingClientRect(); const br=b.getBoundingClientRect(); const brc = br.top + br.height/2; row.style.setProperty('--line-x', (br.left - rr.left + br.width/2) + 'px'); const next=rows[idx+1]; if(next){ const nb=next.querySelector('.bubble'); if(nb){ const nbb=nb.getBoundingClientRect(); const nbc = nbb.top + nbb.height/2; const len=Math.max(10, Math.round(nbc - brc)); row.style.setProperty('--conn-len', len + 'px'); } else { row.style.setProperty('--conn-len','22px'); } } else { row.style.setProperty('--conn-len','0px'); } }); }
 
-        <!-- Sí / No después del detalle -->
-        <div class="cond">
-          <div class="cond-col">
-            <span class="tag-si">sí</span>
-            <button class="btn-icon add" title="Añadir punto sí" onclick="addCond('${s.id}','${st.id}','yes')">＋</button>
-            <div id="yes-${st.id}"></div>
-          </div>
-          <div class="cond-col">
-            <span class="tag-no">NO</span>
-            <button class="btn-icon add" title="Añadir punto no" onclick="addCond('${s.id}','${st.id}','no')">＋</button>
-            <div id="no-${st.id}"></div>
-          </div>
-        </div>
+render();
 
-        <div class="attach">
-          <span class="pill icon-only" onclick="addLink('${s.id}','${st.id}')">🔗 Enlace</span>
-          <span class="pill icon-only" onclick="addDoc('${s.id}','${st.id}')">📎 Documento</span>
-          <span class="small" id="meta-${st.id}"></span>
-          <span class="pill icon-only" onclick="markGoal('${s.id}','${st.id}')">🎯 Cerrar caso</span>
-          <span class="small" id="goal-${st.id}"></span>
-        </div>
-      `;
-      list.appendChild(step);
-
-      renderConds(st);
-      refreshMeta(st);
-      refreshGoal(st);
-    });
-  });
-  sheet.appendChild(body);
-}
-
-/* color */
-function cycleColor(){
-  const p=current(); if(!p) return;
-  const i=PALETTE.indexOf(p.color); p.color=PALETTE[(i+1)%PALETTE.length];
-  renderLeft(); renderRight(); save();
-}
-
-/* crear subproceso + primer paso anclado */
-function addSubStep(){
-  const p=current(); if(!p) return;
-  const s={id:uid(), name:'Nuevo subproceso', resp:'Audiólogo', steps:[]};
-  p.sub.push(s);
-  s.steps.push(newStep());
-  renderLeft(); renderRight(); save();
-}
-function addStep(subId){
-  const p=current(); const s=p.sub.find(x=>x.id===subId); if(!s) return;
-  s.steps.push(newStep()); renderRight(); save();
-}
-function newStep(){
-  return {id:uid(), title:'Nuevo paso', desc:'', resp:'Audiólogo', link:'', doc:'', goal:false, yes:[], no:[]};
-}
-function delStep(subId,stepId){
-  const p=current(); const s=p.sub.find(x=>x.id===subId); if(!s) return;
-  const i=s.steps.findIndex(t=>t.id===stepId); if(i>-1) s.steps.splice(i,1);
-  renderRight(); save();
-}
-
-/* adjuntos + meta */
-function refreshMeta(st){
-  const meta=document.getElementById('meta-'+st.id);
-  const tags=[];
-  if(st.link) tags.push(`<a href="${st.link}" target="_blank" title="Abrir enlace">🔗</a>`);
-  if(st.doc)  tags.push(`<a href="${st.doc}" target="_blank" title="Abrir documento">📎</a>`);
-  meta.innerHTML=tags.join(' ');
-}
-function addLink(subId,stepId){
-  const st=findStep(subId,stepId);
-  const v=prompt('URL del enlace', st.link||''); if(v==null) return;
-  st.link=v.trim(); save(); refreshMeta(st);
-}
-function addDoc(subId,stepId){
-  const st=findStep(subId,stepId);
-  const v=prompt('URL del documento', st.doc||''); if(v==null) return;
-  st.doc=v.trim(); save(); refreshMeta(st);
-}
-function markGoal(subId,stepId){
-  const st=findStep(subId,stepId);
-  st.goal=!st.goal; save(); refreshGoal(st);
-}
-function refreshGoal(st){
-  const g=document.getElementById('goal-'+st.id);
-  g.textContent=st.goal?'✅ Caso cerrado':'';
-}
-
-/* Sí/No */
-function addCond(subId,stepId,kind){ // kind: yes | no
-  const st=findStep(subId,stepId);
-  const text=prompt(`Añadir punto (${kind==='yes'?'sí':'no'})`,''); if(!text) return;
-  (kind==='yes'?st.yes:st.no).push({id:uid(),txt:text,next:null,link:'',doc:'',kids:[]});
-  save(); renderConds(st);
-}
-function delPoint(st,kind,pid){
-  const arr=(kind==='yes'?st.yes:st.no);
-  const i=arr.findIndex(x=>x.id===pid); if(i>-1) arr.splice(i,1);
-  save(); renderConds(st);
-}
-function addKid(st,kind,pid){
-  const arr=(kind==='yes'?st.yes:st.no);
-  const it=arr.find(x=>x.id===pid); if(!it) return;
-  const text=prompt('Añadir sub-punto', ''); if(!text) return;
-  it.kids.push({id:uid(),txt:text,next:null,link:'',doc:''});
-  save(); renderConds(st);
-}
-function setNextProcess(st,kind,pid){
-  const it=findPoint(st,kind,pid); if(!it) return;
-  const procs=data.processes.map(p=>p.name);
-  const sel=prompt('Próximo proceso (exacto):\n'+procs.join('\n'), it.next||'');
-  if(sel==null) return; it.next=sel.trim()||null; save(); renderConds(st);
-}
-function setLinkPoint(st,kind,pid){
-  const it=findPoint(st,kind,pid); if(!it) return;
-  const v=prompt('URL enlace',it.link||''); if(v==null) return; it.link=v.trim(); save(); renderConds(st);
-}
-function setDocPoint(st,kind,pid){
-  const it=findPoint(st,kind,pid); if(!it) return;
-  const v=prompt('URL documento',it.doc||''); if(v==null) return; it.doc=v.trim(); save(); renderConds(st);
-}
-
-function renderConds(st){
-  const yBox=document.getElementById('yes-'+st.id);
-  const nBox=document.getElementById('no-'+st.id);
-  if(!yBox || !nBox) return;
-  yBox.innerHTML=''; nBox.innerHTML='';
-  const renderList=(arr,box,kind,base)=>{
-    arr.forEach((it,idx)=>{
-      const idxStr = base ? `${base}.${idx+1}` : `${(kind==='yes'?'S':'N')}.${idx+1}`; // etiqueta
-      const row=document.createElement('div'); row.className='point';
-      const badgeNext= it.next ? `<span class="flag">→ ${it.next}</span>` : '';
-      const link= it.link ? `<a href="${it.link}" target="_blank">🔗</a>` : '';
-      const doc = it.doc  ? `<a href="${it.doc}" target="_blank">📎</a>` : '';
-      row.innerHTML=`
-        <div class="row">
-          <div class="idx">${idxStr}</div>
-          <input value="${it.txt}" oninput="(function(v){ const el=findPointById('${st.id}','${kind}','${it.id}'); el.txt=v; save(); }) (this.value)">
-          <div class="mini">
-            <span class="btn-icon" title="Borrar" onclick="(function(){ const st=findStepById('${st.id}'); delPoint(st,'${kind}','${it.id}'); })()">🗑️</span>
-            <span class="btn-icon" title="Sub-punto" onclick="(function(){ const st=findStepById('${st.id}'); addKid(st,'${kind}','${it.id}'); })()">＋</span>
-            <span class="btn-icon" title="Próximo proceso" onclick="(function(){ const st=findStepById('${st.id}'); setNextProcess(st,'${kind}','${it.id}'); })()">🚩</span>
-            <span class="btn-icon" title="Enlace" onclick="(function(){ const st=findStepById('${st.id}'); setLinkPoint(st,'${kind}','${it.id}'); })()">🔗</span>
-            <span class="btn-icon" title="Documento" onclick="(function(){ const st=findStepById('${st.id}'); setDocPoint(st,'${kind}','${it.id}'); })()">📎</span>
-            ${badgeNext}${link}${doc}
-          </div>
-        </div>
-      `;
-      box.appendChild(row);
-      // hijos
-      if(it.kids?.length){
-        const cont=document.createElement('div'); cont.style.marginLeft='36px';
-        box.appendChild(cont);
-        renderList(it.kids,cont,kind,idxStr);
-      }
-    });
-  }
-  renderList(st.yes||[],yBox,'yes','');
-  renderList(st.no||[], nBox,'no','');
-}
-
-function findStep(subId,stepId){
-  const p=current(); const s=p.sub.find(x=>x.id===subId); return s.steps.find(t=>t.id===stepId);
-}
-function findStepById(stepId){
-  const p=current(); for(const s of p.sub){ const t=s.steps.find(x=>x.id===stepId); if(t) return t; } return null;
-}
-function findPoint(st,kind,pid){
-  const arr=(kind==='yes'?st.yes:st.no);
-  const deep=(list)=>{ for(const it of list){ if(it.id===pid) return it; const f=deep(it.kids||[]); if(f) return f; } return null; }
-  return deep(arr);
-}
-function findPointById(stepId,kind,pid){
-  const st=findStepById(stepId); return findPoint(st,kind,pid);
-}
-
-/* ========= botones globales ========= */
-let editMode=false; let compact=true;
-function toggleEdit(){ editMode=!editMode; document.getElementById('app').classList.toggle('hide-icons', !editMode); }
-function toggleCompact(){ compact=!compact; document.getElementById('app').classList.toggle('compact', compact); }
-
-function exportHTML(){
-  const html='<!doctype html>'+document.documentElement.outerHTML;
-  const blob=new Blob([html],{type:'text/html'}); const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download='procesos-audio.html'; a.click(); URL.revokeObjectURL(a.href);
-}
-
-/* ========= listeners ========= */
-document.getElementById('btnAddProc').onclick=addProcess;
-document.getElementById('btnAddSubStep').onclick=addSubStep;
-document.getElementById('btnToggleEdit').onclick=toggleEdit;
-document.getElementById('btnCompact').onclick=toggleCompact;
-document.getElementById('btnExport').onclick=exportHTML;
-document.getElementById('q').oninput=renderLeft;
-
-/* ========= init ========= */
-document.getElementById('app').classList.add('hide-icons');   // vista limpia por defecto
-document.getElementById('app').classList.add('compact');      // compacto por defecto
-renderLeft(); renderRight(); stamp();
+document.addEventListener('DOMContentLoaded',()=>{ const s=localStorage.getItem(LS+'_STAMP'); if(s){ const el=byId('lastSaved'); if(el) el.textContent='Última actualización: '+s; } byId('pinBtn').textContent = canEdit() ? '🔓' : '🔒'; applyLockState(); const vb=byId('viewBtn'); vb.textContent = modulesMode? 'Vista lineal' : 'Vista módulos'; });
 </script>
 </body>
 </html>
