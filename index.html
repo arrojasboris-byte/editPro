@@ -1,537 +1,579 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>PROCESOS AUDIO</title>
 <style>
-  :root{
-    --bg:#f5f6f8; --surface:#ffffff; --ink:#1b1d24;
-    --muted:#667085; --soft:#eceff3;
-    --shadow:0 10px 24px rgba(0,0,0,.08);
-    --ring:0 0 0 2px rgba(59,130,246,.15);
-    --grad:linear-gradient(90deg,#6f1d1b 0%,#b23a3a 50%,#6f1d1b 100%);
-    --pillGrad:linear-gradient(180deg,#ffffff 0%,#f2f4f8 100%);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
+:root{
+  --bg:#f2f3f5;         /* fondo gris claro */
+  --panel:#ffffff;
+  --ink:#17181a;
+  --muted:#5a606b;
+  --brand:#b02a2a;
+  --brand2:#d45353;
+  --shadow:0 10px 24px rgba(0,0,0,.08),0 2px 5px rgba(0,0,0,.04);
+  --radius:16px;
+  --chip:#f6f7f9;
+}
 
-  /* ===== Top bar ===== */
-  .topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:.75rem;
-    padding:.65rem .9rem;background:var(--grad);color:#fff;box-shadow:var(--shadow)}
-  .title{display:flex;align-items:center;gap:.5rem;font-weight:900;font-size:22px}
-  .search{flex:1;display:flex;align-items:center;background:rgba(255,255,255,.18);padding:.4rem .6rem;border-radius:9999px}
-  .search input{width:100%;border:0;background:transparent;outline:0;color:#fff;font-weight:600}
-  .btn3d{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border:0;border-radius:9999px;color:#fff;
-    background:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 3px 0 rgba(0,0,0,.28),0 12px 24px rgba(0,0,0,.2);cursor:pointer}
-  .btn3d:active{transform:translateY(1px)}
-  .bar-right{margin-left:auto;display:flex;align-items:center;gap:.5rem}
-  .stamp{color:#fff;opacity:.9;font-size:12px;background:rgba(255,255,255,.14);border-radius:9999px;padding:.35rem .75rem}
+/* --- REGLA CLAVE PARA EL MODAL --- */
+.hide{ display:none !important; }
 
-  /* iconitos compactos */
-  .ico{width:36px;height:36px;border-radius:12px;border:0;
-    display:grid;place-items:center;cursor:pointer;color:#fff;background:rgba(255,255,255,.16);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 0 rgba(0,0,0,.25)}
-  .ico:active{transform:translateY(1px)}
+/* layout */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+}
 
-  /* ===== Layout ===== */
-  .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px;min-height:calc(100dvh - 64px)}
-  .left,.right{background:var(--surface);border-radius:14px;box-shadow:var(--shadow)}
-  .left{padding:10px}
-  .right{padding:10px;display:flex;flex-direction:column;gap:12px}
-  @media (max-width:1020px){ .wrap{grid-template-columns:1fr} }
+/* header */
+.header{
+  position:sticky; top:0; z-index:20;
+  background:linear-gradient(90deg,#a73939,#602323);
+  color:#fff;
+  padding:.75rem 1rem;
+  display:flex; align-items:center; gap:.8rem;
+  box-shadow:var(--shadow)
+}
+.h-title{
+  display:flex; align-items:center; gap:.65rem; font-weight:800; font-size:1.4rem;
+  letter-spacing:.5px
+}
+.h-search{flex:1}
+.h-search input{
+  width:100%; border:none; outline:none;
+  background:rgba(255,255,255,.15); color:#fff;padding:.55rem .9rem;border-radius:999px
+}
 
-  /* ===== Lista de procesos (izquierda) ===== */
-  .proc-item{display:flex;flex-direction:column;gap:.45rem;background:var(--pillGrad);border-radius:14px;
-    padding:.55rem .7rem;margin:.45rem 0;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);border:2px solid transparent}
-  .proc-item.activo{border-color:rgba(59,130,246,.35);box-shadow:var(--ring),0 1px 0 rgba(0,0,0,.06)}
-  .proc-row{display:flex;align-items:center;gap:.55rem;cursor:pointer}
-  .dot{width:10px;height:10px;border-radius:50%;background:#ddd;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
-  .proc-name{flex:1;font-weight:800}
-  .proc-acts{display:flex;align-items:center;gap:.35rem}
-  .icon-btn{width:28px;height:28px;border-radius:12px;border:0;background:#f2f4f8;box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(0,0,0,.1);cursor:pointer}
-  .icon-btn:active{transform:translateY(1px)}
-  .proc-detail{display:none}
-  .proc-detail textarea{width:100%;min-height:72px;border-radius:10px;border:1px solid #e6e8ec;padding:.5rem;background:#fff}
+/* buttons 3D */
+.btn3d{
+  background:#fff; border:none; border-radius:999px; padding:.6rem 1rem;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.1);
+  font-weight:600; color:#222; display:inline-flex; gap:.5rem; align-items:center; cursor:pointer
+}
+.btn3d:active{ transform:translateY(1px) }
 
-  /* ===== Subproceso (módulo) derecha ===== */
-  .module{position:relative;background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);display:flex;flex-direction:column;gap:8px;padding:10px}
-  .mod-head{display:flex;align-items:center;gap:.5rem;background:var(--proc,#333);color:#111;border-radius:12px;padding:.5rem .7rem}
-  .mod-title{flex:1;font-weight:900;border:0;background:transparent;color:#111;outline:0}
-  .sel{border:1px solid #e6e8ec;background:#fff;border-radius:10px;padding:.35rem .5rem}
-  .pill{height:34px;padding:0 .75rem;background:#222;border-radius:9999px;color:#fff;border:0;cursor:pointer;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 3px 0 rgba(0,0,0,.3),0 12px 24px rgba(0,0,0,.2)}
-  .pill:active{transform:translateY(1px)}
-  .badge-diana{margin-left:.25rem}
+.icon{font-style:normal; display:inline-block; width:1.1rem; height:1.1rem; line-height:1.1rem; text-align:center}
 
-  .mod-detail{display:none}
-  .mod-detail textarea{width:100%;min-height:60px;border:1px solid #e6e8ec;border-radius:10px;padding:.5rem;background:#fff}
+/* layout principal */
+.main{display:grid; grid-template-columns:320px 1fr; gap:16px; padding:14px}
 
-  /* ===== Pasos ===== */
-  .steps{display:flex;flex-direction:column;gap:10px;padding:6px}
-  .step{position:relative;display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:.65rem .7rem;
-    box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06); width:100%}
-  .bubble{min-width:36px;height:36px;border-radius:9999px;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;
-    z-index:2;box-shadow:0 2px 0 rgba(0,0,0,.3)}
-  .step::before{content:""; position:absolute; left:43px; top:-14px; bottom:-14px; width:5px; background:var(--proc,#ffd166); opacity:.9; border-radius:2px; z-index:0}
-  .steps .step:first-child::before{top:20px}
-  .steps .step:last-child::before{bottom:20px}
-  .step.selected{box-shadow:inset 0 0 0 3px var(--proc,#ffd166),0 8px 20px rgba(0,0,0,.1)}
-  .step.selected::after{content:"";position:absolute;left:-6px;right:-6px;top:-6px;bottom:-6px;border-radius:14px;background:var(--proc,#ffd166);opacity:.12;pointer-events:none;z-index:1}
-  .step input.title{font-weight:800;border:0;background:transparent;outline:0;width:100%}
-  .minis{display:flex;gap:.35rem;margin-left:auto}
-  .mini{width:30px;height:30px;border-radius:10px;border:0;background:#f2f4f8;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(0,0,0,.1)}
-  .mini:active{transform:translateY(1px)}
-  .chip{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;border-radius:9999px;padding:.2rem .55rem;color:#111}
+/* procesos panel */
+.proc-left{
+  background:var(--panel); border-radius:var(--radius); padding:10px; box-shadow:var(--shadow); min-height:70vh
+}
+.proc-card{
+  background:#fff; border-radius:14px; padding:.7rem .75rem; margin:.55rem 0; box-shadow:inset 0 -1px 0 rgba(0,0,0,.06),0 1px 0 rgba(0,0,0,.03);
+  display:flex;align-items:center; gap:.6rem; justify-content:space-between; border:1px solid rgba(0,0,0,.05)
+}
+.proc-card .name{font-weight:800}
+.proc-actions{display:flex; gap:.4rem}
+.chip{
+  background:var(--chip); border-radius:999px; padding:.25rem .55rem; font-weight:700; font-size:.8rem; color:#111; display:inline-flex; gap:.45rem; align-items:center
+}
+.dot{width:.65rem; height:.65rem; border-radius:50%; display:inline-block}
 
-  /* ===== Si / No ===== */
-  .branches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 0 54px}
-  .branch{background:#fff;border:1px solid #ececec;border-radius:10px;padding:.45rem .5rem;box-shadow:inset 0 1px 0 #fff}
-  .branch.yes .bh-label{font-size:12px;font-weight:700;opacity:.8}
-  .branch.no .bh-label{font-size:14px;font-weight:900}
-  .bh-top{display:flex;align-items:center;gap:.35rem;margin-bottom:.35rem}
-  .plist{display:flex;flex-direction:column;gap:.35rem}
-  .point{display:flex;align-items:center;gap:.4rem}
-  .point .num{min-width:44px;font-weight:900;opacity:.7}
-  .pt-input{flex:1;border:1px solid #e6e8ec;border-radius:8px;padding:.25rem .45rem}
-  .p-mini{width:24px;height:24px;border-radius:8px;border:0;background:#f2f4f8;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(0,0,0,.1)}
-  .p-mini:active{transform:translateY(1px)}
-  .children{margin-left:44px;display:flex;flex-direction:column;gap:.2rem}
+/* contenedor derecho */
+.proc-right{
+  display:grid; grid-template-columns:repeat(2,minmax(380px,1fr)); gap:16px;
+}
+.module{
+  background:var(--panel); border-radius:18px; box-shadow:var(--shadow); overflow:hidden;
+  display:flex; flex-direction:column
+}
+.mod-head{
+  background:rgba(255,190,130,.35); /* se sobreescribe dinámicamente acorde al color del proceso */
+  padding:.7rem; display:flex; align-items:center; gap:.5rem; justify-content:space-between;
+}
+.mod-title{
+  background:#222; color:#fff; padding:.5rem .9rem; border-radius:999px; font-weight:800; box-shadow:inset 0 -2px 0 rgba(255,255,255,.08)
+}
+.mod-actions{display:flex; gap:.5rem; align-items:center}
 
-  /* Bloqueo visual */
-  body.locked .needsEdit{pointer-events:none;filter:grayscale(.9) opacity(.6)}
-  body.locked input[readonly], body.locked textarea[readonly]{background:#fafafa}
+/* pasos */
+.mod-body{ padding:.65rem .75rem 1rem }
+.step{
+  background:#fff; border-radius:14px; padding:.7rem .8rem; margin:.55rem 0;
+  display:grid; grid-template-columns:52px 1fr auto; align-items:center; gap:.6rem;
+  border:1px solid rgba(0,0,0,.05); position:relative;
+}
+.step .num{
+  background:#111;color:#fff;width:40px;height:40px;border-radius:50%; display:grid;place-items:center; font-weight:900; font-size:.98rem;
+  position:relative; z-index:1;
+}
+.step .vline{
+  position:absolute; left:26px; top:40px; bottom:-8px; width:6px; border-radius:6px; background:#f1c24f; opacity:.9;
+}
+.step .title{ font-size:1.05rem; font-weight:800 }
+.step .right{ display:flex; gap:.45rem; align-items:center }
 
-  /* ===== PRINT ===== */
-  .printsheet{display:none}
-  @media print{
-    body > *:not(.printsheet){ display:none !important; }
-    .printsheet{display:block !important; padding:16px}
-    .print-title{font-size:22px;font-weight:900;margin:10px 0}
-    .print-proc{margin:18px 0;border-top:3px solid #000;padding-top:6px}
-    .print-mod{margin:10px 0 14px 0}
-  }
+/* acciones pequeñas en paso */
+.pill{
+  background:#fff; border:1px solid rgba(0,0,0,.08); color:#111; border-radius:999px; padding:.35rem .6rem; font-weight:700;
+  display:inline-flex; gap:.4rem; align-items:center; box-shadow:inset 0 -2px 0 rgba(0,0,0,.06)
+}
+
+/* detalles (ocultos por defecto) */
+.detail{ display:none; margin:.4rem 0 .1rem 52px }
+.detail textarea{
+  width:100%; min-height:84px; border-radius:12px; border:1px solid rgba(0,0,0,.1); padding:.6rem .7rem; resize:vertical;
+}
+
+/* modal selector proceso destino */
+#procModal{
+  position:fixed; inset:0; background:rgba(0,0,0,.35); display:grid; place-items:center; z-index:50;
+}
+#pmCard{
+  width:min(520px,92vw); background:#fff; border-radius:18px; padding:1rem; box-shadow:var(--shadow)
+}
+#procModalList{ display:grid; gap:.5rem; margin-top:.5rem; max-height:50vh; overflow:auto }
+#pmActions{ display:flex; justify-content:flex-end; margin-top:.7rem }
+
+/* imprime */
+@media print{
+  .header, .proc-actions, .mod-actions, .right .pill, .btn3d, #procModal{ display:none !important }
+  .main{ grid-template-columns:1fr; }
+  .proc-left{ display:none }
+  body{ background:#fff }
+}
 </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="title">🎧 PROCESOS AUDIO</div>
-    <div class="search"><input id="q" placeholder="Buscar…"></div>
 
-    <!-- Botones existentes -->
-    <button id="btnAddProcess" class="btn3d needsEdit">+ Procesos</button>
-    <button id="btnAddStepGlobal" class="btn3d needsEdit" title="Añadir paso al subproceso abierto">+ Paso</button>
-    <button id="btnAddSubprocPaso" class="btn3d needsEdit">+ Subproceso + Paso</button>
+<header class="header">
+  <div class="h-title">
+    <span class="icon">🎧</span> PROCESOS AUDIO
+  </div>
+  <div class="h-search"><input id="q" placeholder="Buscar…"></div>
 
-    <!-- NUEVOS 3 ICONOS -->
-    <button id="icoPin" class="ico" title="PIN (AR4321)">🔒</button>
-    <button id="icoPrint" class="ico" title="Imprimir / PDF">🖨️</button>
-    <button id="icoHtml" class="ico" title="Descargar HTML">⬇️</button>
+  <!-- Botonera superior (no tocada) -->
+  <button class="btn3d" id="btnAddProc"><span class="icon">＋</span> Procesos</button>
+  <button class="btn3d" id="btnAddStep"><span class="icon">＋</span> Paso</button>
+  <button class="btn3d" id="btnAddPack"><span class="icon">＋</span> Subproceso + Paso</button>
 
-    <div class="bar-right">
-      <span id="stamp" class="stamp">—</span>
-      <button id="btnSave" class="btn3d needsEdit">💾 Guardar</button>
+  <!-- PIN / PDF / HTML / Guardar nube -->
+  <button class="btn3d" id="btnPIN" title="Desbloquear edición"><span class="icon">🔒</span></button>
+  <button class="btn3d" id="btnPDF" title="Imprimir / PDF"><span class="icon">🖨️</span></button>
+  <button class="btn3d" id="btnHTML" title="Descargar HTML"><span class="icon">⬇️</span> HTML</button>
+  <button class="btn3d" id="btnSaveCloud" title="Guardar"><span class="icon">💾</span> Guardar</button>
+</header>
+
+<main class="main">
+  <!-- IZQUIERDA -->
+  <aside class="proc-left">
+    <div id="procList"></div>
+  </aside>
+
+  <!-- DERECHA -->
+  <section class="proc-right" id="modules"></section>
+</main>
+
+<!-- MODAL selector proceso destino -->
+<div id="procModal" class="hide">
+  <div id="pmCard">
+    <div style="font-weight:800;font-size:1.05rem">Selecciona proceso destino</div>
+    <div id="procModalList"></div>
+    <div id="pmActions">
+      <button id="pmCancel" class="btn3d">Cancelar</button>
     </div>
   </div>
-
-  <div class="wrap">
-    <div class="left"><div id="processList"></div></div>
-    <div class="right" id="modules"></div>
-  </div>
-
-  <div id="procModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;z-index:50">
-    <div style="background:#fff;border-radius:14px;min-width:320px;max-width:92vw;padding:10px;box-shadow:0 20px 40px rgba(0,0,0,.2)">
-      <div style="font-weight:800;margin:.2rem .2rem .6rem">Selecciona proceso destino</div>
-      <div id="procModalList" style="display:flex;flex-direction:column;gap:.35rem"></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:.6rem">
-        <button id="pmCancel" class="btn3d" style="background:#ddd;color:#111">Cancelar</button>
-      </div>
-    </div>
-  </div>
+</div>
 
 <script>
-/* ====== NUEVO: bloqueo por PIN ====== */
-let locked = true;
-const PIN_CODE = 'AR4321';
-function updateLockUI(){
-  document.body.classList.toggle('locked', locked);
-  const pin = document.getElementById('icoPin');
-  pin.textContent = locked ? '🔒' : '🔓';
-  pin.title = locked ? 'PIN (AR4321)' : 'Edición habilitada';
-}
-function requireUnlock(e){
-  if(locked){
-    e.stopPropagation(); e.preventDefault();
-    alert('Edición bloqueada. PIN: AR4321');
-    return false;
-  }
-}
-function guardClick(el){ el.classList.add('needsEdit'); el.addEventListener('click', requireUnlock, true); }
+/* ───────────────────────── STATE ───────────────────────── */
+const colors = [
+  '#ffb4b4','#ffd39c','#ffe18b','#c7f1a0','#a9e5ff','#bdb0ff','#ffc2e9','#f7d48b','#c0ffd7','#ffd0a0'
+];
+const roles = ['Audiólogo','Responsable','Otros'];
 
-/* ===== Visibilidad segura Detalles ===== */
-function showBlock(el){ if(!el) return; el.classList.remove('hide'); el.style.display='block'; el.setAttribute('aria-hidden','false'); }
-function hideBlock(el){ if(!el) return; el.classList.add('hide'); el.style.display='none'; el.setAttribute('aria-hidden','true'); }
-function toggleBlock(el,open){ open ? showBlock(el) : hideBlock(el); }
+const state = {
+  processes: [],
+  current: null, // id proceso seleccionado
+  pinOk: false
+};
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const uid = (p='id') => p+Math.random().toString(36).slice(2,9);
 
-/* ===== Estado / Persistencia ===== */
-const LSKEY='pa_v3_connectors_3d';
-const RESPONSABLES=['Audiólogo','Responsable','Otros'];
-const colors=['#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5','#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'];
-const uid=()=>'p'+Math.random().toString(36).slice(2,9);
-const stampNow=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
+/* util show/hide */
+const showBlock = el => { el.style.display='grid'; }
+const hideBlock = el => { el.style.display='none'; }
 
-const state={processes:[]};
-let activePid=null;
-
-function save(){ localStorage.setItem(LSKEY,JSON.stringify(state)); document.getElementById('stamp').textContent='Última actualización '+stampNow(); }
+/* persistencia */
+const KEY='PROCESOS_AUDIO_V2';
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); stamp(); }
 function load(){
-  const raw=localStorage.getItem(LSKEY);
+  const raw = localStorage.getItem(KEY);
   if(!raw){
-    state.processes.push({id:uid(),name:'Revisión auditiva',color:colors[0],detail:'',modules:[],_openDetail:false});
+    // primer arranque
+    const id = uid('p_');
+    state.processes=[{id,name:'Revisión auditiva',color:colors[0],detail:'',modules:[]}];
+    state.current=id;
+    state.processes[0].id=id;
     save();
-  }else{ try{ Object.assign(state,JSON.parse(raw)); }catch{} }
-  if(!activePid && state.processes[0]) activePid=state.processes[0].id;
-}
-
-/* ===== Izquierda: procesos ===== */
-function procRow(p){
-  const wrap=document.createElement('div'); wrap.className='proc-item'+(p.id===activePid?' activo':'');
-  const row=document.createElement('div'); row.className='proc-row';
-  row.innerHTML=`<span class="dot" style="background:${p.color}"></span>
-    <span class="proc-name">${p.name}</span>
-    <div class="proc-acts">
-      <button class="icon-btn" title="Detalle">▾</button>
-      <button class="icon-btn needsEdit" title="Renombrar">✏️</button>
-      <button class="icon-btn needsEdit" title="Eliminar" style="box-shadow:inset 0 0 0 #fff">🗑️</button>
-    </div>`;
-  row.onclick=e=>{ if(e.target.closest('.icon-btn')) return; activePid=p.id; render(); };
-
-  const det=document.createElement('div'); 
-  det.className='proc-detail'+(p._openDetail?'':' hide');
-  det.setAttribute('aria-hidden', p._openDetail ? 'false':'true');
-  det.innerHTML=`<textarea ${locked?'readonly':''} placeholder="Detalle del proceso…">${p.detail||''}</textarea>`;
-  const ta=det.querySelector('textarea');
-  ta.oninput=e=>{ p.detail=e.target.value; save(); };
-
-  const [bDet,bRen,bDel]=row.querySelectorAll('.icon-btn');
-  bDet.onclick=e=>{
-    e.stopPropagation();
-    p._openDetail=!p._openDetail;
-    toggleBlock(det,p._openDetail);
-    if(p._openDetail){ setTimeout(()=>ta.focus(),0); }
-    save();
-  };
-  guardClick(bRen); guardClick(bDel);
-  bRen.onclick=e=>{ if(locked) return; e.stopPropagation(); const nn=prompt('Nombre del proceso',p.name); if(nn){p.name=nn;save();render();} };
-  bDel.onclick=e=>{ if(locked) return; e.stopPropagation(); if(confirm('¿Eliminar proceso y sus módulos?')){ const i=state.processes.findIndex(x=>x.id===p.id); if(i>-1){ state.processes.splice(i,1); activePid=state.processes[0]?.id||null; save(); render(); } } };
-
-  wrap.appendChild(row); wrap.appendChild(det);
-  return wrap;
-}
-function renderProcesses(){
-  const box=document.getElementById('processList'); box.innerHTML='';
-  state.processes.forEach(p=>box.appendChild(procRow(p)));
-}
-
-/* ===== Modal bandera ===== */
-function openProcPicker(onPick){
-  const modal=document.getElementById('procModal');
-  const list=document.getElementById('procModalList'); list.innerHTML='';
-  state.processes.forEach(p=>{
-    const b=document.createElement('button');
-    b.className='btn3d'; b.style.cssText='justify-content:flex-start;color:#111;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06);border-radius:12px';
-    b.innerHTML=`<span class="dot" style="background:${p.color}"></span> <strong>${p.name}</strong>`;
-    b.onclick=()=>{ modal.classList.add('hide'); onPick(p.id); };
-    list.appendChild(b);
-  });
-  document.getElementById('pmCancel').onclick=()=>modal.classList.add('hide');
-  modal.classList.remove('hide');
-}
-
-/* ===== helpers ===== */
-function makeStep(){ return {id:uid(),title:'Nuevo paso',link:null,yes:[],no:[],_openBranches:false}; }
-function pushPoint(arr){ arr.push({id:uid(),text:'',children:[]}); }
-function pushSubPoint(pt){ pt.children.push({id:uid(),text:''}); }
-function delFromArray(arr,id){ const i=arr.findIndex(x=>x.id===id); if(i>-1) arr.splice(i,1); }
-
-/* ===== Si/No ===== */
-function branchBox(p,m,st,kind,idx){
-  const isYes=kind==='yes';
-  const arr = st[kind] || (st[kind]=[]);
-  const wrap=document.createElement('div'); wrap.className='branch '+(isYes?'yes':'no');
-
-  const top=document.createElement('div'); top.className='bh-top';
-  const label=document.createElement('div'); label.className='bh-label'; label.textContent=isYes?'SÍ':'NO';
-  const add=document.createElement('button'); add.className='p-mini needsEdit'; add.textContent='＋'; add.title='Añadir punto'; guardClick(add);
-  const flag=document.createElement('button'); flag.className='p-mini needsEdit'; flag.textContent='🚩'; flag.title='Bandera rama'; guardClick(flag);
-  add.onclick=()=>{ if(locked) return; st._openBranches=true; pushPoint(arr); save(); renderModules(); };
-  flag.onclick=()=>{ if(locked) return; st._openBranches=true; openProcPicker(pid=>{ st[kind+'Link']={pid}; save(); renderModules(); }); };
-  top.appendChild(label); top.appendChild(add); top.appendChild(flag);
-
-  if(st[kind+'Link']?.pid){
-    const dest=state.processes.find(x=>x.id===st[kind+'Link'].pid);
-    if(dest){
-      const chip=document.createElement('span'); chip.className='chip'; chip.style.background=dest.color; chip.style.marginLeft='.35rem';
-      chip.innerHTML=`→ <small>Proceso:</small> <strong>${dest.name}</strong>`;
-      top.appendChild(chip);
+  }else{
+    try{
+      const parsed = JSON.parse(raw);
+      if(!parsed || !Array.isArray(parsed.processes)) throw 0;
+      Object.assign(state, parsed);
+    }catch(e){
+      // fallback suave
+      const id = uid('p_');
+      state.processes=[{id,name:'Revisión auditiva',color:colors[0],detail:'',modules:[]}];
+      state.current=id;
     }
   }
-  wrap.appendChild(top);
+}
 
-  const list=document.createElement('div'); list.className='plist';
-  arr.forEach((pt,i)=>{
-    const li=document.createElement('div'); li.className='point';
-    const num=`${idx+1}.${i+1}`;
-    li.innerHTML=`<span class="num">${num}</span>
-      <input class="pt-input" ${locked?'readonly':''} placeholder="Escribe…" value="${pt.text||''}">
-      <button class="p-mini needsEdit" title="Subpunto">＋</button>
-      <button class="p-mini needsEdit" title="Bandera">🚩</button>
-      <button class="p-mini needsEdit" title="Borrar">🗑</button>`;
-    const inp=li.querySelector('.pt-input'); inp.oninput=e=>{ pt.text=e.target.value; save(); };
-    const [bAdd,bFlag,bDel]=li.querySelectorAll('.p-mini');
-    guardClick(bAdd); guardClick(bFlag); guardClick(bDel);
-    bAdd.onclick=()=>{ if(locked) return; st._openBranches=true; pushSubPoint(pt); save(); renderModules(); };
-    bFlag.onclick=()=>{ if(locked) return; st._openBranches=true; openProcPicker(pid=>{ pt.link={pid}; save(); renderModules(); }); };
-    bDel.onclick=()=>{ if(locked) return; st._openBranches=true; delFromArray(arr,pt.id); save(); renderModules(); };
+/* sello de hora */
+function stamp(){
+  if(!$('#stamp')){
+    const s=document.createElement('div');
+    s.id='stamp';
+    s.style.marginLeft='auto'; s.style.color='#ffdede';
+    $('.header').appendChild(s);
+  }
+  const d=new Date();
+  $('#stamp').textContent='Última actualización '+d.toLocaleDateString()+' '+d.toLocaleTimeString();
+}
 
-    if(pt.link?.pid){
-      const dest=state.processes.find(x=>x.id===pt.link.pid);
-      if(dest){
-        const pc=document.createElement('span'); pc.className='chip'; pc.style.background=dest.color; pc.style.marginLeft='.35rem';
-        pc.innerHTML=`→ <small>${dest.name}</small>`;
-        li.appendChild(pc);
-      }
+/* ───────────────────────── RENDER ───────────────────────── */
+function render(){
+  renderLeft();
+  renderRight();
+}
+
+function renderLeft(){
+  const box = $('#procList'); box.innerHTML='';
+  state.processes.forEach(p=>{
+    const card=document.createElement('div'); card.className='proc-card';
+    card.style.borderColor='rgba(0,0,0,.06)';
+    card.innerHTML=`
+      <div class="name"><span class="dot" style="background:${p.color}"></span> ${p.name}</div>
+      <div class="proc-actions">
+        <button class="btn3d" title="Editar" onclick="renameProcess('${p.id}')">✏️</button>
+        <button class="btn3d" title="Eliminar" onclick="delProcess('${p.id}')">🗑️</button>
+      </div>`;
+    card.onclick = (e)=>{ if(e.target.closest('button')) return; state.current=p.id; save(); renderRight(); };
+    if(state.current===p.id){ card.style.outline='2px solid '+p.color; card.style.outlineOffset='2px'; }
+    box.appendChild(card);
+  });
+}
+
+function renderRight(){
+  const cur = state.processes.find(p=>p.id===state.current) || state.processes[0];
+  if(!cur){ $('#modules').innerHTML=''; return; }
+  const grid = $('#modules'); grid.innerHTML='';
+
+  // cada módulo (subproceso) ocupa una tarjeta
+  cur.modules.forEach(m=>{
+    const wrap=document.createElement('article'); wrap.className='module';
+
+    const head=document.createElement('div'); head.className='mod-head';
+    head.style.background = hexToTint(cur.color,.28);
+    head.innerHTML=`
+      <div class="mod-title">${m.title||'Nuevo subproceso'}</div>
+      <div class="mod-actions">
+        <select onchange="m.role=this.value; save();" title="Responsable">
+          ${roles.map(r=>`<option ${m.role===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+        <button class="btn3d" onclick="toggleDetail('m','${m.id}')">▾ Detalle</button>
+        <button class="btn3d" onclick="addStep('${m.id}')">＋ Paso</button>
+        <button class="btn3d" onclick="save()">🎯 Guardar</button>
+        <button class="btn3d" onclick="delModule('${m.id}')">–</button>
+      </div>`;
+    wrap.appendChild(head);
+
+    // cuerpo
+    const body=document.createElement('div'); body.className='mod-body';
+    // detalle subproceso
+    const d=document.createElement('div'); d.className='detail'; d.id=`d_m_${m.id}`;
+    d.innerHTML=`<textarea placeholder="Descripción del subproceso" oninput="autoGrow(this); setDetail('m','${m.id}',this.value)">${m.detail||''}</textarea>`;
+    body.appendChild(d);
+
+    // pasos
+    m.steps.forEach((s,ix)=>{
+      const step=document.createElement('div'); step.className='step';
+      step.style.borderColor='rgba(0,0,0,.05)';
+      step.innerHTML=`
+        <div class="num">${ix+1}</div>
+        <div class="title">${s.title||'Nuevo paso'}</div>
+        <div class="right">
+          <button class="pill" title="Bandera → proceso" onclick="pickLink('s','${m.id}','${s.id}')">🚩</button>
+          <button class="pill" title="Si/No" onclick="toggleDetail('s','${m.id}:${s.id}')">？</button>
+          <button class="pill" title="Eliminar paso" onclick="delStep('${m.id}','${s.id}')">–</button>
+        </div>
+        <div class="vline" style="background:${cur.color}"></div>
+      `;
+      // detalle del paso (si/no + descripción)
+      const dd=document.createElement('div'); dd.className='detail'; dd.id=`d_s_${m.id}:${s.id}`;
+      dd.innerHTML=`
+        <div style="display:grid;gap:.5rem">
+          <textarea placeholder="Descripción del paso" oninput="autoGrow(this); setDetail('s','${m.id}:${s.id}',this.value)">${s.detail||''}</textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+            ${condBlock('NO',cur.color, s.no||[], (txt)=>addCond('no','${m.id}','${s.id}',txt))}
+            ${condBlock('SÍ',cur.color, s.yes||[], (txt)=>addCond('yes','${m.id}','${s.id}',txt))}
+          </div>
+        </div>`;
+      body.appendChild(step);
+      body.appendChild(dd);
+    });
+
+    wrap.appendChild(body);
+    grid.appendChild(wrap);
+  });
+
+  // botón global para añadir pack a este proceso
+  const addCard=document.createElement('article'); addCard.className='module';
+  addCard.innerHTML=`
+    <div class="mod-head" style="background:${hexToTint(cur.color,.2)}">
+      <div class="mod-title" style="background:#111">Pasos</div>
+      <div class="mod-actions">
+        <button class="btn3d" onclick="addModule()">＋ Subproceso</button>
+        <button class="btn3d" onclick="addModuleWithStep()">＋ Subproceso + Paso</button>
+      </div>
+    </div>`;
+  $('#modules').appendChild(addCard);
+}
+
+/* bloque Si/No */
+function condBlock(label,color,arr,onAdd){
+  const low = label.toLowerCase();
+  const headColor = low==='no' ? '#111' : '#0b74c8';
+  return `
+  <div style="background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:12px;padding:.5rem">
+    <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.4rem">
+      <span class="pill" style="background:${headColor};color:#fff">${label}</span>
+      <button class="pill" onclick="const t=prompt('Añadir punto a ${label}:'); if(t) (${onAdd.toString().replace(' (txt)','(t)')});">＋</button>
+    </div>
+    <div style="display:grid;gap:.35rem">
+      ${arr.map((pt,i)=>`
+        <div class="chip" style="justify-content:space-between">
+          <span><b>${i+1}.</b> ${escapeHtml(pt.text||'')}</span>
+          <span style="display:flex;gap:.35rem">
+            <button class="pill" title="Bandera → proceso" onclick="pickLink('c','${pt.id}')">🚩</button>
+            <button class="pill" title="Eliminar" onclick="delCond('${pt.id}')">–</button>
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+/* ───────────────────────── EDICIÓN ───────────────────────── */
+function renameProcess(id){
+  const p = state.processes.find(x=>x.id===id); if(!p) return;
+  const t = prompt('Nombre del proceso', p.name || ''); if(t==null) return;
+  p.name = t.trim()||p.name; save(); render();
+}
+function delProcess(id){
+  if(!confirm('¿Eliminar proceso?')) return;
+  const k = state.processes.findIndex(x=>x.id===id);
+  if(k>-1) state.processes.splice(k,1);
+  if(!state.processes.length){
+    const nid=uid('p_'); state.processes=[{id:nid,name:'Nuevo proceso',color:colors[0],detail:'',modules:[]}];
+    state.current=nid;
+  }else if(state.current===id){
+    state.current=state.processes[0].id;
+  }
+  save(); render();
+}
+
+function addProcess(){
+  const id = uid('p_');
+  state.processes.push({id,name:'Nuevo proceso',color:colors[state.processes.length % colors.length],detail:'',modules:[]});
+  state.current=id; save(); render();
+}
+function addModule(){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  cur.modules.push({id:uid('m_'),title:'Nuevo subproceso',role:roles[0],detail:'',steps:[]});
+  save(); renderRight();
+}
+function addModuleWithStep(){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  const mid = uid('m_');
+  cur.modules.push({id:mid,title:'Nuevo subproceso',role:roles[0],detail:'',steps:[{id:uid('s_'),title:'Nuevo paso',detail:'',yes:[],no:[]} ]});
+  save(); renderRight();
+}
+function delModule(mid){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  const i = cur.modules.findIndex(m=>m.id===mid); if(i>-1) cur.modules.splice(i,1);
+  save(); renderRight();
+}
+function addStep(mid){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  const m = cur.modules.find(m=>m.id===mid); if(!m) return;
+  m.steps.push({id:uid('s_'),title:'Nuevo paso',detail:'',yes:[],no:[]});
+  save(); renderRight();
+}
+function delStep(mid,sid){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  const m = cur.modules.find(m=>m.id===mid); if(!m) return;
+  const i = m.steps.findIndex(s=>s.id===sid); if(i>-1) m.steps.splice(i,1);
+  save(); renderRight();
+}
+
+/* detalles */
+function toggleDetail(kind,key){
+  const id = kind==='m' ? `d_m_${key}` : `d_s_${key}`;
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display==='block') ? 'none' : 'block';
+}
+function setDetail(kind,key,value){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  if(kind==='m'){
+    const m = cur.modules.find(m=>m.id===key); if(!m) return;
+    m.detail = value; save();
+  }else{
+    const [mid,sid]=key.split(':');
+    const m = cur.modules.find(m=>m.id===mid); if(!m) return;
+    const s = m.steps.find(x=>x.id===sid); if(!s) return;
+    s.detail=value; save();
+  }
+}
+function autoGrow(el){
+  el.style.height='auto'; el.style.height=(el.scrollHeight+6)+'px';
+}
+
+/* condiciones si/no */
+function addCond(which, mid, sid, text){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  const m = cur.modules.find(m=>m.id===mid); if(!m) return;
+  const s = m.steps.find(x=>x.id===sid); if(!s) return;
+  const item = { id:uid('c_'), text:text||'' , link:null };
+  (which==='yes' ? s.yes : s.no).push(item);
+  save(); renderRight();
+}
+function delCond(cid){
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  for(const m of cur.modules){
+    for(const s of m.steps){
+      const i1=s.yes?.findIndex(c=>c.id===cid)??-1;
+      if(i1>-1){ s.yes.splice(i1,1); save(); return renderRight(); }
+      const i2=s.no?.findIndex(c=>c.id===cid)??-1;
+      if(i2>-1){ s.no.splice(i2,1); save(); return renderRight(); }
     }
+  }
+}
 
-    const kids=document.createElement('div'); kids.className='children';
-    pt.children.forEach((ch,j)=>{
-      const cli=document.createElement('div'); cli.className='point';
-      const cnum=`${num}.${j+1}`;
-      cli.innerHTML=`<span class="num">${cnum}</span>
-        <input class="pt-input" ${locked?'readonly':''} placeholder="Subpunto…" value="${ch.text||''}">
-        <button class="p-mini needsEdit" title="Bandera">🚩</button>
-        <button class="p-mini needsEdit" title="Borrar">🗑</button>`;
-      const cin=cli.querySelector('.pt-input'); cin.oninput=e=>{ ch.text=e.target.value; save(); };
-      const [cf,cd]=cli.querySelectorAll('.p-mini'); guardClick(cf); guardClick(cd);
-      cf.onclick=()=>{ if(locked) return; st._openBranches=true; openProcPicker(pid=>{ ch.link={pid}; save(); renderModules(); }); };
-      cd.onclick=()=>{ if(locked) return; st._openBranches=true; const k=pt.children.indexOf(ch); if(k>-1){ pt.children.splice(k,1); save(); renderModules(); } };
+/* bandera (en paso o punto) → selecciona proceso destino */
+let pendingLink = null;
+/* === FUNCION REEMPLAZADA Y ROBUSTA === */
+function openProcPicker(onPick){
+  const modal = document.getElementById('procModal');
+  const list  = document.getElementById('procModalList');
 
-      if(ch.link?.pid){
-        const dest=state.processes.find(x=>x.id===ch.link.pid);
-        if(dest){
-          const cc=document.createElement('span'); cc.className='chip'; cc.style.background=dest.color; cc.innerHTML=`→ <small>${dest.name}</small>`;
-          cli.appendChild(cc);
+  // Reset lista + asegurar visibilidad
+  list.innerHTML = '';
+  showBlock(modal);
+  modal.classList.remove('hide');
+
+  if(Array.isArray(state.processes) && state.processes.length){
+    state.processes.forEach(p=>{
+      const b=document.createElement('button');
+      b.className='btn3d';
+      b.style.cssText='justify-content:flex-start;color:#111;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06);border-radius:12px';
+      b.innerHTML = `<span class="dot" style="background:${p.color}"></span> <strong>${escapeHtml(p.name)}</strong>`;
+      b.onclick = ()=>{ hideBlock(modal); onPick(p.id); };
+      list.appendChild(b);
+    });
+  }else{
+    const note=document.createElement('div');
+    note.style.cssText='padding:.6rem .4rem;color:#111;background:#fff;border-radius:10px;box-shadow:0 1px 0 rgba(0,0,0,.06)';
+    note.innerHTML = `No hay procesos disponibles.<br>Usa <b>+ Procesos</b> para crear uno.`;
+    list.appendChild(note);
+  }
+
+  const cancel = document.getElementById('pmCancel');
+  cancel.onclick = () => hideBlock(modal);
+  modal.onclick  = (e) => { if(e.target===modal) hideBlock(modal); };
+}
+
+function pickLink(kind, ...ids){
+  // kind: 's' → paso  | 'c' → cond punto
+  pendingLink = { kind, ids };
+  openProcPicker((pid)=>{
+    if(!pendingLink) return;
+    const {kind, ids} = pendingLink;
+    if(kind==='s'){
+      const [mid,sid] = ids;
+      const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+      const m = cur.modules.find(m=>m.id===mid); if(!m) return;
+      const s = m.steps.find(x=>x.id===sid); if(!s) return;
+      s.link = pid;
+    }else if(kind==='c'){
+      const cid=ids[0];
+      const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+      for(const m of cur.modules){
+        for(const s of m.steps){
+          const it1=s.yes?.find(c=>c.id===cid); if(it1){ it1.link=pid; save(); return renderRight(); }
+          const it2=s.no?.find(c=>c.id===cid);  if(it2){ it2.link=pid; save(); return renderRight(); }
         }
       }
-      kids.appendChild(cli);
-    });
-
-    list.appendChild(li); list.appendChild(kids);
-  });
-  wrap.appendChild(list);
-  return wrap;
-}
-
-function stepRow(p,m,st,index){
-  const row=document.createElement('div');
-  const sc=document.createElement('div'); sc.className='step';
-  sc.innerHTML=`
-    <div class="bubble">${index+1}</div>
-    <input class="title" ${locked?'readonly':''} value="${st.title}">
-    <div class="minis">
-      <button class="mini needsEdit" title="Bandera paso">🚩</button>
-      <button class="mini needsEdit" title="Si / No">❓</button>
-      <button class="mini needsEdit" title="Eliminar">–</button>
-    </div>`;
-  sc.style.setProperty('--proc',p.color);
-  sc.addEventListener('click', (e)=>{
-    if(e.target.closest('.mini') || e.target.classList.contains('title')) return;
-    sc.closest('.steps').querySelectorAll('.step').forEach(s=>s.classList.remove('selected'));
-    sc.classList.add('selected');
-  });
-
-  const titleInp = sc.querySelector('.title'); titleInp.oninput=e=>{ st.title=e.target.value; save(); };
-  const [bFlag,bQ,bDel]=sc.querySelectorAll('.mini'); guardClick(bFlag); guardClick(bQ); guardClick(bDel);
-  bDel.onclick=()=>{ if(locked) return; m.steps.splice(index,1); save(); renderModules(); };
-  bFlag.onclick=()=> { if(locked) return; openProcPicker(pid=>{ st.link={pid}; save(); renderModules(); }); };
-
-  const branches=document.createElement('div'); branches.className='branches'+(st._openBranches?'':' hide');
-  bQ.onclick=()=>{ if(locked) return; st._openBranches=!st._openBranches; save(); toggleBlock(branches,st._openBranches); };
-
-  row.appendChild(sc);
-
-  if(st.link?.pid){
-    const dest=state.processes.find(x=>x.id===st.link.pid);
-    if(dest){
-      const chip=document.createElement('div');
-      chip.className='chip'; chip.style.background=dest.color; chip.style.margin='4px 0 0 54px';
-      chip.innerHTML=`→ <small>Ir al proceso:</small> <strong>${dest.name}</strong>`;
-      row.appendChild(chip);
     }
-  }
-
-  branches.appendChild(branchBox(p,m,st,'no',index));
-  branches.appendChild(branchBox(p,m,st,'yes',index));
-  row.appendChild(branches);
-  return row;
-}
-
-/* ===== Subproceso (módulo) ===== */
-function modCard(p,m){
-  const card=document.createElement('div'); card.className='module';
-  card.style.setProperty('--proc',p.color);
-
-  const head=document.createElement('div'); head.className='mod-head';
-  head.style.setProperty('--proc',p.color);
-  head.innerHTML=`<input class="mod-title" ${locked?'readonly':''} value="${m.title}">
-    <select class="sel" ${locked?'disabled':''}>${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
-    <button class="pill" data-act="toggle-detail" aria-expanded="${m._openDetail?'true':'false'}">▾ Detalle</button>
-    <button class="pill needsEdit" data-act="add-step">+ Paso</button>
-    <button class="pill needsEdit" data-act="close">${m.completed?'🎯 Cerrado':'🎯 Guardar'}</button>
-    <button class="pill needsEdit" data-act="del">–</button>`;
-  const titleEl=head.querySelector('.mod-title');
-  titleEl.oninput=e=>{ m.title=e.target.value; save(); };
-  titleEl.ondblclick=()=>{ m._openDetail=!m._openDetail; toggleBlock(det,m._openDetail); if(m._openDetail){ setTimeout(()=>det.querySelector('textarea').focus(),0);} save(); };
-  head.querySelector('select').onchange=e=>{ m.responsable=e.target.value; save(); };
-  const btnAdd=head.querySelector('[data-act="add-step"]'); guardClick(btnAdd);
-  const btnClose=head.querySelector('[data-act="close"]'); guardClick(btnClose);
-  const btnDel=head.querySelector('[data-act="del"]'); guardClick(btnDel);
-  head.querySelector('[data-act="add-step"]').onclick=()=>{ if(locked) return; m.steps.push(makeStep()); save(); renderModules(); };
-  head.querySelector('[data-act="toggle-detail"]').onclick=(ev)=>{
-    m._openDetail=!m._openDetail;
-    ev.currentTarget.setAttribute('aria-expanded', m._openDetail?'true':'false');
-    toggleBlock(det,m._openDetail);
-    if(m._openDetail){ setTimeout(()=>det.querySelector('textarea').focus(),0); }
-    save();
-  };
-  head.querySelector('[data-act="close"]').onclick=()=>{ if(locked) return; m.completed=!m.completed; save(); renderModules(); };
-  head.querySelector('[data-act="del"]').onclick=()=>{ if(locked) return; if(confirm('¿Eliminar subproceso?')){ const i=p.modules.findIndex(x=>x.id===m.id); if(i>-1){ p.modules.splice(i,1); save(); renderModules(); } } };
-  card.appendChild(head);
-
-  const det=document.createElement('div'); 
-  det.className='mod-detail'+(m._openDetail?'':' hide');
-  det.setAttribute('aria-hidden', m._openDetail ? 'false':'true');
-  det.innerHTML=`<textarea ${locked?'readonly':''} placeholder="Descripción del subproceso…">${m.detail||''}</textarea>`;
-  const mta=det.querySelector('textarea');
-  mta.oninput=e=>{ m.detail=e.target.value; save(); };
-  card.appendChild(det);
-
-  const steps=document.createElement('div'); steps.className='steps';
-  steps.style.setProperty('--proc',p.color);
-  m.steps.forEach((st,idx)=> steps.appendChild(stepRow(p,m,st,idx)));
-  card.appendChild(steps);
-
-  if(m.completed){
-    const d=document.createElement('span'); d.className='badge-diana'; d.textContent='🎯';
-    head.appendChild(d);
-  }
-  return card;
-}
-
-/* ===== Render derecha ===== */
-function renderModules(){
-  const box=document.getElementById('modules'); box.innerHTML='';
-  const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p) return; activePid=p.id;
-  p.modules.forEach(m=> box.appendChild(modCard(p,m)));
-}
-
-/* ===== Acciones globales ===== */
-function createModuleForProcess(pid,titleOverride){
-  const p=state.processes.find(x=>x.id===pid); if(!p) return null;
-  const m={id:uid(),title:titleOverride||'Nuevo subproceso',responsable:RESPONSABLES[0],detail:'',steps:[makeStep()],completed:false,_openDetail:false};
-  p.modules.push(m); save(); renderModules(); return m;
-}
-function addProcess(){
-  if(locked){ alert('PIN requerido: AR4321'); return; }
-  const color=colors[state.processes.length%colors.length];
-  const p={id:uid(),name:'Nuevo proceso',color,detail:'',modules:[],_openDetail:false};
-  state.processes.push(p); activePid=p.id; save(); render();
-}
-function addStepGlobal(){
-  if(locked){ alert('PIN requerido: AR4321'); return; }
-  const p=state.processes.find(x=>x.id===activePid)||state.processes[0];
-  if(!p){ alert('Primero crea un proceso'); return; }
-  let m=p.modules[p.modules.length-1];
-  if(!m) m=createModuleForProcess(p.id,'Pasos');
-  m.steps.push(makeStep()); save(); renderModules();
-}
-
-/* ===== Render maestro ===== */
-function render(){ renderProcesses(); renderModules(); setTimeout(updateLockUI,0); }
-
-/* ====== NUEVO: Imprimir/PDF (todos los contenidos) ====== */
-function buildPrintSheet(){
-  const host=document.createElement('div'); host.className='printsheet';
-  const title=document.createElement('div'); title.className='print-title'; title.textContent='PROCESOS AUDIO — Impresión';
-  host.appendChild(title);
-  state.processes.forEach(p=>{
-    const sec=document.createElement('section'); sec.className='print-proc';
-    const h=document.createElement('h2'); h.textContent=p.name; h.style.margin='6px 0'; sec.appendChild(h);
-    // clonar módulos mostrando todo
-    p.modules.forEach(m=>{
-      // clonar datos con detalles abiertos
-      const m2=JSON.parse(JSON.stringify(m));
-      m2._openDetail=true;
-      (m2.steps||[]).forEach(st=>{ st._openBranches=true; });
-      const tempP={id:p.id,color:p.color,name:p.name};
-      sec.appendChild(modCard(tempP,m2));
-    });
-    host.appendChild(sec);
+    save(); renderRight();
+    pendingLink=null;
   });
-  return host;
-}
-function doPrintAll(){
-  const sheet=buildPrintSheet();
-  document.body.appendChild(sheet);
-  window.addEventListener('afterprint',()=>{ sheet.remove(); },{once:true});
-  window.print();
 }
 
-/* ====== NUEVO: Descargar HTML autocontenido ====== */
+/* ───────────────────────── TOP BAR ───────────────────────── */
 function downloadHTML(){
-  const html=document.documentElement.outerHTML;
-  const data=JSON.stringify(state);
-  const inj = `<script>try{localStorage.setItem('${LSKEY}', ${JSON.stringify(data)});}catch(e){}</script>`;
-  const final = html.replace('<head>', '<head>'+inj);
+  // genera HTML auto-contenido (sin document.write)
+  const html = document.documentElement.cloneNode(true);
+  // opcional: quitar modal abierto
+  html.querySelector('#procModal')?.classList.add('hide');
+  const final='<!doctype html>\n'+html.outerHTML;
   const blob=new Blob([final],{type:'text/html'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='procesos-audio.html'; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='procesos-audio.html'; a.click();
+  URL.revokeObjectURL(url);
+}
+function printPDF(){ window.print(); }
+
+function requirePIN(){
+  if(state.pinOk) return (state.pinOk=false, state.pinOk=true);
+  const code = prompt('PIN (p.ej. AR4321)');
+  if(code && code.trim().toUpperCase()==='AR4321'){ state.pinOk=true; alert('Edición desbloqueada'); }
+  else alert('PIN incorrecto');
 }
 
-/* ===== Boot ===== */
-load(); document.getElementById('stamp').textContent='Última actualización '+stampNow(); render();
+/* helpers */
+function hexToTint(hex, amt){
+  // mezcla con blanco
+  const h=hex.replace('#','');
+  const r=parseInt(h.substring(0,2),16), g=parseInt(h.substring(2,4),16), b=parseInt(h.substring(4,6),16);
+  const R=Math.round(r+(255-r)*amt), G=Math.round(g+(255-g)*amt), B=Math.round(b+(255-b)*amt);
+  return `rgba(${R},${G},${B},.85)`;
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[m]); }
 
-document.getElementById('btnAddProcess').onclick=addProcess;
-document.getElementById('btnAddSubprocPaso').onclick=()=>{ if(locked){alert('PIN requerido: AR4321');return;} const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p){alert('Crea un proceso');return;} createModuleForProcess(p.id,'Nuevo subproceso'); };
-document.getElementById('btnAddStepGlobal').onclick=addStepGlobal;
-document.getElementById('btnSave').onclick=save;
+/* ───────────────────────── EVENTS ───────────────────────── */
+$('#btnAddProc').onclick = ()=>{ addProcess(); };
+$('#btnAddStep').onclick = ()=>{
+  const cur = state.processes.find(p=>p.id===state.current); if(!cur) return;
+  if(!cur.modules.length) addModule();
+  addStep(cur.modules[0].id);
+};
+$('#btnAddPack').onclick = ()=> addModuleWithStep();
+$('#btnPIN').onclick = ()=> requirePIN();
+$('#btnPDF').onclick = ()=> printPDF();
+$('#btnHTML').onclick = ()=> downloadHTML();
+$('#btnSaveCloud').onclick = ()=> save();
 
-document.getElementById('q').addEventListener('input',e=>{
-  const q=e.target.value.toLowerCase();
-  document.querySelectorAll('.proc-item').forEach(el=>{
-    const name=el.querySelector('.proc-name').textContent.toLowerCase();
-    el.classList.toggle('hide',!name.includes(q));
-  });
-});
-
-/* Icons: PIN / Print / HTML */
-document.getElementById('icoPin').onclick=()=>{
-  if(locked){
-    const v=prompt('Introduce PIN para editar','');
-    if(v===PIN_CODE){ locked=false; updateLockUI(); }
-    else alert('PIN incorrecto');
-  }else{
-    locked=true; updateLockUI();
+$('#q').oninput = (e)=>{
+  const q = e.target.value.toLowerCase();
+  for(const el of $$('#procList .proc-card')){
+    const name = el.querySelector('.name')?.innerText.toLowerCase()||'';
+    el.style.display = name.includes(q)?'flex':'none';
   }
 };
-document.getElementById('icoPrint').onclick=doPrintAll;
-document.getElementById('icoHtml').onclick=downloadHTML;
 
-/* Al iniciar, bloqueo activo */
-updateLockUI();
+/* ───────────────────────── BOOT ───────────────────────── */
+load(); render(); stamp();
 </script>
 </body>
 </html>
