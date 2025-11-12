@@ -144,7 +144,7 @@ function save(){ localStorage.setItem(LSKEY,JSON.stringify(state)); document.get
 function load(){
   const raw=localStorage.getItem(LSKEY);
   if(!raw){
-    state.processes.push({id:uid(),name:'Revisión auditiva',color:colors[0],detail:'',modules:[]});
+    state.processes.push({id:uid(),name:'Revisión auditiva',color:colors[0],detail:'',modules:[],_openDetail:false});
     save();
   }else{ try{ Object.assign(state,JSON.parse(raw)); }catch{} }
   if(!activePid && state.processes[0]) activePid=state.processes[0].id;
@@ -163,11 +163,11 @@ function procRow(p){
     </div>`;
   row.onclick=e=>{ if(e.target.closest('.icon-btn')) return; activePid=p.id; render(); };
   const [bDet,bRen,bDel]=row.querySelectorAll('.icon-btn');
-  bDet.onclick=e=>{ e.stopPropagation(); det.classList.toggle('hide'); };
+  bDet.onclick=e=>{ e.stopPropagation(); p._openDetail=!p._openDetail; det.classList.toggle('hide',!p._openDetail); save(); };
   bRen.onclick=e=>{ e.stopPropagation(); const nn=prompt('Nombre del proceso',p.name); if(nn){p.name=nn;save();render();} };
   bDel.onclick=e=>{ e.stopPropagation(); if(confirm('¿Eliminar proceso y sus módulos?')){ const i=state.processes.findIndex(x=>x.id===p.id); if(i>-1){ state.processes.splice(i,1); activePid=state.processes[0]?.id||null; save(); render(); } } };
 
-  const det=document.createElement('div'); det.className='proc-detail hide';
+  const det=document.createElement('div'); det.className='proc-detail'+(p._openDetail?'':' hide');
   det.innerHTML=`<textarea placeholder="Detalle del proceso…">${p.detail||''}</textarea>`;
   det.querySelector('textarea').oninput=e=>{ p.detail=e.target.value; save(); };
   wrap.appendChild(row); wrap.appendChild(det);
@@ -194,7 +194,7 @@ function openProcPicker(onPick){
 }
 
 /* ====== helpers ====== */
-function makeStep(){ return {id:uid(),title:'Nuevo paso',link:null,yes:[],no:[]}; }
+function makeStep(){ return {id:uid(),title:'Nuevo paso',link:null,yes:[],no:[],_openBranches:false}; }
 function pushPoint(arr){ arr.push({id:uid(),text:'',children:[]}); }
 function pushSubPoint(pt){ pt.children.push({id:uid(),text:''}); }
 function delFromArray(arr,id){ const i=arr.findIndex(x=>x.id===id); if(i>-1) arr.splice(i,1); }
@@ -209,8 +209,8 @@ function branchBox(p,m,st,kind,idx){
   const label=document.createElement('div'); label.className='bh-label'; label.textContent=isYes?'SÍ':'NO';
   const add=document.createElement('button'); add.className='p-mini'; add.textContent='＋'; add.title='Añadir punto';
   const flag=document.createElement('button'); flag.className='p-mini'; flag.textContent='🚩'; flag.title='Bandera rama';
-  add.onclick=()=>{ pushPoint(arr); save(); renderModules(); };
-  flag.onclick=()=>{ openProcPicker(pid=>{ st[kind+'Link']={pid}; save(); renderModules(); }); };
+  add.onclick=()=>{ st._openBranches=true; pushPoint(arr); save(); renderModules(); };
+  flag.onclick=()=>{ st._openBranches=true; openProcPicker(pid=>{ st[kind+'Link']={pid}; save(); renderModules(); }); };
   top.appendChild(label); top.appendChild(add); top.appendChild(flag);
 
   if(st[kind+'Link']?.pid){
@@ -233,9 +233,9 @@ function branchBox(p,m,st,kind,idx){
       <button class="p-mini" title="Bandera">🚩</button>
       <button class="p-mini" title="Borrar">🗑</button>`;
     li.querySelector('.pt-input').oninput=e=>{ pt.text=e.target.value; save(); };
-    li.querySelectorAll('.p-mini')[0].onclick=()=>{ pushSubPoint(pt); save(); renderModules(); };
-    li.querySelectorAll('.p-mini')[1].onclick=()=>{ openProcPicker(pid=>{ pt.link={pid}; save(); renderModules(); }); };
-    li.querySelectorAll('.p-mini')[2].onclick=()=>{ delFromArray(arr,pt.id); save(); renderModules(); };
+    li.querySelectorAll('.p-mini')[0].onclick=()=>{ st._openBranches=true; pushSubPoint(pt); save(); renderModules(); };
+    li.querySelectorAll('.p-mini')[1].onclick=()=>{ st._openBranches=true; openProcPicker(pid=>{ pt.link={pid}; save(); renderModules(); }); };
+    li.querySelectorAll('.p-mini')[2].onclick=()=>{ st._openBranches=true; delFromArray(arr,pt.id); save(); renderModules(); };
 
     if(pt.link?.pid){
       const dest=state.processes.find(x=>x.id===pt.link.pid);
@@ -255,8 +255,8 @@ function branchBox(p,m,st,kind,idx){
         <button class="p-mini" title="Bandera">🚩</button>
         <button class="p-mini" title="Borrar">🗑</button>`;
       cli.querySelector('.pt-input').oninput=e=>{ ch.text=e.target.value; save(); };
-      cli.querySelectorAll('.p-mini')[0].onclick=()=>{ openProcPicker(pid=>{ ch.link={pid}; save(); renderModules(); }); };
-      cli.querySelectorAll('.p-mini')[1].onclick=()=>{ const k=pt.children.indexOf(ch); if(k>-1){ pt.children.splice(k,1); save(); renderModules(); } };
+      cli.querySelectorAll('.p-mini')[0].onclick=()=>{ st._openBranches=true; openProcPicker(pid=>{ ch.link={pid}; save(); renderModules(); }); };
+      cli.querySelectorAll('.p-mini')[1].onclick=()=>{ st._openBranches=true; const k=pt.children.indexOf(ch); if(k>-1){ pt.children.splice(k,1); save(); renderModules(); } };
 
       if(ch.link?.pid){
         const dest=state.processes.find(x=>x.id===ch.link.pid);
@@ -297,8 +297,9 @@ function stepRow(p,m,st,index){
   sc.querySelectorAll('.mini')[2].onclick=()=>{ m.steps.splice(index,1); save(); renderModules(); };
   sc.querySelectorAll('.mini')[0].onclick=()=> openProcPicker(pid=>{ st.link={pid}; save(); renderModules(); });
 
-  const branches=document.createElement('div'); branches.className='branches hide';
-  sc.querySelectorAll('.mini')[1].onclick=()=> branches.classList.toggle('hide');
+  const branches=document.createElement('div'); branches.className='branches'+(st._openBranches?'':' hide');
+  sc.querySelectorAll('.mini')[1].onclick=()=>{ st._openBranches=!st._openBranches; save(); branches.classList.toggle('hide',!st._openBranches); };
+
   row.appendChild(sc);
 
   if(st.link?.pid){
@@ -323,6 +324,7 @@ function modCard(p,m){
   card.style.setProperty('--proc',p.color);
 
   const head=document.createElement('div'); head.className='mod-head';
+  head.style.setProperty('--proc',p.color); /* fuerza el color en cabecera para evitar que se vea negro en algún navegador */
   head.innerHTML=`<input class="mod-title" value="${m.title}">
     <select class="sel">${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
     <button class="pill" data-act="toggle-detail">▾ Detalle</button>
@@ -332,12 +334,12 @@ function modCard(p,m){
   head.querySelector('.mod-title').oninput=e=>{ m.title=e.target.value; save(); };
   head.querySelector('select').onchange=e=>{ m.responsable=e.target.value; save(); };
   head.querySelector('[data-act="add-step"]').onclick=()=>{ m.steps.push(makeStep()); save(); renderModules(); };
-  head.querySelector('[data-act="toggle-detail"]').onclick=()=> det.classList.toggle('hide');
+  head.querySelector('[data-act="toggle-detail"]').onclick=()=>{ m._openDetail=!m._openDetail; save(); det.classList.toggle('hide',!m._openDetail); };
   head.querySelector('[data-act="close"]').onclick=()=>{ m.completed=!m.completed; save(); renderModules(); };
   head.querySelector('[data-act="del"]').onclick=()=>{ if(confirm('¿Eliminar subproceso?')){ const i=p.modules.findIndex(x=>x.id===m.id); if(i>-1){ p.modules.splice(i,1); save(); renderModules(); } } };
   card.appendChild(head);
 
-  const det=document.createElement('div'); det.className='mod-detail hide';
+  const det=document.createElement('div'); det.className='mod-detail'+(m._openDetail?'':' hide');
   det.innerHTML=`<textarea placeholder="Descripción del subproceso…">${m.detail||''}</textarea>`;
   det.querySelector('textarea').oninput=e=>{ m.detail=e.target.value; save(); };
   card.appendChild(det);
@@ -364,12 +366,12 @@ function renderModules(){
 /* ====== Acciones globales ====== */
 function addProcess(){
   const color=colors[state.processes.length%colors.length];
-  const p={id:uid(),name:'Nuevo proceso',color,detail:'',modules:[]};
+  const p={id:uid(),name:'Nuevo proceso',color,detail:'',modules:[],_openDetail:false};
   state.processes.push(p); activePid=p.id; save(); render();
 }
 function addSubprocPasoForProcess(pid){
   const p=state.processes.find(x=>x.id===pid); if(!p) return null;
-  const m={id:uid(),title:'Nuevo subproceso',responsable:RESPONSABLES[0],detail:'',steps:[makeStep()],completed:false};
+  const m={id:uid(),title:'Nuevo subproceso',responsable:RESPONSABLES[0],detail:'',steps:[makeStep()],completed:false,_openDetail:false};
   p.modules.push(m); save(); renderModules(); return m;
 }
 function addStepGlobal(){
