@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -29,6 +30,12 @@
   .bar-right{margin-left:auto;display:flex;align-items:center;gap:.5rem}
   .stamp{color:#fff;opacity:.9;font-size:12px;background:rgba(255,255,255,.14);border-radius:9999px;padding:.35rem .75rem}
 
+  /* iconitos compactos */
+  .ico{width:36px;height:36px;border-radius:12px;border:0;
+    display:grid;place-items:center;cursor:pointer;color:#fff;background:rgba(255,255,255,.16);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 0 rgba(0,0,0,.25)}
+  .ico:active{transform:translateY(1px)}
+
   /* ===== Layout ===== */
   .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px;min-height:calc(100dvh - 64px)}
   .left,.right{background:var(--surface);border-radius:14px;box-shadow:var(--shadow)}
@@ -51,7 +58,6 @@
 
   /* ===== Subproceso (módulo) derecha ===== */
   .module{position:relative;background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);display:flex;flex-direction:column;gap:8px;padding:10px}
-  .module::before{display:none}
   .mod-head{display:flex;align-items:center;gap:.5rem;background:var(--proc,#333);color:#111;border-radius:12px;padding:.5rem .7rem}
   .mod-title{flex:1;font-weight:900;border:0;background:transparent;color:#111;outline:0}
   .sel{border:1px solid #e6e8ec;background:#fff;border-radius:10px;padding:.35rem .5rem}
@@ -94,19 +100,39 @@
   .p-mini:active{transform:translateY(1px)}
   .children{margin-left:44px;display:flex;flex-direction:column;gap:.2rem}
 
-  .hide{display:none!important}
+  /* Bloqueo visual */
+  body.locked .needsEdit{pointer-events:none;filter:grayscale(.9) opacity(.6)}
+  body.locked input[readonly], body.locked textarea[readonly]{background:#fafafa}
+
+  /* ===== PRINT ===== */
+  .printsheet{display:none}
+  @media print{
+    body > *:not(.printsheet){ display:none !important; }
+    .printsheet{display:block !important; padding:16px}
+    .print-title{font-size:22px;font-weight:900;margin:10px 0}
+    .print-proc{margin:18px 0;border-top:3px solid #000;padding-top:6px}
+    .print-mod{margin:10px 0 14px 0}
+  }
 </style>
 </head>
 <body>
   <div class="topbar">
     <div class="title">🎧 PROCESOS AUDIO</div>
     <div class="search"><input id="q" placeholder="Buscar…"></div>
-    <button id="btnAddProcess" class="btn3d">+ Procesos</button>
-    <button id="btnAddStepGlobal" class="btn3d" title="Añadir paso al subproceso abierto">+ Paso</button>
-    <button id="btnAddSubprocPaso" class="btn3d">+ Subproceso + Paso</button>
+
+    <!-- Botones existentes -->
+    <button id="btnAddProcess" class="btn3d needsEdit">+ Procesos</button>
+    <button id="btnAddStepGlobal" class="btn3d needsEdit" title="Añadir paso al subproceso abierto">+ Paso</button>
+    <button id="btnAddSubprocPaso" class="btn3d needsEdit">+ Subproceso + Paso</button>
+
+    <!-- NUEVOS 3 ICONOS -->
+    <button id="icoPin" class="ico" title="PIN (AR4321)">🔒</button>
+    <button id="icoPrint" class="ico" title="Imprimir / PDF">🖨️</button>
+    <button id="icoHtml" class="ico" title="Descargar HTML">⬇️</button>
+
     <div class="bar-right">
       <span id="stamp" class="stamp">—</span>
-      <button id="btnSave" class="btn3d">💾 Guardar</button>
+      <button id="btnSave" class="btn3d needsEdit">💾 Guardar</button>
     </div>
   </div>
 
@@ -126,7 +152,25 @@
   </div>
 
 <script>
-/* ===== Utilidades de visibilidad seguras para Detalle ===== */
+/* ====== NUEVO: bloqueo por PIN ====== */
+let locked = true;
+const PIN_CODE = 'AR4321';
+function updateLockUI(){
+  document.body.classList.toggle('locked', locked);
+  const pin = document.getElementById('icoPin');
+  pin.textContent = locked ? '🔒' : '🔓';
+  pin.title = locked ? 'PIN (AR4321)' : 'Edición habilitada';
+}
+function requireUnlock(e){
+  if(locked){
+    e.stopPropagation(); e.preventDefault();
+    alert('Edición bloqueada. PIN: AR4321');
+    return false;
+  }
+}
+function guardClick(el){ el.classList.add('needsEdit'); el.addEventListener('click', requireUnlock, true); }
+
+/* ===== Visibilidad segura Detalles ===== */
 function showBlock(el){ if(!el) return; el.classList.remove('hide'); el.style.display='block'; el.setAttribute('aria-hidden','false'); }
 function hideBlock(el){ if(!el) return; el.classList.add('hide'); el.style.display='none'; el.setAttribute('aria-hidden','true'); }
 function toggleBlock(el,open){ open ? showBlock(el) : hideBlock(el); }
@@ -136,12 +180,12 @@ const LSKEY='pa_v3_connectors_3d';
 const RESPONSABLES=['Audiólogo','Responsable','Otros'];
 const colors=['#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5','#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'];
 const uid=()=>'p'+Math.random().toString(36).slice(2,9);
-const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
+const stampNow=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
 
 const state={processes:[]};
 let activePid=null;
 
-function save(){ localStorage.setItem(LSKEY,JSON.stringify(state)); document.getElementById('stamp').textContent='Última actualización '+stamp(); }
+function save(){ localStorage.setItem(LSKEY,JSON.stringify(state)); document.getElementById('stamp').textContent='Última actualización '+stampNow(); }
 function load(){
   const raw=localStorage.getItem(LSKEY);
   if(!raw){
@@ -159,15 +203,15 @@ function procRow(p){
     <span class="proc-name">${p.name}</span>
     <div class="proc-acts">
       <button class="icon-btn" title="Detalle">▾</button>
-      <button class="icon-btn" title="Renombrar">✏️</button>
-      <button class="icon-btn" title="Eliminar" style="box-shadow:inset 0 0 0 #fff">🗑️</button>
+      <button class="icon-btn needsEdit" title="Renombrar">✏️</button>
+      <button class="icon-btn needsEdit" title="Eliminar" style="box-shadow:inset 0 0 0 #fff">🗑️</button>
     </div>`;
   row.onclick=e=>{ if(e.target.closest('.icon-btn')) return; activePid=p.id; render(); };
 
   const det=document.createElement('div'); 
   det.className='proc-detail'+(p._openDetail?'':' hide');
   det.setAttribute('aria-hidden', p._openDetail ? 'false':'true');
-  det.innerHTML=`<textarea placeholder="Detalle del proceso…">${p.detail||''}</textarea>`;
+  det.innerHTML=`<textarea ${locked?'readonly':''} placeholder="Detalle del proceso…">${p.detail||''}</textarea>`;
   const ta=det.querySelector('textarea');
   ta.oninput=e=>{ p.detail=e.target.value; save(); };
 
@@ -176,11 +220,12 @@ function procRow(p){
     e.stopPropagation();
     p._openDetail=!p._openDetail;
     toggleBlock(det,p._openDetail);
-    if(p._openDetail) setTimeout(()=>ta.focus(),0);
+    if(p._openDetail){ setTimeout(()=>ta.focus(),0); }
     save();
   };
-  bRen.onclick=e=>{ e.stopPropagation(); const nn=prompt('Nombre del proceso',p.name); if(nn){p.name=nn;save();render();} };
-  bDel.onclick=e=>{ e.stopPropagation(); if(confirm('¿Eliminar proceso y sus módulos?')){ const i=state.processes.findIndex(x=>x.id===p.id); if(i>-1){ state.processes.splice(i,1); activePid=state.processes[0]?.id||null; save(); render(); } } };
+  guardClick(bRen); guardClick(bDel);
+  bRen.onclick=e=>{ if(locked) return; e.stopPropagation(); const nn=prompt('Nombre del proceso',p.name); if(nn){p.name=nn;save();render();} };
+  bDel.onclick=e=>{ if(locked) return; e.stopPropagation(); if(confirm('¿Eliminar proceso y sus módulos?')){ const i=state.processes.findIndex(x=>x.id===p.id); if(i>-1){ state.processes.splice(i,1); activePid=state.processes[0]?.id||null; save(); render(); } } };
 
   wrap.appendChild(row); wrap.appendChild(det);
   return wrap;
@@ -219,10 +264,10 @@ function branchBox(p,m,st,kind,idx){
 
   const top=document.createElement('div'); top.className='bh-top';
   const label=document.createElement('div'); label.className='bh-label'; label.textContent=isYes?'SÍ':'NO';
-  const add=document.createElement('button'); add.className='p-mini'; add.textContent='＋'; add.title='Añadir punto';
-  const flag=document.createElement('button'); flag.className='p-mini'; flag.textContent='🚩'; flag.title='Bandera rama';
-  add.onclick=()=>{ st._openBranches=true; pushPoint(arr); save(); renderModules(); };
-  flag.onclick=()=>{ st._openBranches=true; openProcPicker(pid=>{ st[kind+'Link']={pid}; save(); renderModules(); }); };
+  const add=document.createElement('button'); add.className='p-mini needsEdit'; add.textContent='＋'; add.title='Añadir punto'; guardClick(add);
+  const flag=document.createElement('button'); flag.className='p-mini needsEdit'; flag.textContent='🚩'; flag.title='Bandera rama'; guardClick(flag);
+  add.onclick=()=>{ if(locked) return; st._openBranches=true; pushPoint(arr); save(); renderModules(); };
+  flag.onclick=()=>{ if(locked) return; st._openBranches=true; openProcPicker(pid=>{ st[kind+'Link']={pid}; save(); renderModules(); }); };
   top.appendChild(label); top.appendChild(add); top.appendChild(flag);
 
   if(st[kind+'Link']?.pid){
@@ -240,14 +285,16 @@ function branchBox(p,m,st,kind,idx){
     const li=document.createElement('div'); li.className='point';
     const num=`${idx+1}.${i+1}`;
     li.innerHTML=`<span class="num">${num}</span>
-      <input class="pt-input" placeholder="Escribe…" value="${pt.text||''}">
-      <button class="p-mini" title="Subpunto">＋</button>
-      <button class="p-mini" title="Bandera">🚩</button>
-      <button class="p-mini" title="Borrar">🗑</button>`;
-    li.querySelector('.pt-input').oninput=e=>{ pt.text=e.target.value; save(); };
-    li.querySelectorAll('.p-mini')[0].onclick=()=>{ st._openBranches=true; pushSubPoint(pt); save(); renderModules(); };
-    li.querySelectorAll('.p-mini')[1].onclick=()=>{ st._openBranches=true; openProcPicker(pid=>{ pt.link={pid}; save(); renderModules(); }); };
-    li.querySelectorAll('.p-mini')[2].onclick=()=>{ st._openBranches=true; delFromArray(arr,pt.id); save(); renderModules(); };
+      <input class="pt-input" ${locked?'readonly':''} placeholder="Escribe…" value="${pt.text||''}">
+      <button class="p-mini needsEdit" title="Subpunto">＋</button>
+      <button class="p-mini needsEdit" title="Bandera">🚩</button>
+      <button class="p-mini needsEdit" title="Borrar">🗑</button>`;
+    const inp=li.querySelector('.pt-input'); inp.oninput=e=>{ pt.text=e.target.value; save(); };
+    const [bAdd,bFlag,bDel]=li.querySelectorAll('.p-mini');
+    guardClick(bAdd); guardClick(bFlag); guardClick(bDel);
+    bAdd.onclick=()=>{ if(locked) return; st._openBranches=true; pushSubPoint(pt); save(); renderModules(); };
+    bFlag.onclick=()=>{ if(locked) return; st._openBranches=true; openProcPicker(pid=>{ pt.link={pid}; save(); renderModules(); }); };
+    bDel.onclick=()=>{ if(locked) return; st._openBranches=true; delFromArray(arr,pt.id); save(); renderModules(); };
 
     if(pt.link?.pid){
       const dest=state.processes.find(x=>x.id===pt.link.pid);
@@ -263,12 +310,13 @@ function branchBox(p,m,st,kind,idx){
       const cli=document.createElement('div'); cli.className='point';
       const cnum=`${num}.${j+1}`;
       cli.innerHTML=`<span class="num">${cnum}</span>
-        <input class="pt-input" placeholder="Subpunto…" value="${ch.text||''}">
-        <button class="p-mini" title="Bandera">🚩</button>
-        <button class="p-mini" title="Borrar">🗑</button>`;
-      cli.querySelector('.pt-input').oninput=e=>{ ch.text=e.target.value; save(); };
-      cli.querySelectorAll('.p-mini')[0].onclick=()=>{ st._openBranches=true; openProcPicker(pid=>{ ch.link={pid}; save(); renderModules(); }); };
-      cli.querySelectorAll('.p-mini')[1].onclick=()=>{ st._openBranches=true; const k=pt.children.indexOf(ch); if(k>-1){ pt.children.splice(k,1); save(); renderModules(); } };
+        <input class="pt-input" ${locked?'readonly':''} placeholder="Subpunto…" value="${ch.text||''}">
+        <button class="p-mini needsEdit" title="Bandera">🚩</button>
+        <button class="p-mini needsEdit" title="Borrar">🗑</button>`;
+      const cin=cli.querySelector('.pt-input'); cin.oninput=e=>{ ch.text=e.target.value; save(); };
+      const [cf,cd]=cli.querySelectorAll('.p-mini'); guardClick(cf); guardClick(cd);
+      cf.onclick=()=>{ if(locked) return; st._openBranches=true; openProcPicker(pid=>{ ch.link={pid}; save(); renderModules(); }); };
+      cd.onclick=()=>{ if(locked) return; st._openBranches=true; const k=pt.children.indexOf(ch); if(k>-1){ pt.children.splice(k,1); save(); renderModules(); } };
 
       if(ch.link?.pid){
         const dest=state.processes.find(x=>x.id===ch.link.pid);
@@ -291,11 +339,11 @@ function stepRow(p,m,st,index){
   const sc=document.createElement('div'); sc.className='step';
   sc.innerHTML=`
     <div class="bubble">${index+1}</div>
-    <input class="title" value="${st.title}">
+    <input class="title" ${locked?'readonly':''} value="${st.title}">
     <div class="minis">
-      <button class="mini" title="Bandera paso">🚩</button>
-      <button class="mini" title="Si / No">❓</button>
-      <button class="mini" title="Eliminar">–</button>
+      <button class="mini needsEdit" title="Bandera paso">🚩</button>
+      <button class="mini needsEdit" title="Si / No">❓</button>
+      <button class="mini needsEdit" title="Eliminar">–</button>
     </div>`;
   sc.style.setProperty('--proc',p.color);
   sc.addEventListener('click', (e)=>{
@@ -304,12 +352,13 @@ function stepRow(p,m,st,index){
     sc.classList.add('selected');
   });
 
-  sc.querySelector('.title').oninput=e=>{ st.title=e.target.value; save(); };
-  sc.querySelectorAll('.mini')[2].onclick=()=>{ m.steps.splice(index,1); save(); renderModules(); };
-  sc.querySelectorAll('.mini')[0].onclick=()=> openProcPicker(pid=>{ st.link={pid}; save(); renderModules(); });
+  const titleInp = sc.querySelector('.title'); titleInp.oninput=e=>{ st.title=e.target.value; save(); };
+  const [bFlag,bQ,bDel]=sc.querySelectorAll('.mini'); guardClick(bFlag); guardClick(bQ); guardClick(bDel);
+  bDel.onclick=()=>{ if(locked) return; m.steps.splice(index,1); save(); renderModules(); };
+  bFlag.onclick=()=> { if(locked) return; openProcPicker(pid=>{ st.link={pid}; save(); renderModules(); }); };
 
   const branches=document.createElement('div'); branches.className='branches'+(st._openBranches?'':' hide');
-  sc.querySelectorAll('.mini')[1].onclick=()=>{ st._openBranches=!st._openBranches; save(); toggleBlock(branches,st._openBranches); };
+  bQ.onclick=()=>{ if(locked) return; st._openBranches=!st._openBranches; save(); toggleBlock(branches,st._openBranches); };
 
   row.appendChild(sc);
 
@@ -336,17 +385,20 @@ function modCard(p,m){
 
   const head=document.createElement('div'); head.className='mod-head';
   head.style.setProperty('--proc',p.color);
-  head.innerHTML=`<input class="mod-title" value="${m.title}">
-    <select class="sel">${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
+  head.innerHTML=`<input class="mod-title" ${locked?'readonly':''} value="${m.title}">
+    <select class="sel" ${locked?'disabled':''}>${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
     <button class="pill" data-act="toggle-detail" aria-expanded="${m._openDetail?'true':'false'}">▾ Detalle</button>
-    <button class="pill" data-act="add-step">+ Paso</button>
-    <button class="pill" data-act="close">${m.completed?'🎯 Cerrado':'🎯 Guardar'}</button>
-    <button class="pill" data-act="del">–</button>`;
+    <button class="pill needsEdit" data-act="add-step">+ Paso</button>
+    <button class="pill needsEdit" data-act="close">${m.completed?'🎯 Cerrado':'🎯 Guardar'}</button>
+    <button class="pill needsEdit" data-act="del">–</button>`;
   const titleEl=head.querySelector('.mod-title');
   titleEl.oninput=e=>{ m.title=e.target.value; save(); };
   titleEl.ondblclick=()=>{ m._openDetail=!m._openDetail; toggleBlock(det,m._openDetail); if(m._openDetail){ setTimeout(()=>det.querySelector('textarea').focus(),0);} save(); };
   head.querySelector('select').onchange=e=>{ m.responsable=e.target.value; save(); };
-  head.querySelector('[data-act="add-step"]').onclick=()=>{ m.steps.push(makeStep()); save(); renderModules(); };
+  const btnAdd=head.querySelector('[data-act="add-step"]'); guardClick(btnAdd);
+  const btnClose=head.querySelector('[data-act="close"]'); guardClick(btnClose);
+  const btnDel=head.querySelector('[data-act="del"]'); guardClick(btnDel);
+  head.querySelector('[data-act="add-step"]').onclick=()=>{ if(locked) return; m.steps.push(makeStep()); save(); renderModules(); };
   head.querySelector('[data-act="toggle-detail"]').onclick=(ev)=>{
     m._openDetail=!m._openDetail;
     ev.currentTarget.setAttribute('aria-expanded', m._openDetail?'true':'false');
@@ -354,14 +406,14 @@ function modCard(p,m){
     if(m._openDetail){ setTimeout(()=>det.querySelector('textarea').focus(),0); }
     save();
   };
-  head.querySelector('[data-act="close"]').onclick=()=>{ m.completed=!m.completed; save(); renderModules(); };
-  head.querySelector('[data-act="del"]').onclick=()=>{ if(confirm('¿Eliminar subproceso?')){ const i=p.modules.findIndex(x=>x.id===m.id); if(i>-1){ p.modules.splice(i,1); save(); renderModules(); } } };
+  head.querySelector('[data-act="close"]').onclick=()=>{ if(locked) return; m.completed=!m.completed; save(); renderModules(); };
+  head.querySelector('[data-act="del"]').onclick=()=>{ if(locked) return; if(confirm('¿Eliminar subproceso?')){ const i=p.modules.findIndex(x=>x.id===m.id); if(i>-1){ p.modules.splice(i,1); save(); renderModules(); } } };
   card.appendChild(head);
 
   const det=document.createElement('div'); 
   det.className='mod-detail'+(m._openDetail?'':' hide');
   det.setAttribute('aria-hidden', m._openDetail ? 'false':'true');
-  det.innerHTML=`<textarea placeholder="Descripción del subproceso…">${m.detail||''}</textarea>`;
+  det.innerHTML=`<textarea ${locked?'readonly':''} placeholder="Descripción del subproceso…">${m.detail||''}</textarea>`;
   const mta=det.querySelector('textarea');
   mta.oninput=e=>{ m.detail=e.target.value; save(); };
   card.appendChild(det);
@@ -392,27 +444,71 @@ function createModuleForProcess(pid,titleOverride){
   p.modules.push(m); save(); renderModules(); return m;
 }
 function addProcess(){
+  if(locked){ alert('PIN requerido: AR4321'); return; }
   const color=colors[state.processes.length%colors.length];
   const p={id:uid(),name:'Nuevo proceso',color,detail:'',modules:[],_openDetail:false};
   state.processes.push(p); activePid=p.id; save(); render();
 }
 function addStepGlobal(){
+  if(locked){ alert('PIN requerido: AR4321'); return; }
   const p=state.processes.find(x=>x.id===activePid)||state.processes[0];
   if(!p){ alert('Primero crea un proceso'); return; }
   let m=p.modules[p.modules.length-1];
-  if(!m) m=createModuleForProcess(p.id,'Pasos');   /* título Pasos si nace desde +Paso */
+  if(!m) m=createModuleForProcess(p.id,'Pasos');
   m.steps.push(makeStep()); save(); renderModules();
 }
 
 /* ===== Render maestro ===== */
-function render(){ renderProcesses(); renderModules(); }
+function render(){ renderProcesses(); renderModules(); setTimeout(updateLockUI,0); }
+
+/* ====== NUEVO: Imprimir/PDF (todos los contenidos) ====== */
+function buildPrintSheet(){
+  const host=document.createElement('div'); host.className='printsheet';
+  const title=document.createElement('div'); title.className='print-title'; title.textContent='PROCESOS AUDIO — Impresión';
+  host.appendChild(title);
+  state.processes.forEach(p=>{
+    const sec=document.createElement('section'); sec.className='print-proc';
+    const h=document.createElement('h2'); h.textContent=p.name; h.style.margin='6px 0'; sec.appendChild(h);
+    // clonar módulos mostrando todo
+    p.modules.forEach(m=>{
+      // clonar datos con detalles abiertos
+      const m2=JSON.parse(JSON.stringify(m));
+      m2._openDetail=true;
+      (m2.steps||[]).forEach(st=>{ st._openBranches=true; });
+      const tempP={id:p.id,color:p.color,name:p.name};
+      sec.appendChild(modCard(tempP,m2));
+    });
+    host.appendChild(sec);
+  });
+  return host;
+}
+function doPrintAll(){
+  const sheet=buildPrintSheet();
+  document.body.appendChild(sheet);
+  window.addEventListener('afterprint',()=>{ sheet.remove(); },{once:true});
+  window.print();
+}
+
+/* ====== NUEVO: Descargar HTML autocontenido ====== */
+function downloadHTML(){
+  const html=document.documentElement.outerHTML;
+  const data=JSON.stringify(state);
+  const inj = `<script>try{localStorage.setItem('${LSKEY}', ${JSON.stringify(data)});}catch(e){}</script>`;
+  const final = html.replace('<head>', '<head>'+inj);
+  const blob=new Blob([final],{type:'text/html'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='procesos-audio.html'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
 
 /* ===== Boot ===== */
-load(); document.getElementById('stamp').textContent='Última actualización '+stamp(); render();
+load(); document.getElementById('stamp').textContent='Última actualización '+stampNow(); render();
+
 document.getElementById('btnAddProcess').onclick=addProcess;
-document.getElementById('btnAddSubprocPaso').onclick=()=>{ const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p){alert('Crea un proceso');return;} createModuleForProcess(p.id,'Nuevo subproceso'); };
+document.getElementById('btnAddSubprocPaso').onclick=()=>{ if(locked){alert('PIN requerido: AR4321');return;} const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p){alert('Crea un proceso');return;} createModuleForProcess(p.id,'Nuevo subproceso'); };
 document.getElementById('btnAddStepGlobal').onclick=addStepGlobal;
 document.getElementById('btnSave').onclick=save;
+
 document.getElementById('q').addEventListener('input',e=>{
   const q=e.target.value.toLowerCase();
   document.querySelectorAll('.proc-item').forEach(el=>{
@@ -420,6 +516,22 @@ document.getElementById('q').addEventListener('input',e=>{
     el.classList.toggle('hide',!name.includes(q));
   });
 });
+
+/* Icons: PIN / Print / HTML */
+document.getElementById('icoPin').onclick=()=>{
+  if(locked){
+    const v=prompt('Introduce PIN para editar','');
+    if(v===PIN_CODE){ locked=false; updateLockUI(); }
+    else alert('PIN incorrecto');
+  }else{
+    locked=true; updateLockUI();
+  }
+};
+document.getElementById('icoPrint').onclick=doPrintAll;
+document.getElementById('icoHtml').onclick=downloadHTML;
+
+/* Al iniciar, bloqueo activo */
+updateLockUI();
 </script>
 </body>
 </html>
