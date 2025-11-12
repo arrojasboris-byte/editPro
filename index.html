@@ -440,10 +440,18 @@ function addStepGlobal(){
 }
 
 /* ===== Render maestro ===== */
-function render(){ renderProcesses(); renderModules(); applyPinLockUI(); }
+function render(){
+  renderProcesses();
+  renderModules();
+  // Llamada segura: evita ReferenceError si aún no está definida
+  if (window.applyPinLockUI) window.applyPinLockUI();
+}
 
 /* ===== Boot ===== */
-load(); document.getElementById('stamp').textContent='Última actualización '+stamp(); render();
+load(); document.getElementById('stamp').textContent='Última actualización '+stamp();
+// Fallback para que render() nunca falle aunque el bloque de utilidades aún no definiera la función
+window.applyPinLockUI = window.applyPinLockUI || function(){};
+render();
 document.getElementById('btnAddProcess').onclick=addProcess;
 document.getElementById('btnAddSubprocPaso').onclick=()=>{ const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p){alert('Crea un proceso');return;} createModuleForProcess(p.id,'Nuevo subproceso'); };
 document.getElementById('btnAddStepGlobal').onclick=addStepGlobal;
