@@ -21,6 +21,7 @@
   .topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:.75rem;
     padding:.65rem .9rem;background:var(--grad);color:#fff;box-shadow:var(--shadow)}
   .title{display:flex;align-items:center;gap:.5rem;font-weight:900;font-size:22px}
+  .title .ear{font-size:30px;line-height:1;display:inline-block;transform:translateY(2px)}
   .search{flex:1;display:flex;align-items:center;background:rgba(255,255,255,.18);padding:.4rem .6rem;border-radius:9999px}
   .search input{width:100%;border:0;background:transparent;outline:0;color:#fff;font-weight:600}
   .btn3d{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border:0;border-radius:9999px;color:#fff;
@@ -28,6 +29,7 @@
   .btn3d:active{transform:translateY(1px)}
   .bar-right{margin-left:auto;display:flex;align-items:center;gap:.5rem}
   .stamp{color:#fff;opacity:.9;font-size:12px;background:rgba(255,255,255,.14);border-radius:9999px;padding:.35rem .75rem}
+  .bar-right .btn3d svg{width:14px;height:14px}
 
   /* ===== Layout ===== */
   .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px;min-height:calc(100dvh - 64px)}
@@ -96,21 +98,48 @@
 
   .hide{display:none!important}
 
-  /* ===== Toast pequeño para utilidades ===== */
+  /* ===== Toast pequeño ===== */
   .pa-toast{position:fixed;right:14px;bottom:16px;background:#111;color:#fff;padding:.6rem .8rem;border-radius:10px;
     box-shadow:0 6px 18px rgba(0,0,0,.2);opacity:0;transform:translateY(6px);transition:all .2s;z-index:99999;font:14px system-ui}
   .pa-toast.show{opacity:1;transform:translateY(0)}
   @media print{ .pa-tools-hide{display:none!important} }
+
+  /* ===== Modo bloqueado por PIN ===== */
+  body.pa-locked .is-readonly{opacity:.6;filter:saturate(.6)}
+  body.pa-locked .lock-block{ pointer-events:none !important; opacity:.6; }
+  body.pa-locked input[readonly], body.pa-locked textarea[readonly]{background:#f7f7f7}
 </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="title">🎧 PROCESOS AUDIO</div>
+    <div class="title"><span class="ear">🎧</span> PROCESOS AUDIO</div>
     <div class="search"><input id="q" placeholder="Buscar…"></div>
     <button id="btnAddProcess" class="btn3d">+ Procesos</button>
     <button id="btnAddStepGlobal" class="btn3d" title="Añadir paso al subproceso abierto">+ Paso</button>
     <button id="btnAddSubprocPaso" class="btn3d">+ Subproceso + Paso</button>
     <div class="bar-right">
+      <!-- Utilidades -->
+      <button id="paPinBtn" class="btn3d pa-tools-hide" title="PIN (AR4321)">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 8V7a5 5 0 10-10 0v1M6 8h12v12H6V8z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        PIN
+      </button>
+      <button id="paPdfBtn" class="btn3d pa-tools-hide" title="Imprimir / Guardar PDF">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9V4h12v5M6 18h12M6 14h12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        PDF
+      </button>
+      <button id="paHtmlBtn" class="btn3d pa-tools-hide" title="Descargar HTML idéntico">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        HTML
+      </button>
+      <button id="paSaveCloud" class="btn3d pa-tools-hide" title="Guardar copia en nube (local)">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 18a4 4 0 110-8 5 5 0 119.9 1H18a3 3 0 110 6H7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Nube
+      </button>
+      <button id="paLoadCloud" class="btn3d pa-tools-hide" title="Abrir copia guardada">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 10-3.17 6.34" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Actualizar
+      </button>
+
       <span id="stamp" class="stamp">—</span>
       <button id="btnSave" class="btn3d">💾 Guardar</button>
     </div>
@@ -411,7 +440,7 @@ function addStepGlobal(){
 }
 
 /* ===== Render maestro ===== */
-function render(){ renderProcesses(); renderModules(); }
+function render(){ renderProcesses(); renderModules(); applyPinLockUI(); }
 
 /* ===== Boot ===== */
 load(); document.getElementById('stamp').textContent='Última actualización '+stamp(); render();
@@ -428,40 +457,12 @@ document.getElementById('q').addEventListener('input',e=>{
 });
 
 /* =======================================================================
-   UTILIDADES AÑADIDAS (PIN, PDF/IMPRIMIR, DESCARGAR HTML, NUBE/ACTUALIZAR)
-   — No toca tu lógica. No usa document.write. Se inyecta en .bar-right.
+   UTILIDADES (PIN, PDF/Imprimir, Descargar HTML, Guardar / Cargar nube)
    ======================================================================= */
 (function(){
   const PIN_CODE = 'AR4321';
   const SNAP_KEY = 'PA_SNAPSHOT_V1';
 
-  const barRight = document.querySelector('.topbar .bar-right');
-  if(!barRight) return;
-
-  const mk = (id, label, title, svg) => {
-    const b = document.createElement('button');
-    b.id = id; b.className = 'btn3d pa-tools-hide'; b.title = title;
-    b.innerHTML = `${svg} ${label}`;
-    return b;
-  };
-
-  const pinSVG  = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M17 8V7a5 5 0 10-10 0v1M6 8h12v12H6V8z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const pdfSVG  = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M6 9V4h12v5M6 18h12M6 14h12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const htmlSVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const saveSVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M7 18a4 4 0 110-8 5 5 0 119.9 1H18a3 3 0 110 6H7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const syncSVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 10-3.17 6.34" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
-  const pinBtn  = mk('paPinBtn','PIN','PIN (AR4321)', pinSVG);
-  const pdfBtn  = mk('paPdfBtn','PDF','Imprimir / Guardar PDF', pdfSVG);
-  const htmlBtn = mk('paHtmlBtn','HTML','Descargar HTML idéntico', htmlSVG);
-  const saveBtn = mk('paSaveCloud','Nube','Guardar copia en nube (localStorage)', saveSVG);
-  const loadBtn = mk('paLoadCloud','Actualizar','Abrir copia guardada', syncSVG);
-
-  // Insertamos antes del botón Guardar
-  const guardar = document.getElementById('btnSave');
-  [pinBtn,pdfBtn,htmlBtn,saveBtn,loadBtn].forEach(b=> barRight.insertBefore(b, guardar));
-
-  // Toast
   const toast = (() => {
     const n = document.createElement('div');
     n.className='pa-toast'; n.id='paToast';
@@ -471,22 +472,103 @@ document.getElementById('q').addEventListener('input',e=>{
 
   const fileStamp = () => { const d=new Date(),p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`; };
 
-  // Abre temporalmente detalles ocultos para impresión y luego restaura
+  const pinBtn  = document.getElementById('paPinBtn');
+  const pdfBtn  = document.getElementById('paPdfBtn');
+  const htmlBtn = document.getElementById('paHtmlBtn');
+  const saveBtn = document.getElementById('paSaveCloud');
+  const loadBtn = document.getElementById('paLoadCloud');
+
+  /* ====== Bloqueo de escritura por PIN ====== */
+  window.applyPinLockUI = function applyPinLockUI(){
+    const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
+    document.body.classList.toggle('pa-locked', locked);
+
+    // Botones globales de añadir (bloqueados)
+    ['#btnAddProcess','#btnAddStepGlobal','#btnAddSubprocPaso'].forEach(sel=>{
+      const b=document.querySelector(sel);
+      if(b){ b.classList.toggle('lock-block', locked); b.toggleAttribute('disabled', locked); }
+    });
+
+    // Dentro de lista de procesos: bloquear Renombrar / Eliminar (permitir Detalle)
+    document.querySelectorAll('.proc-item .icon-btn[title="Renombrar"], .proc-item .icon-btn[title="Eliminar"]').forEach(b=>{
+      b.classList.toggle('lock-block', locked);
+      b.toggleAttribute('disabled', locked);
+    });
+
+    // Inputs / Textareas / Select (solo lectura)
+    document.querySelectorAll('input.title, .mod-title, textarea, .pt-input').forEach(el=>{
+      el.toggleAttribute('readonly', locked);
+      el.classList.toggle('is-readonly', locked);
+    });
+    document.querySelectorAll('select.sel').forEach(s=>{
+      s.toggleAttribute('disabled', locked);
+      s.classList.toggle('is-readonly', locked);
+    });
+
+    // En cabeceras de módulo: bloquear + Paso / Guardar-Cerrar / Eliminar  (permitir ▾ Detalle)
+    document.querySelectorAll('[data-act="add-step"], [data-act="close"], [data-act="del"]').forEach(b=>{
+      b.classList.toggle('lock-block', locked);
+      b.toggleAttribute('disabled', locked);
+    });
+
+    // En pasos: bloquear 🗑 y 🚩 (permitir ❓ para solo ver Si/No)
+    document.querySelectorAll('.step .mini[title="Eliminar"], .step .mini[title="Bandera paso"]').forEach(b=>{
+      b.classList.toggle('lock-block', locked);
+      b.toggleAttribute('disabled', locked);
+    });
+
+    // En ramas Si/No: bloquear añadir/borrar/flag/subpuntos (visualizar sigue posible si estaba abierto)
+    document.querySelectorAll('.branch .p-mini').forEach(b=>{
+      b.classList.toggle('lock-block', locked);
+      b.toggleAttribute('disabled', locked);
+    });
+  };
+
+  // Interceptor defensivo: si está bloqueado, cancela clicks que modifiquen
+  function cancelIfLocked(e){
+    const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
+    if(!locked) return;
+    const t = e.target.closest('button, input, textarea, select');
+    if(!t) return;
+    const denySel = [
+      '#btnAddProcess','#btnAddStepGlobal','#btnAddSubprocPaso',
+      '.proc-item .icon-btn[title="Renombrar"]',
+      '.proc-item .icon-btn[title="Eliminar"]',
+      '[data-act="add-step"]','[data-act="close"]','[data-act="del"]',
+      '.step .mini[title="Eliminar"]','.step .mini[title="Bandera paso"]',
+      '.branch .p-mini'
+    ].join(',');
+    if(t.matches(denySel) || (t.tagName==='SELECT') || (t.tagName==='INPUT' && t.classList.contains('title')) ||
+       (t.tagName==='TEXTAREA') || t.classList.contains('pt-input')){
+      e.stopPropagation(); e.preventDefault();
+      toast('Modo lectura: bloqueado por PIN');
+    }
+  }
+  document.addEventListener('click', cancelIfLocked, true);
+  document.addEventListener('input', cancelIfLocked, true);
+  document.addEventListener('change', cancelIfLocked, true);
+
+  // Reaplicar bloqueo ante cambios del DOM (cuando render() reconstruye)
+  const mo = new MutationObserver(()=>applyPinLockUI());
+  mo.observe(document.body,{childList:true,subtree:true});
+
   function printAll(){
     const opened=[];
-    document.querySelectorAll('.proc-detail, .mod-detail').forEach(b=>{
-      const wasHidden = b.classList.contains('hide') || b.style.display==='none';
-      if(wasHidden){ opened.push(b); showBlock(b); }
+    document.querySelectorAll('.proc-detail, .mod-detail, .branches, details').forEach(b=>{
+      const wasHidden = (b.classList && (b.classList.contains('hide') || b.style.display==='none')) || (b.tagName==='DETAILS' && !b.open);
+      if(wasHidden){
+        if(b.tagName==='DETAILS') b.open=true; else showBlock(b);
+        opened.push(b);
+      }
     });
-    const restore=()=>{ opened.forEach(h=>hideBlock(h)); window.removeEventListener('afterprint',restore); };
+    const restore=()=>{ opened.forEach(h=>{ if(h.tagName==='DETAILS') h.open=false; else hideBlock(h); }); window.removeEventListener('afterprint',restore); };
     window.addEventListener('afterprint',restore);
     window.print();
   }
 
-  // Clona el DOM y quita las utilidades para descarga limpia
   function currentHTML(){
     const clone=document.documentElement.cloneNode(true);
-    clone.querySelectorAll('.pa-tools-hide, #paToast').forEach(el=>el?.parentNode?.removeChild(el));
+    clone.querySelectorAll('#paToast').forEach(el=>el?.parentNode?.removeChild(el));
     return '<!DOCTYPE html>\n'+clone.outerHTML;
   }
 
@@ -521,24 +603,26 @@ document.getElementById('q').addEventListener('input',e=>{
 
   function togglePin(){
     if(sessionStorage.getItem('PA_PIN_OK')==='1'){
-      sessionStorage.removeItem('PA_PIN_OK'); pinBtn.style.background='';
+      sessionStorage.removeItem('PA_PIN_OK');
+      pinBtn.classList.remove('locked');
+      applyPinLockUI();
       toast('Edición bloqueada');
     }else{
       const v=prompt('Introduce PIN para editar:');
-      if(v==='AR4321'){ sessionStorage.setItem('PA_PIN_OK','1'); pinBtn.style.background='rgba(255,255,255,.35)'; toast('Edición habilitada'); }
+      if(v==='AR4321'){ sessionStorage.setItem('PA_PIN_OK','1'); pinBtn.classList.add('locked'); applyPinLockUI(); toast('Edición habilitada'); }
       else if(v!==null){ toast('PIN incorrecto'); }
     }
   }
-  if(sessionStorage.getItem('PA_PIN_OK')==='1'){ pinBtn.style.background='rgba(255,255,255,.35)'; }
 
-  pinBtn.addEventListener('click', togglePin);
-  pdfBtn.addEventListener('click',  printAll);
-  htmlBtn.addEventListener('click', downloadHTML);
-  saveBtn.addEventListener('click', saveToCloud);
-  loadBtn.addEventListener('click', loadFromCloud);
+  // Wire
+  pinBtn?.addEventListener('click', togglePin);
+  pdfBtn?.addEventListener('click',  printAll);
+  htmlBtn?.addEventListener('click', downloadHTML);
+  saveBtn?.addEventListener('click', saveToCloud);
+  loadBtn?.addEventListener('click', loadFromCloud);
 
-  // Autotest rápido (evita errores de exportación)
-  try{ new Blob([currentHTML()],{type:'text/html'}); }catch(e){ console.error('Export check fail',e); }
+  // Estado inicial: bloqueado hasta meter PIN
+  if(sessionStorage.getItem('PA_PIN_OK')!=='1'){ applyPinLockUI(); }
 })();
 </script>
 </body>
