@@ -12,7 +12,6 @@
     --ring:0 0 0 2px rgba(59,130,246,.15);
     --grad:linear-gradient(90deg,#6f1d1b 0%,#b23a3a 50%,#6f1d1b 100%);
     --pillGrad:linear-gradient(180deg,#ffffff 0%,#f2f4f8 100%);
-    --ok:#10b981; --warn:#f59e0b; --danger:#ef4444; --info:#3b82f6;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -51,8 +50,10 @@
   .proc-detail textarea{width:100%;min-height:72px;border-radius:10px;border:1px solid #e6e8ec;padding:.5rem}
 
   /* ===== Subproceso (módulo) derecha ===== */
-  .module{background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);display:flex;flex-direction:column;gap:8px;padding:10px}
-  .mod-head{display:flex;align-items:center;gap:.5rem;background:#333;color:#fff;border-radius:12px;padding:.5rem .7rem}
+  .module{position:relative;background:var(--pillGrad);border-radius:14px;box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06);display:flex;flex-direction:column;gap:8px;padding:10px}
+  /* Faldón del subproceso del color del proceso */
+  .module::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:var(--proc,#ffd166);border-radius:14px 14px 0 0}
+  .mod-head{display:flex;align-items:center;gap:.5rem;background:var(--proc,#333);color:#fff;border-radius:12px;padding:.5rem .7rem}
   .mod-title{flex:1;font-weight:900;border:0;background:transparent;color:#fff;outline:0}
   .sel{border:1px solid #e6e8ec;background:#fff;border-radius:10px;padding:.35rem .5rem}
   .pill{height:34px;padding:0 .75rem;background:#222;border-radius:9999px;color:#fff;border:0;cursor:pointer;
@@ -64,16 +65,18 @@
   .mod-detail textarea{width:100%;min-height:60px;border:1px solid #e6e8ec;border-radius:10px;padding:.5rem;background:#fff}
 
   /* ===== Pasos ===== */
-  .steps{display:flex;flex-direction:column;gap:10px;padding:6px; /* color de línea del proceso */ }
-  /* cada paso ocupa 100% con conector vertical */
+  .steps{display:flex;flex-direction:column;gap:10px;padding:6px}
   .step{position:relative;display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:.65rem .7rem;
     box-shadow:inset 0 1px 0 #fff,0 1px 0 rgba(0,0,0,.06); width:100%}
   .bubble{min-width:36px;height:36px;border-radius:9999px;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;
     z-index:2;box-shadow:0 2px 0 rgba(0,0,0,.3)}
-  /* conector vertical del color del proceso – no tapa el número */
+  /* Conector vertical (del color del proceso) */
   .step::before{content:""; position:absolute; left:43px; top:-14px; bottom:-14px; width:5px; background:var(--proc,#ffd166); opacity:.9; border-radius:2px; z-index:0}
   .steps .step:first-child::before{top:20px}
   .steps .step:last-child::before{bottom:20px}
+  /* Faldón al seleccionar un paso */
+  .step.selected{box-shadow:inset 0 0 0 3px var(--proc,#ffd166),0 8px 20px rgba(0,0,0,.1)}
+  .step.selected::after{content:"";position:absolute;left:-6px;right:-6px;top:-6px;bottom:-6px;border-radius:14px;background:var(--proc,#ffd166);opacity:.12;pointer-events:none;z-index:1}
   .step input.title{font-weight:800;border:0;background:transparent;outline:0;width:100%}
   .minis{display:flex;gap:.35rem;margin-left:auto}
   .mini{width:30px;height:30px;border-radius:10px;border:0;background:#f2f4f8;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(0,0,0,.1)}
@@ -93,6 +96,7 @@
   .p-mini{width:24px;height:24px;border-radius:8px;border:0;background:#f2f4f8;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(0,0,0,.1)}
   .p-mini:active{transform:translateY(1px)}
   .children{margin-left:44px;display:flex;flex-direction:column;gap:.2rem}
+
   .hide{display:none!important}
 </style>
 </head>
@@ -257,8 +261,7 @@ function branchBox(p,m,st,kind,idx){
       if(ch.link?.pid){
         const dest=state.processes.find(x=>x.id===ch.link.pid);
         if(dest){
-          const cc=document.createElement('span'); cc.className='chip'; cc.style.background=dest.color; cc.style.marginLeft='.35rem';
-          cc.innerHTML=`→ <small>${dest.name}</small>`;
+          const cc=document.createElement('span'); cc.className='chip'; cc.style.background=dest.color; cc.innerHTML=`→ <small>${dest.name}</small>`;
           cli.appendChild(cc);
         }
       }
@@ -283,12 +286,19 @@ function stepRow(p,m,st,index){
       <button class="mini" title="Eliminar">–</button>
     </div>`;
   sc.style.setProperty('--proc',p.color);
+  /* selección visual (faldón) al clicar el paso */
+  sc.addEventListener('click', (e)=>{
+    if(e.target.closest('.mini') || e.target.classList.contains('title')) return;
+    sc.closest('.steps').querySelectorAll('.step').forEach(s=>s.classList.remove('selected'));
+    sc.classList.add('selected');
+  });
+
   sc.querySelector('.title').oninput=e=>{ st.title=e.target.value; save(); };
   sc.querySelectorAll('.mini')[2].onclick=()=>{ m.steps.splice(index,1); save(); renderModules(); };
   sc.querySelectorAll('.mini')[0].onclick=()=> openProcPicker(pid=>{ st.link={pid}; save(); renderModules(); });
+
   const branches=document.createElement('div'); branches.className='branches hide';
   sc.querySelectorAll('.mini')[1].onclick=()=> branches.classList.toggle('hide');
-
   row.appendChild(sc);
 
   if(st.link?.pid){
@@ -310,6 +320,7 @@ function stepRow(p,m,st,index){
 /* ====== Subproceso (módulo) ====== */
 function modCard(p,m){
   const card=document.createElement('div'); card.className='module';
+  card.style.setProperty('--proc',p.color);
 
   const head=document.createElement('div'); head.className='mod-head';
   head.innerHTML=`<input class="mod-title" value="${m.title}">
