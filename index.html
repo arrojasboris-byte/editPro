@@ -132,7 +132,7 @@
         HTML
       </button>
       <button id="paSaveCloud" class="btn3d pa-tools-hide" title="Guardar copia en nube (local)">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 18a4 4 0 110-8 5 5 0 119.9 1H18a3 3 0 110 6H7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 18a4 4 0 110-8 0 5 5 0 119.9 1H18a3 3 0 110 6H7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Nube
       </button>
       <button id="paLoadCloud" class="btn3d pa-tools-hide" title="Abrir copia guardada">
@@ -171,7 +171,7 @@ const LSKEY='pa_v3_connectors_3d';
 const RESPONSABLES=['Audiólogo','Responsable','Otros'];
 const colors=['#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5','#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'];
 const uid=()=>'p'+Math.random().toString(36).slice(2,9);
-const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
+const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${p(d.getFullYear())}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
 
 const state={processes:[]};
 let activePid=null;
@@ -189,6 +189,7 @@ function load(){
 /* ===== Izquierda: procesos ===== */
 function procRow(p){
   const wrap=document.createElement('div'); wrap.className='proc-item'+(p.id===activePid?' activo':'');
+  wrap.dataset.pid = p.id;  // <--- AÑADIDO PARA BUSCADOR GLOBAL
   const row=document.createElement('div'); row.className='proc-row';
   row.innerHTML=`<span class="dot" style="background:${p.color}"></span>
     <span class="proc-name">${p.name}</span>
@@ -368,6 +369,8 @@ function stepRow(p,m,st,index){
 function modCard(p,m){
   const card=document.createElement('div'); card.className='module';
   card.style.setProperty('--proc',p.color);
+  card.dataset.mid = m.id;  // <--- AÑADIDO PARA BUSCADOR GLOBAL
+  card.dataset.pid = p.id;  // <--- AÑADIDO PARA BUSCADOR GLOBAL
 
   const head=document.createElement('div'); head.className='mod-head';
   head.style.setProperty('--proc',p.color);
@@ -456,11 +459,81 @@ document.getElementById('btnAddProcess').onclick=addProcess;
 document.getElementById('btnAddSubprocPaso').onclick=()=>{ const p=state.processes.find(x=>x.id===activePid)||state.processes[0]; if(!p){alert('Crea un proceso');return;} createModuleForProcess(p.id,'Nuevo subproceso'); };
 document.getElementById('btnAddStepGlobal').onclick=addStepGlobal;
 document.getElementById('btnSave').onclick=save;
+
+/* ====== MATCHERS PARA BUSCADOR GLOBAL (procesos, subprocesos y pasos) ====== */
+function stepMatches(st, q){
+  if(!q) return true;
+  const ql = q.toLowerCase();
+  if((st.title||'').toLowerCase().includes(ql)) return true;
+
+  const checkPoints = (list=[])=>{
+    for(const pt of list){
+      if((pt.text||'').toLowerCase().includes(ql)) return true;
+      if(Array.isArray(pt.children)){
+        for(const ch of pt.children){
+          if((ch.text||'').toLowerCase().includes(ql)) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  if(checkPoints(st.yes||[])) return true;
+  if(checkPoints(st.no||[])) return true;
+  return false;
+}
+
+function moduleMatches(m, q){
+  if(!q) return true;
+  const ql = q.toLowerCase();
+  if((m.title||'').toLowerCase().includes(ql)) return true;
+  if((m.detail||'').toLowerCase().includes(ql)) return true;
+
+  if(Array.isArray(m.steps)){
+    for(const st of m.steps){
+      if(stepMatches(st, ql)) return true;
+    }
+  }
+  return false;
+}
+
+function processMatches(p, q){
+  if(!q) return true;
+  const ql = q.toLowerCase();
+  if((p.name||'').toLowerCase().includes(ql)) return true;
+  if((p.detail||'').toLowerCase().includes(ql)) return true;
+
+  if(Array.isArray(p.modules)){
+    for(const m of p.modules){
+      if(moduleMatches(m, ql)) return true;
+    }
+  }
+  return false;
+}
+
+/* ===== Buscador global sobre procesos, subprocesos y pasos ===== */
 document.getElementById('q').addEventListener('input',e=>{
-  const q=e.target.value.toLowerCase();
+  const q = e.target.value.trim().toLowerCase();
+
+  // 1) FILTRO EN PROCESOS (IZQUIERDA)
   document.querySelectorAll('.proc-item').forEach(el=>{
-    const name=el.querySelector('.proc-name').textContent.toLowerCase();
-    el.classList.toggle('hide',!name.includes(q));
+    const pid = el.dataset.pid;
+    const p = state.processes.find(x=>x.id===pid);
+    const visible = !q || (p && processMatches(p, q));
+    el.classList.toggle('hide', !visible);
+  });
+
+  // 2) FILTRO EN SUBPROCESOS (DERECHA) DEL PROCESO ACTIVO
+  const pActive = state.processes.find(x=>x.id===activePid) || state.processes[0];
+  if(!pActive){
+    return;
+  }
+
+  document.querySelectorAll('#modules .module').forEach(el=>{
+    const mid = el.dataset.mid;
+    const m = pActive.modules.find(x=>x.id===mid);
+    const visible = !q || (m && moduleMatches(m, q));
+    el.classList.toggle('hide', !visible);
   });
 });
 
