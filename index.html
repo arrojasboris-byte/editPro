@@ -23,19 +23,26 @@
     top:0;
     z-index:30;
     display:flex;
-    flex-wrap:wrap; /* permite segunda fila */
+    flex-wrap:wrap;
     align-items:center;
     gap:.75rem;
-    padding:.65rem .9rem .75rem; /* un poco más alto */
+    padding:.65rem .9rem .75rem;
     background:var(--grad);
     color:#fff;
     box-shadow:var(--shadow)
   }
-  .title{display:flex;align-items:center;gap:.5rem;font-weight:900;font-size:22px}
+  .title{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    font-weight:900;
+    font-size:22px;
+    flex:1 1 100%;     /* <-- título ocupa fila completa */
+  }
   .title .ear{font-size:30px;line-height:1;display:inline-block;transform:translateY(2px)}
   .search{
-    flex:1 1 100%;          /* ocupa todo el ancho disponible */
-    order:2;                /* pasa a la segunda fila */
+    flex:1 1 100%;    /* ocupa todo el ancho disponible */
+    order:2;          /* tercera fila, debajo de botones */
     display:flex;
     align-items:center;
     background:rgba(255,255,255,.18);
@@ -133,9 +140,12 @@
 <body>
   <div class="topbar">
     <div class="title"><span class="ear">🎧</span> PROCESOS AUDIO</div>
+
+    <!-- Botones en el orden solicitado: Procesos, Subproceso+Paso, Paso -->
     <button id="btnAddProcess" class="btn3d">+ Procesos</button>
-    <button id="btnAddStepGlobal" class="btn3d" title="Añadir paso al subproceso abierto">+ Paso</button>
     <button id="btnAddSubprocPaso" class="btn3d">+ Subproceso + Paso</button>
+    <button id="btnAddStepGlobal" class="btn3d" title="Añadir paso al subproceso abierto">+ Paso</button>
+
     <div class="bar-right">
       <!-- Utilidades -->
       <button id="paPinBtn" class="btn3d pa-tools-hide" title="PIN (AR4321)">
@@ -162,7 +172,8 @@
       <span id="stamp" class="stamp">—</span>
       <button id="btnSave" class="btn3d">💾 Guardar</button>
     </div>
-    <!-- Buscador en segunda fila -->
+
+    <!-- Buscador en la fila inferior del faldón -->
     <div class="search"><input id="q" placeholder="Buscar…"></div>
   </div>
 
@@ -210,7 +221,7 @@ function load(){
 /* ===== Izquierda: procesos ===== */
 function procRow(p){
   const wrap=document.createElement('div'); wrap.className='proc-item'+(p.id===activePid?' activo':'');
-  wrap.dataset.pid = p.id;  // <--- AÑADIDO PARA BUSCADOR GLOBAL
+  wrap.dataset.pid = p.id;
   const row=document.createElement('div'); row.className='proc-row';
   row.innerHTML=`<span class="dot" style="background:${p.color}"></span>
     <span class="proc-name">${p.name}</span>
@@ -390,8 +401,8 @@ function stepRow(p,m,st,index){
 function modCard(p,m){
   const card=document.createElement('div'); card.className='module';
   card.style.setProperty('--proc',p.color);
-  card.dataset.mid = m.id;  // <--- AÑADIDO PARA BUSCADOR GLOBAL
-  card.dataset.pid = p.id;  // <--- AÑADIDO PARA BUSCADOR GLOBAL
+  card.dataset.mid = m.id;
+  card.dataset.pid = p.id;
 
   const head=document.createElement('div'); head.className='mod-head';
   head.style.setProperty('--proc',p.color);
@@ -467,13 +478,11 @@ function addStepGlobal(){
 function render(){
   renderProcesses();
   renderModules();
-  // Llamada segura: evita ReferenceError si aún no está definida
   if (window.applyPinLockUI) window.applyPinLockUI();
 }
 
 /* ===== Boot ===== */
 load(); document.getElementById('stamp').textContent='Última actualización '+stamp();
-// Fallback para que render() nunca falle aunque el bloque de utilidades aún no definiera la función
 window.applyPinLockUI = window.applyPinLockUI || function(){};
 render();
 document.getElementById('btnAddProcess').onclick=addProcess;
@@ -585,19 +594,16 @@ document.getElementById('q').addEventListener('input',e=>{
     const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
     document.body.classList.toggle('pa-locked', locked);
 
-    // Botones globales de añadir (bloqueados)
     ['#btnAddProcess','#btnAddStepGlobal','#btnAddSubprocPaso'].forEach(sel=>{
       const b=document.querySelector(sel);
       if(b){ b.classList.toggle('lock-block', locked); b.toggleAttribute('disabled', locked); }
     });
 
-    // Dentro de lista de procesos: bloquear Renombrar / Eliminar (permitir Detalle)
     document.querySelectorAll('.proc-item .icon-btn[title="Renombrar"], .proc-item .icon-btn[title="Eliminar"]').forEach(b=>{
       b.classList.toggle('lock-block', locked);
       b.toggleAttribute('disabled', locked);
     });
 
-    // Inputs / Textareas / Select (solo lectura)
     document.querySelectorAll('input.title, .mod-title, textarea, .pt-input').forEach(el=>{
       el.toggleAttribute('readonly', locked);
       el.classList.toggle('is-readonly', locked);
@@ -607,26 +613,22 @@ document.getElementById('q').addEventListener('input',e=>{
       s.classList.toggle('is-readonly', locked);
     });
 
-    // En cabeceras de módulo: bloquear + Paso / Guardar-Cerrar / Eliminar  (permitir ▾ Detalle)
     document.querySelectorAll('[data-act="add-step"], [data-act="close"], [data-act="del"]').forEach(b=>{
       b.classList.toggle('lock-block', locked);
       b.toggleAttribute('disabled', locked);
     });
 
-    // En pasos: bloquear 🗑 y 🚩 (permitir ❓ para solo ver Si/No)
     document.querySelectorAll('.step .mini[title="Eliminar"], .step .mini[title="Bandera paso"]').forEach(b=>{
       b.classList.toggle('lock-block', locked);
       b.toggleAttribute('disabled', locked);
     });
 
-    // En ramas Si/No: bloquear añadir/borrar/flag/subpuntos (visualizar sigue posible si estaba abierto)
     document.querySelectorAll('.branch .p-mini').forEach(b=>{
       b.classList.toggle('lock-block', locked);
       b.toggleAttribute('disabled', locked);
     });
   };
 
-  // Interceptor defensivo: si está bloqueado, cancela clicks que modifiquen
   function cancelIfLocked(e){
     const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
     if(!locked) return;
@@ -650,7 +652,6 @@ document.getElementById('q').addEventListener('input',e=>{
   document.addEventListener('input', cancelIfLocked, true);
   document.addEventListener('change', cancelIfLocked, true);
 
-  // Reaplicar bloqueo ante cambios del DOM (cuando render() reconstruye)
   const mo = new MutationObserver(()=>applyPinLockUI());
   mo.observe(document.body,{childList:true,subtree:true});
 
@@ -711,19 +712,17 @@ document.getElementById('q').addEventListener('input',e=>{
       toast('Edición bloqueada');
     }else{
       const v=prompt('Introduce PIN para editar:');
-      if(v==='AR4321'){ sessionStorage.setItem('PA_PIN_OK','1'); pinBtn.classList.add('locked'); applyPinLockUI(); toast('Edición habilitada'); }
+      if(v===PIN_CODE){ sessionStorage.setItem('PA_PIN_OK','1'); pinBtn.classList.add('locked'); applyPinLockUI(); toast('Edición habilitada'); }
       else if(v!==null){ toast('PIN incorrecto'); }
     }
   }
 
-  // Wire
   pinBtn?.addEventListener('click', togglePin);
   pdfBtn?.addEventListener('click',  printAll);
   htmlBtn?.addEventListener('click', downloadHTML);
   saveBtn?.addEventListener('click', saveToCloud);
   loadBtn?.addEventListener('click', loadFromCloud);
 
-  // Estado inicial: bloqueado hasta meter PIN
   if(sessionStorage.getItem('PA_PIN_OK')!=='1'){ applyPinLockUI(); }
 })();
 </script>
