@@ -48,7 +48,7 @@
     gap:.35rem;
     font-weight:900;
     font-size:22px;
-    flex:0 0 auto; /* NO cambia nada más, solo evita que estire */
+    flex:0 0 auto;
     letter-spacing:.03em;
     text-shadow:0 1px 2px rgba(0,0,0,.6);
   }
@@ -60,13 +60,13 @@
     filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));
   }
 
-  /* botones rojos: pequeños, ancho automático, todos igual de altos */
+  /* ===== BOTONES ROJOS (alineados, pequeños, ancho auto) ===== */
   .btn3d{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:.25rem;
-    padding:.2rem .55rem;
+    gap:.2rem;
+    padding:.12rem .5rem;
     border:0;
     border-radius:9999px;
     color:#f9fafb;
@@ -77,10 +77,10 @@
       0 11px 20px rgba(0,0,0,.6);
     cursor:pointer;
     font-weight:700;
-    font-size:11px;
+    font-size:10px;        /* letra más pequeña */
     line-height:1;
-    height:26px;
-    white-space:nowrap;
+    height:24px;           /* todos misma altura */
+    white-space:nowrap;    /* no se parten en dos líneas */
   }
   .btn3d:active{
     transform:translateY(1px);
@@ -95,23 +95,22 @@
     display:flex;
     align-items:center;
     gap:.25rem;
-    flex-wrap:nowrap; /* todos los botones de la derecha en una sola fila */
+    flex-wrap:nowrap;  /* todos los rojos de la derecha en una línea */
   }
 
-  /* los botones rojos directos de la topbar (Procesos, Subproceso+Paso, Paso)
-     también se mantienen en línea con los de la derecha */
   .topbar > .btn3d{
-    flex:0 0 auto;
+    flex:0 0 auto;     /* los tres de la izquierda también en la misma fila */
   }
 
   .stamp{
     color:#f9fafb;
     opacity:.9;
-    font-size:12px;
+    font-size:11px;         /* un poco más pequeño para que quepa todo */
     background:rgba(15,23,42,.8);
     border-radius:9999px;
-    padding:.3rem .75rem;
+    padding:.2rem .6rem;
     box-shadow:0 2px 8px rgba(0,0,0,.5);
+    white-space:nowrap;
   }
   .bar-right .btn3d svg{width:14px;height:14px}
   .search{
@@ -1040,6 +1039,8 @@ function renderDeptInfo(){
   const bDetail=menu.querySelector('[data-act="detail"]');
 
   bEdit.onclick=()=>{
+    const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
+    if(locked){ if(window.paToastFn) window.paToastFn('Modo lectura: bloqueado por PIN'); return; }
     const nn=prompt('Nombre del departamento', dept.name || '');
     if(nn){
       dept.name=nn;
@@ -1049,6 +1050,8 @@ function renderDeptInfo(){
     menu.classList.add('hide');
   };
   bDelete.onclick=()=>{
+    const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
+    if(locked){ if(window.paToastFn) window.paToastFn('Modo lectura: bloqueado por PIN'); return; }
     if(!confirm('¿Eliminar departamento y todos sus procesos?')){ menu.classList.add('hide'); return; }
     const idx=state.departments.findIndex(d=>d.id===dept.id);
     if(idx>-1){
@@ -1409,8 +1412,7 @@ function branchBox(p,m,st,kind,idx){
   const right=document.createElement('div'); right.className='bh-top-right';
 
   const add=document.createElement('button'); add.className='p-mini'; add.textContent='＋'; add.title='Añadir punto';
-  const flag=document.createElement('button'); flag.className='p-mini'; textContent='🚩'; flag.title='Bandera rama';
-  flag.textContent='🚩';
+  const flag=document.createElement('button'); flag.className='p-mini'; flag.textContent='🚩'; flag.title='Bandera rama';
   const delBranch=document.createElement('button'); delBranch.className='p-mini'; delBranch.textContent='🗑'; delBranch.title='Borrar rama';
 
   add.onclick=()=>{ st._openBranches=true; st._editingBranches=true; pushPoint(arr); save(); renderModules(); };
@@ -1802,9 +1804,7 @@ function stepRow(p,m,st,index){
     indicator.className='branch-indicator';
     indicator.innerHTML='<span>ver más</span><span>👇</span>';
     indicator.onclick=()=>{
-      if(sessionStorage.getItem('PA_PIN_OK')!=='1'){
-        return;
-      }
+      // En modo lectura también dejamos ver contenido, solo bloqueamos edición con PIN
       st._editingBranches=true;
       st._openBranches=true;
       save();
@@ -2188,7 +2188,9 @@ if(filePicker){
     const n = document.createElement('div');
     n.className='pa-toast'; n.id='paToast';
     document.body.appendChild(n);
-    return (msg)=>{ n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),2200); };
+    const fn = (msg)=>{ n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),2200); };
+    window.paToastFn = fn;
+    return fn;
   })();
 
   const fileStamp = () => { const d=new Date(),p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}`; };
@@ -2212,11 +2214,14 @@ if(filePicker){
       b.toggleAttribute('disabled', locked);
     });
 
+    // campos de texto en solo lectura, pero clicables (se pueden seleccionar / copiar)
     document.querySelectorAll('.title, .mod-title, textarea, .pt-input').forEach(el=>{
       el.toggleAttribute('readonly', locked);
       el.classList.toggle('is-readonly', locked);
     });
-    document.querySelectorAll('select.sel, #deptSelect').forEach(s=>{
+
+    // sólo se bloquean los select de responsable; el selector de departamento SI se puede usar
+    document.querySelectorAll('select.sel').forEach(s=>{
       s.toggleAttribute('disabled', locked);
       s.classList.toggle('is-readonly', locked);
     });
@@ -2232,27 +2237,26 @@ if(filePicker){
     });
   };
 
+  // BLOQUEO SÓLO PARA AÑADIR / BORRAR / EDITAR
   function cancelIfLocked(e){
     const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
     if(!locked) return;
     const t = e.target.closest('button, textarea, select, .title, .mod-title, .pt-input');
     if(!t) return;
 
-    const denySel = [
-      '#btnAddProcess','#btnAddStepGlobal','#btnAddSubprocPaso','#btnDeptAdd',
-      '.proc-item .icon-btn[title="Renombrar"]',
-      '.proc-item .icon-btn[title="Eliminar"]',
-      '[data-act="add-step"]','[data-act="close"]','[data-act="del"]','[data-act="add-submodule"]',
-      '.branch .p-mini',
-      '.title','.mod-title','.pt-input','textarea',
-      '#deptSelect',
-      '.dept-edit-menu button'   /* menú del lápiz también bloqueado en modo lectura */
-    ].join(',');
-
-    if(t.matches(denySel)){
-      e.stopPropagation(); e.preventDefault();
+    // Sólo bloqueamos acciones de EDICIÓN, BORRADO o AÑADIDO
+    if(
+      t.matches('#btnAddProcess, #btnAddStepGlobal, #btnAddSubprocPaso, #btnDeptAdd') ||
+      t.matches('.proc-item .icon-btn[title="Renombrar"], .proc-item .icon-btn[title="Eliminar"]') ||
+      t.matches('[data-act="add-step"], [data-act="close"], [data-act="del"], [data-act="add-submodule"]') ||
+      t.matches('.branch .p-mini') ||
+      t.matches('.dept-edit-menu button[data-act="edit"], .dept-edit-menu button[data-act="delete"]')
+    ){
+      e.stopPropagation();
+      e.preventDefault();
       toast('Modo lectura: bloqueado por PIN');
     }
+    // Se permiten: desplegar/plegar, ver detalle, cambiar departamento, hacer scroll y seleccionar texto.
   }
   document.addEventListener('click', cancelIfLocked, true);
   document.addEventListener('input', cancelIfLocked, true);
