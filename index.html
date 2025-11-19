@@ -77,10 +77,10 @@
       0 11px 20px rgba(0,0,0,.6);
     cursor:pointer;
     font-weight:700;
-    font-size:10px;        /* letra más pequeña */
+    font-size:10px;
     line-height:1;
-    height:24px;           /* todos misma altura */
-    white-space:nowrap;    /* no se parten en dos líneas */
+    height:24px;
+    white-space:nowrap;
   }
   .btn3d:active{
     transform:translateY(1px);
@@ -95,17 +95,17 @@
     display:flex;
     align-items:center;
     gap:.25rem;
-    flex-wrap:nowrap;  /* todos los rojos de la derecha en una línea */
+    flex-wrap:nowrap;
   }
 
   .topbar > .btn3d{
-    flex:0 0 auto;     /* los tres de la izquierda también en la misma fila */
+    flex:0 0 auto;
   }
 
   .stamp{
     color:#f9fafb;
     opacity:.9;
-    font-size:11px;         /* un poco más pequeño para que quepa todo */
+    font-size:11px;
     background:rgba(15,23,42,.8);
     border-radius:9999px;
     padding:.2rem .6rem;
@@ -254,7 +254,7 @@
     align-items:center;
     justify-content:space-between;
     gap:6px;
-    position:relative; /* para menú del lápiz */
+    position:relative;
   }
   .dept-info-title{
     font-weight:700;
@@ -906,7 +906,6 @@ function load(){
       state.activeDeptId=null;
     }
   }
-  /* detalle de departamento siempre plegado por defecto */
   if(Array.isArray(state.departments)){
     state.departments.forEach(d=>{
       if(!Array.isArray(d.processes)) d.processes=[];
@@ -1804,7 +1803,6 @@ function stepRow(p,m,st,index){
     indicator.className='branch-indicator';
     indicator.innerHTML='<span>ver más</span><span>👇</span>';
     indicator.onclick=()=>{
-      // En modo lectura también dejamos ver contenido, solo bloqueamos edición con PIN
       st._editingBranches=true;
       st._openBranches=true;
       save();
@@ -1833,6 +1831,7 @@ function modCard(p,m){
     <button class="pill" data-act="toggle-detail" aria-expanded="${m._openDetail?'true':'false'}">▾ Detalle</button>
     <button class="pill" data-act="toggle-steps" aria-expanded="${m._openSteps===false?'false':'true'}">▾ Pasos</button>
     <button class="pill" data-act="add-step">+ Paso</button>
+    <button class="pill" data-act="add-submodule">+ Sub-subproceso</button>
     <button class="pill" data-act="close">${m.completed?'🎯 Cerrado':'🎯 Guardar'}</button>
     <button class="pill" data-act="del">–</button>`;
   const titleEl=head.querySelector('.mod-title');
@@ -1888,7 +1887,7 @@ function modCard(p,m){
   const btnSub = head.querySelector('[data-act="add-submodule"]');
   if(btnSub){
     if(m.isSub){
-      btnSub.style.display='none'; /* solo en subproceso principal */
+      btnSub.style.display='none';
     }else{
       btnSub.onclick=()=>{
         const dept=currentDept(); if(!dept) return;
@@ -2213,13 +2212,11 @@ if(filePicker){
       b.toggleAttribute('disabled', locked);
     });
 
-    // campos de texto en solo lectura, pero clicables (se pueden seleccionar / copiar)
     document.querySelectorAll('.title, .mod-title, textarea, .pt-input').forEach(el=>{
       el.toggleAttribute('readonly', locked);
       el.classList.toggle('is-readonly', locked);
     });
 
-    // sólo se bloquean los select de responsable; el selector de departamento SI se puede usar
     document.querySelectorAll('select.sel').forEach(s=>{
       s.toggleAttribute('disabled', locked);
       s.classList.toggle('is-readonly', locked);
@@ -2236,14 +2233,12 @@ if(filePicker){
     });
   };
 
-  // BLOQUEO SÓLO PARA AÑADIR / BORRAR / EDITAR
   function cancelIfLocked(e){
     const locked = sessionStorage.getItem('PA_PIN_OK')!=='1';
     if(!locked) return;
     const t = e.target.closest('button, textarea, select, .title, .mod-title, .pt-input');
     if(!t) return;
 
-    // Sólo bloqueamos acciones de EDICIÓN, BORRADO o AÑADIDO
     if(
       t.matches('#btnAddProcess, #btnAddStepGlobal, #btnAddSubprocPaso, #btnDeptAdd') ||
       t.matches('.proc-item .icon-btn[title="Renombrar"], .proc-item .icon-btn[title="Eliminar"]') ||
@@ -2255,7 +2250,6 @@ if(filePicker){
       e.preventDefault();
       toast('Modo lectura: bloqueado por PIN');
     }
-    // Se permiten: desplegar/plegar, ver detalle, cambiar departamento, hacer scroll y seleccionar texto.
   }
   document.addEventListener('click', cancelIfLocked, true);
   document.addEventListener('input', cancelIfLocked, true);
@@ -2264,7 +2258,6 @@ if(filePicker){
   const mo = new MutationObserver(()=>applyPinLockUI());
   mo.observe(document.body,{childList:true,subtree:true});
 
-  // ==== FUNCIÓN AUXILIAR HTML SAFE ====
   function escapeHTML(s){
     if(s==null) return '';
     return String(s)
@@ -2275,7 +2268,6 @@ if(filePicker){
       .replace(/'/g,'&#39;');
   }
 
-  // ==== NUEVO: IMPRIMIR SOLO UN DEPARTAMENTO ====
   function printDepartment(dept){
     const html=[];
     html.push('<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>PROCESOS AUDIO – Informe</title>');
@@ -2358,7 +2350,6 @@ if(filePicker){
     win.print();
   }
 
-  // ==== IMPRIMIR: ESTE DEPARTAMENTO O TODOS ====
   function printAll(){
     const onlyCurrent = confirm('¿Deseas imprimir ESTE DEPARTAMENTO (Aceptar) o TODOS LOS DEPARTAMENTOS (Cancelar)?');
 
