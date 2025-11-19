@@ -1881,9 +1881,8 @@ function modCard(p,m){
     <select class="sel">${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
     <input class="resp-extra" placeholder="Nombre otros…" value="${m.respOtro||''}" style="${m.responsable==='Otros'?'display:inline-block':'display:none'}">
     <button class="pill" data-act="toggle-detail" aria-expanded="${m._openDetail?'true':'false'}">▾ Detalle</button>
-    <button class="pill" data-act="toggle-steps" aria-expanded="${m._openSteps===false?'false':'true'}">▾ Pasos</button>
+    <button class="pill" data-act="toggle-steps" aria-expanded="${m._openSteps===false?'false':'true'}">▾ Pasos del proceso</button>
     <button class="pill" data-act="add-step">+ Paso</button>
-    <button class="pill" data-act="add-submodule">+ Sub-subproceso</button>
     <button class="pill" data-act="close">${m.completed?'🎯 Cerrado':'🎯 Guardar'}</button>
     <button class="pill" data-act="del">–</button>`;
   const titleEl=head.querySelector('.mod-title');
@@ -2543,3 +2542,4 @@ if(filePicker){
 </script>
 </body>
 </html>
+
