@@ -59,12 +59,14 @@
     transform:translateY(2px);
     filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));
   }
+
+  /* BOTONES ROJOS ALINEADOS */
   .btn3d{
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:.35rem;
-    padding:.3rem .6rem;              /* más pequeños */
+    padding:.3rem .6rem;
     border:0;
     border-radius:9999px;
     color:#f9fafb;
@@ -75,9 +77,10 @@
       0 11px 20px rgba(0,0,0,.6);
     cursor:pointer;
     font-weight:700;
-    font-size:12px;                  /* más pequeños */
+    font-size:12px;
     line-height:1;
-    min-height:28px;                 /* más pequeños */
+    min-height:30px;          /* altura fija para alinear */
+    vertical-align:middle;
   }
   .btn3d:active{
     transform:translateY(1px);
@@ -90,8 +93,8 @@
     margin-left:auto;
     display:flex;
     align-items:center;
-    gap:.25rem;          /* un poco menos espacio entre rojos */
-    flex-wrap:nowrap;    /* todos los botones rojos en una sola fila */
+    gap:.25rem;
+    flex-wrap:nowrap;         /* todos los botones rojos en una fila */
   }
   .stamp{
     color:#f9fafb;
@@ -103,6 +106,7 @@
     box-shadow:0 2px 8px rgba(0,0,0,.5);
   }
   .bar-right .btn3d svg{width:14px;height:14px}
+
   .search{
     flex:1 1 100%;
     display:flex;
@@ -230,7 +234,7 @@
     font-size:12px;
   }
 
-  /* ===== Dept info caja izquierda ===== */
+  /* ===== Dept info caja izquierda (con desplegable) ===== */
   .dept-info-box{
     padding:6px 7px;
     border-radius:10px;
@@ -244,7 +248,7 @@
     align-items:center;
     justify-content:space-between;
     gap:6px;
-    position:relative; /* para menú del lápiz */
+    position:relative;
   }
   .dept-info-title{
     font-weight:700;
@@ -252,10 +256,10 @@
     color:#111827;
   }
   .dept-desc-toggle{
-    width:26px;
+    width:auto;
     height:26px;
-    padding:0;
-    font-size:13px;
+    padding:0 .6rem;
+    font-size:11px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
@@ -284,6 +288,23 @@
   }
   .dept-edit-menu button:active{
     transform:translateY(1px);
+  }
+
+  /* DETALLE DEPARTAMENTO DESPLEGABLE */
+  .dept-desc{
+    margin-top:4px;
+  }
+  .dept-desc.hide{
+    display:none;
+  }
+  .dept-desc textarea{
+    width:100%;
+    min-height:52px;
+    border-radius:8px;
+    border:1px solid #e5e7eb;
+    padding:4px;
+    font-size:12px;
+    background:#fff;
   }
 
   /* ===== Subproceso ===== */
@@ -896,11 +917,10 @@ function load(){
       state.activeDeptId=null;
     }
   }
-  /* detalle de departamento siempre plegado por defecto */
   if(Array.isArray(state.departments)){
     state.departments.forEach(d=>{
       if(!Array.isArray(d.processes)) d.processes=[];
-      d._openDesc=false;
+      if(typeof d._openDesc === 'undefined') d._openDesc=false;
     });
   }
 }
@@ -915,7 +935,7 @@ function autoResize(el){
 
 /* ===== Procesos izquierda ===== */
 function procRow(p){
-  const wrap=document.createElement('div'); wrap.className='proc-item'+(p.id===activePid?' activo':'');
+  const wrap=document.createElement('div'); wrap.className='proc-item'+(p.id===activePid?' activo':'' );
   wrap.dataset.pid = p.id;
   const row=document.createElement('div'); row.className='proc-row';
   row.innerHTML=`<span class="dot" style="background:${p.color}"></span>
@@ -973,7 +993,7 @@ function renderProcesses(){
   dept.processes.forEach(p=>box.appendChild(procRow(p)));
 }
 
-/* ===== Dept info izquierda (lápiz) ===== */
+/* ===== Dept info izquierda (Ajustado: desplegable) ===== */
 function renderDeptInfo(){
   const box=document.getElementById('deptInfo'); if(!box) return;
   box.innerHTML='';
@@ -992,30 +1012,50 @@ function renderDeptInfo(){
   title.className='dept-info-title';
   title.textContent='Departamento: '+(dept.name || 'Sin nombre');
 
+  const controls=document.createElement('div');
+  controls.style.display='flex';
+  controls.style.alignItems='center';
+  controls.style.gap='4px';
+
+  const toggleBtn=document.createElement('button');
+  toggleBtn.className='icon-btn dept-desc-toggle';
+  toggleBtn.textContent = dept._openDesc ? '▾ Detalle' : '▸ Detalle';
+  toggleBtn.title='Mostrar/ocultar detalle del departamento';
+
   const btn=document.createElement('button');
-  btn.className='icon-btn dept-desc-toggle';
+  btn.className='icon-btn';
   btn.textContent='✏️';
   btn.title='Opciones del departamento';
 
+  controls.appendChild(toggleBtn);
+  controls.appendChild(btn);
+
   header.appendChild(title);
-  header.appendChild(btn);
+  header.appendChild(controls);
 
   const menu=document.createElement('div');
   menu.className='dept-edit-menu hide';
   menu.innerHTML=`
-    <button data-act="edit">Editar</button>
-    <button data-act="delete">Borrar</button>
-    <button data-act="detail">Detalle</button>
+    <button data-act="edit">Editar nombre</button>
+    <button data-act="delete">Borrar departamento</button>
   `;
   header.appendChild(menu);
 
   const desc=document.createElement('div');
   desc.classList.add('dept-desc');
   if(!dept._openDesc) desc.classList.add('hide');
-  desc.innerHTML=`<textarea style="width:100%;min-height:52px;margin-top:4px;border-radius:8px;border:1px solid #e5e7eb;padding:4px;font-size:12px;">${dept.description||''}</textarea>`;
+  desc.innerHTML=`<textarea placeholder="Detalle del departamento…">${dept.description||''}</textarea>`;
   const ta=desc.querySelector('textarea');
   ta.oninput=e=>{
     dept.description=e.target.value;
+    save();
+  };
+
+  toggleBtn.onclick=(e)=>{
+    e.stopPropagation();
+    dept._openDesc = !dept._openDesc;
+    toggleBlock(desc, dept._openDesc);
+    toggleBtn.textContent = dept._openDesc ? '▾ Detalle' : '▸ Detalle';
     save();
   };
 
@@ -1026,7 +1066,6 @@ function renderDeptInfo(){
 
   const bEdit=menu.querySelector('[data-act="edit"]');
   const bDelete=menu.querySelector('[data-act="delete"]');
-  const bDetail=menu.querySelector('[data-act="detail"]');
 
   bEdit.onclick=()=>{
     const nn=prompt('Nombre del departamento', dept.name || '');
@@ -1053,12 +1092,6 @@ function renderDeptInfo(){
       save();
       render();
     }
-  };
-  bDetail.onclick=()=>{
-    dept._openDesc = !dept._openDesc;
-    toggleBlock(desc, dept._openDesc);
-    save();
-    menu.classList.add('hide');
   };
 
   wrap.appendChild(header);
@@ -1877,7 +1910,7 @@ function modCard(p,m){
   const btnSub = head.querySelector('[data-act="add-submodule"]');
   if(btnSub){
     if(m.isSub){
-      btnSub.style.display='none'; /* solo en subproceso principal */
+      btnSub.style.display='none';
     }else{
       btnSub.onclick=()=>{
         const dept=currentDept(); if(!dept) return;
@@ -2051,7 +2084,7 @@ function render(){
 
 /* ===== Boot ===== */
 load(); document.getElementById('stamp').textContent='Última actualización '+stamp();
-window.applyPinLockUI = window.applyPinLockUI || function(){};
+window.applyPinLockUI = window.applyPinLockUI || function(){};  // se rellena más abajo
 render();
 
 document.getElementById('btnAddProcess').onclick=addProcess;
@@ -2234,7 +2267,7 @@ if(filePicker){
       '.branch .p-mini',
       '.title','.mod-title','.pt-input','textarea',
       '#deptSelect',
-      '.dept-edit-menu button'   /* menú del lápiz también bloqueado en modo lectura */
+      '.dept-edit-menu button'
     ].join(',');
 
     if(t.matches(denySel)){
