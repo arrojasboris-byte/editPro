@@ -48,7 +48,7 @@
     gap:.35rem;
     font-weight:900;
     font-size:22px;
-    flex:1 1 auto;
+    flex:0 0 auto; /* NO cambia nada más, solo evita que estire */
     letter-spacing:.03em;
     text-shadow:0 1px 2px rgba(0,0,0,.6);
   }
@@ -59,12 +59,14 @@
     transform:translateY(2px);
     filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));
   }
+
+  /* botones rojos: pequeños, ancho automático, todos igual de altos */
   .btn3d{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:.35rem;
-    padding:.3rem .6rem;              /* más pequeños */
+    gap:.25rem;
+    padding:.2rem .55rem;
     border:0;
     border-radius:9999px;
     color:#f9fafb;
@@ -75,9 +77,10 @@
       0 11px 20px rgba(0,0,0,.6);
     cursor:pointer;
     font-weight:700;
-    font-size:12px;                  /* más pequeños */
+    font-size:11px;
     line-height:1;
-    min-height:28px;                 /* más pequeños */
+    height:26px;
+    white-space:nowrap;
   }
   .btn3d:active{
     transform:translateY(1px);
@@ -86,13 +89,21 @@
       0 2px 0 rgba(0,0,0,.6),
       0 8px 16px rgba(0,0,0,.6);
   }
+
   .bar-right{
     margin-left:auto;
     display:flex;
     align-items:center;
-    gap:.25rem;          /* un poco menos espacio entre rojos */
-    flex-wrap:nowrap;    /* todos los botones rojos en una sola fila */
+    gap:.25rem;
+    flex-wrap:nowrap; /* todos los botones de la derecha en una sola fila */
   }
+
+  /* los botones rojos directos de la topbar (Procesos, Subproceso+Paso, Paso)
+     también se mantienen en línea con los de la derecha */
+  .topbar > .btn3d{
+    flex:0 0 auto;
+  }
+
   .stamp{
     color:#f9fafb;
     opacity:.9;
@@ -773,20 +784,6 @@
   body.pa-locked .lock-block{ pointer-events:none !important; opacity:.6; }
   body.pa-locked input[readonly],
   body.pa-locked textarea[readonly]{background:#f7f7f7}
-
-  /* === Ajuste final: botones rojos alineados, letra pequeña, ancho automático === */
-  .bar-right{
-    display:flex;
-    align-items:center;
-    flex-wrap:nowrap;
-    gap:.25rem;
-  }
-  .btn3d{
-    font-size:11px;      /* letra pequeña */
-    line-height:1;
-    padding:.25rem .6rem;
-    height:28px;         /* altura uniforme */
-  }
 </style>
 </head>
 <body>
@@ -1412,7 +1409,8 @@ function branchBox(p,m,st,kind,idx){
   const right=document.createElement('div'); right.className='bh-top-right';
 
   const add=document.createElement('button'); add.className='p-mini'; add.textContent='＋'; add.title='Añadir punto';
-  const flag=document.createElement('button'); flag.className='p-mini'; flag.textContent='🚩'; flag.title='Bandera rama';
+  const flag=document.createElement('button'); flag.className='p-mini'; textContent='🚩'; flag.title='Bandera rama';
+  flag.textContent='🚩';
   const delBranch=document.createElement('button'); delBranch.className='p-mini'; delBranch.textContent='🗑'; delBranch.title='Borrar rama';
 
   add.onclick=()=>{ st._openBranches=true; st._editingBranches=true; pushPoint(arr); save(); renderModules(); };
@@ -2065,7 +2063,7 @@ function render(){
 
 /* ===== Boot ===== */
 load(); document.getElementById('stamp').textContent='Última actualización '+stamp();
-window.applyPinLockUI = window.applyPinLockUI || function(){};  /* por si aún no está definida */
+window.applyPinLockUI = window.applyPinLockUI || function(){}; 
 render();
 
 document.getElementById('btnAddProcess').onclick=addProcess;
