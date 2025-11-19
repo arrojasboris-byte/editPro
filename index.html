@@ -60,7 +60,7 @@
     filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));
   }
 
-  /* ===== BOTONES ROJOS (alineados, pequeños, ancho auto) ===== */
+  /* ===== BOTONES ROJOS ===== */
   .btn3d{
     display:inline-flex;
     align-items:center;
@@ -295,6 +295,24 @@
   .dept-edit-menu button:active{
     transform:translateY(1px);
   }
+
+  /* Faldones negros DETALLE / PROCESOS */
+  .dept-faldon{
+    margin-top:6px;
+    background:linear-gradient(135deg,#020617 0%,#1f2937 50%,#020617 100%);
+    color:#f9fafb;
+    border-radius:9999px;
+    padding:3px 8px;
+    font-size:11px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    box-shadow:0 3px 8px rgba(0,0,0,.45);
+  }
+  .dept-faldon .label{letter-spacing:.04em;}
+  .dept-faldon .chevron{font-size:10px;opacity:.8;}
 
   /* ===== Subproceso ===== */
   .module{
@@ -910,6 +928,7 @@ function load(){
     state.departments.forEach(d=>{
       if(!Array.isArray(d.processes)) d.processes=[];
       d._openDesc=false;
+      if(typeof d._openProcs==='undefined') d._openProcs=true;
     });
   }
 }
@@ -982,7 +1001,7 @@ function renderProcesses(){
   dept.processes.forEach(p=>box.appendChild(procRow(p)));
 }
 
-/* ===== Dept info izquierda (lápiz) ===== */
+/* ===== Dept info izquierda (lápiz + faldones) ===== */
 function renderDeptInfo(){
   const box=document.getElementById('deptInfo'); if(!box) return;
   box.innerHTML='';
@@ -1074,8 +1093,41 @@ function renderDeptInfo(){
     menu.classList.add('hide');
   };
 
+  /* Faldón negro DETALLE */
+  const detalleFaldon=document.createElement('div');
+  detalleFaldon.className='dept-faldon';
+  detalleFaldon.innerHTML=`<span class="label">DETALLE</span><span class="chevron">${dept._openDesc?'▾':'▸'}</span>`;
+  const detChevron=detalleFaldon.querySelector('.chevron');
+  detalleFaldon.onclick=()=>{
+    dept._openDesc=!dept._openDesc;
+    toggleBlock(desc, dept._openDesc);
+    detChevron.textContent=dept._openDesc?'▾':'▸';
+    save();
+  };
+
+  /* Faldón negro PROCESOS (afecta a la lista de la izquierda) */
+  const procBox=document.getElementById('processList');
+  const isOpenProcs = dept._openProcs!==false;
+  if(procBox){
+    toggleBlock(procBox, isOpenProcs);
+  }
+
+  const procFaldon=document.createElement('div');
+  procFaldon.className='dept-faldon';
+  procFaldon.innerHTML=`<span class="label">PROCESOS</span><span class="chevron">${isOpenProcs?'▾':'▸'}</span>`;
+  const procChevron=procFaldon.querySelector('.chevron');
+  procFaldon.onclick=()=>{
+    dept._openProcs = !(dept._openProcs!==false);
+    const open = dept._openProcs!==false;
+    if(procBox) toggleBlock(procBox, open);
+    procChevron.textContent=open?'▾':'▸';
+    save();
+  };
+
   wrap.appendChild(header);
+  wrap.appendChild(detalleFaldon);
   wrap.appendChild(desc);
+  wrap.appendChild(procFaldon);
   box.appendChild(wrap);
 }
 
@@ -2042,6 +2094,7 @@ function addDept(){
     name:name,
     description:'',
     _openDesc:false,
+    _openProcs:true,
     processes:[]
   });
   state.activeDeptId=dId;
@@ -2304,7 +2357,6 @@ if(filePicker){
       modules.forEach((mod,mIndex)=>{
         if(!mod) return;
         let modTitle = mod.title || ('Subproceso '+(mIndex+1));
-        if(mod.isSub) modTitle += ' (sub-subproceso)';
         html.push('<h3>'+escapeHTML(modTitle)+'</h3>');
 
         if(mod.responsable){
@@ -2401,7 +2453,6 @@ if(filePicker){
         modules.forEach((mod,mIndex)=>{
           if(!mod) return;
           let modTitle = mod.title || ('Subproceso '+(mIndex+1));
-          if(mod.isSub) modTitle += ' (sub-subproceso)';
           html.push('<h3>'+escapeHTML(modTitle)+'</h3>');
 
           if(mod.responsable){
