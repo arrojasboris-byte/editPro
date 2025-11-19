@@ -64,7 +64,7 @@
     align-items:center;
     justify-content:center;
     gap:.35rem;
-    padding:.42rem .85rem;
+    padding:.3rem .6rem;              /* más pequeños */
     border:0;
     border-radius:9999px;
     color:#f9fafb;
@@ -75,9 +75,9 @@
       0 11px 20px rgba(0,0,0,.6);
     cursor:pointer;
     font-weight:700;
-    font-size:13px;
+    font-size:12px;                  /* más pequeños */
     line-height:1;
-    min-height:34px;
+    min-height:28px;                 /* más pequeños */
   }
   .btn3d:active{
     transform:translateY(1px);
@@ -90,8 +90,8 @@
     margin-left:auto;
     display:flex;
     align-items:center;
-    gap:.35rem;
-    flex-wrap:nowrap; /* todos los botones rojos en una sola fila */
+    gap:.25rem;          /* un poco menos espacio entre rojos */
+    flex-wrap:nowrap;    /* todos los botones rojos en una sola fila */
   }
   .stamp{
     color:#f9fafb;
@@ -128,7 +128,7 @@
   .dept-block{
     display:flex;
     align-items:center;
-    gap:.3rem;
+    gap:.25rem;
   }
   .dept-select{
     border-radius:9999px;
@@ -244,6 +244,7 @@
     align-items:center;
     justify-content:space-between;
     gap:6px;
+    position:relative; /* para menú del lápiz */
   }
   .dept-info-title{
     font-weight:700;
@@ -251,9 +252,38 @@
     color:#111827;
   }
   .dept-desc-toggle{
-    width:auto;
-    padding:2px 8px;
+    width:26px;
+    height:26px;
+    padding:0;
+    font-size:13px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .dept-edit-menu{
+    position:absolute;
+    right:0;
+    top:28px;
+    background:#020617;
+    border-radius:8px;
+    padding:4px;
+    box-shadow:0 8px 18px rgba(15,23,42,.7);
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    z-index:20;
+  }
+  .dept-edit-menu button{
+    border:0;
+    border-radius:6px;
+    padding:3px 8px;
     font-size:11px;
+    background:#111827;
+    color:#e5e7eb;
+    cursor:pointer;
+  }
+  .dept-edit-menu button:active{
+    transform:translateY(1px);
   }
 
   /* ===== Subproceso ===== */
@@ -276,7 +306,6 @@
     padding:6px 6px 8px;
     position:relative;
   }
-  /* línea discontinua desde panel negro padre -> panel negro sub */
   .module.module-subchild::before{
     content:"";
     position:absolute;
@@ -658,7 +687,6 @@
     gap:.16rem;
   }
 
-  /* Faldón "ver más" en gris */
   .branch-indicator{
     margin:6px 0 0 46px;
     font-size:11px;
@@ -773,7 +801,6 @@
         Nube
       </button>
 
-      <!-- NUEVO: Departamentos+ y selector -->
       <div class="dept-block">
         <button id="btnDeptAdd" class="btn3d" title="Añadir departamento">Departamentos+</button>
         <select id="deptSelect" class="dept-select">
@@ -806,35 +833,25 @@
     </div>
   </div>
 
-  <!-- selector de archivos global para adjuntar documentos -->
   <input type="file" id="paFilePicker" style="display:none" multiple />
 
 <script>
-/* ===== util visibilidad ===== */
 function showBlock(el){ if(!el) return; el.classList.remove('hide'); el.style.display='block'; el.setAttribute('aria-hidden','false'); }
 function hideBlock(el){ if(!el) return; el.classList.add('hide'); el.style.display='none'; el.setAttribute('aria-hidden','true'); }
 function toggleBlock(el,open){ open ? showBlock(el) : hideBlock(el); }
 
 /* ===== Estado ===== */
-const LSKEY='pa_v4_dept_3d';   /* NUEVA CLAVE para esta versión con departamentos */
+const LSKEY='pa_v4_dept_3d';
 const RESPONSABLES=['Audiólogo','Responsable','Otros'];
 const colors=['#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5','#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'];
 const uid=()=>'p'+Math.random().toString(36).slice(2,9);
-const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(d.getMonth()+1)}/${p(d.getFullYear())}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
+const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(dMonth(d))}/${p(d.getFullYear())}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
+function dMonth(d){return d.getMonth()+1;}
 
-/*
-  state = {
-    departments: [
-      { id, name, description, _openDesc, processes:[ {id,name,color,detail,_openDetail,modules:[]}, ... ] }
-    ],
-    activeDeptId
-  }
-*/
 const state={departments:[], activeDeptId:null};
 let activePid=null;
 let pendingDocTarget=null;
 
-/* helpers dept/procesos */
 function currentDept(){
   const d = state.departments.find(d=>d.id===state.activeDeptId);
   return d || state.departments[0] || null;
@@ -864,7 +881,6 @@ function load(){
         state.departments=data.departments;
         state.activeDeptId=data.activeDeptId || (data.departments[0]?.id||null);
       }else if(Array.isArray(data.processes)){
-        /* migración desde versión anterior: un solo departamento genérico */
         const dId=uid();
         state.departments=[{
           id:dId,
@@ -880,9 +896,16 @@ function load(){
       state.activeDeptId=null;
     }
   }
+  /* detalle de departamento siempre plegado por defecto */
+  if(Array.isArray(state.departments)){
+    state.departments.forEach(d=>{
+      if(!Array.isArray(d.processes)) d.processes=[];
+      d._openDesc=false;
+    });
+  }
 }
 
-/* ===== helper auto-resize títulos de paso ===== */
+/* auto-resize títulos paso */
 function autoResize(el){
   if(!el) return;
   el.style.height='auto';
@@ -938,7 +961,6 @@ function procRow(p){
   wrap.appendChild(row); wrap.appendChild(det);
   return wrap;
 }
-
 function renderProcesses(){
   const box=document.getElementById('processList'); if(!box) return;
   box.innerHTML='';
@@ -951,7 +973,7 @@ function renderProcesses(){
   dept.processes.forEach(p=>box.appendChild(procRow(p)));
 }
 
-/* ===== Dept info izquierda ===== */
+/* ===== Dept info izquierda (lápiz) ===== */
 function renderDeptInfo(){
   const box=document.getElementById('deptInfo'); if(!box) return;
   box.innerHTML='';
@@ -972,13 +994,23 @@ function renderDeptInfo(){
 
   const btn=document.createElement('button');
   btn.className='icon-btn dept-desc-toggle';
-  btn.textContent='▾ Descripción';
-  btn.title='Ver/ocultar descripción del departamento';
+  btn.textContent='✏️';
+  btn.title='Opciones del departamento';
 
   header.appendChild(title);
   header.appendChild(btn);
 
+  const menu=document.createElement('div');
+  menu.className='dept-edit-menu hide';
+  menu.innerHTML=`
+    <button data-act="edit">Editar</button>
+    <button data-act="delete">Borrar</button>
+    <button data-act="detail">Detalle</button>
+  `;
+  header.appendChild(menu);
+
   const desc=document.createElement('div');
+  desc.classList.add('dept-desc');
   if(!dept._openDesc) desc.classList.add('hide');
   desc.innerHTML=`<textarea style="width:100%;min-height:52px;margin-top:4px;border-radius:8px;border:1px solid #e5e7eb;padding:4px;font-size:12px;">${dept.description||''}</textarea>`;
   const ta=desc.querySelector('textarea');
@@ -987,10 +1019,46 @@ function renderDeptInfo(){
     save();
   };
 
-  btn.onclick=()=>{
+  btn.onclick=(e)=>{
+    e.stopPropagation();
+    menu.classList.toggle('hide');
+  };
+
+  const bEdit=menu.querySelector('[data-act="edit"]');
+  const bDelete=menu.querySelector('[data-act="delete"]');
+  const bDetail=menu.querySelector('[data-act="detail"]');
+
+  bEdit.onclick=()=>{
+    const nn=prompt('Nombre del departamento', dept.name || '');
+    if(nn){
+      dept.name=nn;
+      save();
+      render();
+    }
+    menu.classList.add('hide');
+  };
+  bDelete.onclick=()=>{
+    if(!confirm('¿Eliminar departamento y todos sus procesos?')){ menu.classList.add('hide'); return; }
+    const idx=state.departments.findIndex(d=>d.id===dept.id);
+    if(idx>-1){
+      state.departments.splice(idx,1);
+      if(state.departments.length){
+        const next=state.departments[Math.min(idx,state.departments.length-1)];
+        state.activeDeptId=next.id;
+        activePid=null;
+      }else{
+        state.activeDeptId=null;
+        activePid=null;
+      }
+      save();
+      render();
+    }
+  };
+  bDetail.onclick=()=>{
     dept._openDesc = !dept._openDesc;
     toggleBlock(desc, dept._openDesc);
     save();
+    menu.classList.add('hide');
   };
 
   wrap.appendChild(header);
@@ -1020,7 +1088,6 @@ function renderDeptSelect(){
     sel.appendChild(o);
   });
 }
-
 function handleDeptChange(value){
   if(!value){
     state.activeDeptId = state.departments[0]?.id || null;
@@ -1054,7 +1121,7 @@ function openProcPicker(onPick){
   modal.classList.remove('hide');
 }
 
-/* ===== helpers ===== */
+/* ===== helpers pasos ===== */
 function makeStep(){
   return {
     id:uid(),
@@ -1076,7 +1143,7 @@ function pushPoint(arr){ arr.push({id:uid(),text:'',children:[]}); }
 function pushSubPoint(pt){ if(!Array.isArray(pt.children)) pt.children=[]; pt.children.push({id:uid(),text:''}); }
 function delFromArray(arr,id){ const i=arr.findIndex(x=>x.id===id); if(i>-1) arr.splice(i,1); }
 
-/* ===== Layout serpentina 3 columnas ===== */
+/* ===== Layout serpentina ===== */
 function layoutStepsSerpentine(container){
   const wrappers = Array.from(container.children).filter(w => w.querySelector('.step'));
   if(!wrappers.length) return;
@@ -1095,9 +1162,7 @@ function layoutStepsSerpentine(container){
   const gapY = 24;
 
   const containerWidthRaw = container.clientWidth || (cardW+desiredGapX);
-
   const cols = Math.min(3, wrappers.length);
-
   const heights = wrappers.map(w => w.offsetHeight);
 
   const rows = [];
@@ -1812,8 +1877,7 @@ function modCard(p,m){
   const btnSub = head.querySelector('[data-act="add-submodule"]');
   if(btnSub){
     if(m.isSub){
-      /* solo aparece en subprocesos principales, NO en sub-subprocesos */
-      btnSub.style.display='none';
+      btnSub.style.display='none'; /* solo en subproceso principal */
     }else{
       btnSub.onclick=()=>{
         const dept=currentDept(); if(!dept) return;
@@ -1959,8 +2023,6 @@ function addStepGlobal(){
   save();
   renderModules();
 }
-
-/* ===== Dept add ===== */
 function addDept(){
   const name=prompt('Nombre del nuevo departamento:','');
   if(!name) return;
@@ -2008,13 +2070,11 @@ const deptSelectEl=document.getElementById('deptSelect');
 if(deptSelectEl){
   deptSelectEl.addEventListener('change',e=>handleDeptChange(e.target.value));
 }
-
 const btnDeptAdd=document.getElementById('btnDeptAdd');
 if(btnDeptAdd){
   btnDeptAdd.addEventListener('click',addDept);
 }
 
-/* Redibujar al redimensionar */
 window.addEventListener('resize',()=>requestAnimationFrame(()=>{layoutAllSteps();drawAllFlows();}));
 
 /* ===== Buscador ===== */
@@ -2173,7 +2233,8 @@ if(filePicker){
       '[data-act="add-step"]','[data-act="close"]','[data-act="del"]','[data-act="add-submodule"]',
       '.branch .p-mini',
       '.title','.mod-title','.pt-input','textarea',
-      '#deptSelect'
+      '#deptSelect',
+      '.dept-edit-menu button'   /* menú del lápiz también bloqueado en modo lectura */
     ].join(',');
 
     if(t.matches(denySel)){
