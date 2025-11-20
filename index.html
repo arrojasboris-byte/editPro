@@ -296,7 +296,7 @@
     transform:translateY(1px);
   }
 
-  /* Faldones negros DETALLE / PROCESOS */
+  /* Faldones negros DETALLE / PROCESOS / SUB-SUB */
   .dept-faldon{
     margin-top:6px;
     background:linear-gradient(135deg,#020617 0%,#1f2937 50%,#020617 100%);
@@ -873,7 +873,7 @@ const LSKEY='pa_v4_dept_3d';
 const RESPONSABLES=['Audiólogo','Responsable','Otros'];
 const colors=['#ffd6a5','#bde0fe','#caffbf','#ffadad','#fdffb6','#bdb2ff','#ffc6ff','#a0e7e5','#c7f9cc','#fbcfe8','#fde68a','#bbf7d0'];
 const uid=()=>'p'+Math.random().toString(36).slice(2,9);
-const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(dMonth(d))}/${p(d.getMonth()+1>9?d.getMonth()+1:'0'+(d.getMonth()+1))}/${p(d.getFullYear())}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
+const stamp=()=>{const d=new Date(),p=n=>n<10?'0'+n:n;return `${p(d.getDate())}/${p(dMonth(d))}/${p(d.getFullYear())}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`};
 function dMonth(d){return d.getMonth()+1;}
 
 const state={departments:[], activeDeptId:null};
@@ -927,7 +927,7 @@ function load(){
   if(Array.isArray(state.departments)){
     state.departments.forEach(d=>{
       if(!Array.isArray(d.processes)) d.processes=[];
-      d._openDesc=false;
+      if(typeof d._openDesc==='undefined') d._openDesc=false;
       if(typeof d._openProcs==='undefined') d._openProcs=true;
     });
   }
@@ -1419,7 +1419,7 @@ function drawFlowForSteps(container){
         if(brBottom + 16 > yDown) yDown = brBottom + 16;
       }
 
-      let yUp = topB.y - 14;
+      const yUp = topB.y - 14;
 
       const allLefts  = rects.map(r => r.left - cRect.left);
       const allRights = rects.map(r => r.right - cRect.left);
@@ -1867,14 +1867,16 @@ function stepRow(p,m,st,index,stepsArray){
   return row;
 }
 
-/* ===== Subprocesos ===== */
+/* ===== Subprocesos y Sub-subprocesos ===== */
 function modCard(p,m){
   if(!m) m={};
-  if(!m.kind) m.kind='sub';                // 'main' = Pasos del proceso, 'sub' = Subprocesos
+  if(!m.kind) m.kind='sub';          // 'main' = Pasos del proceso, 'sub' = Subproceso
   if(!Array.isArray(m.steps)) m.steps=[];
-  if(!Array.isArray(m.subSubSteps)) m.subSubSteps=[];
   if(typeof m._openSteps==='undefined') m._openSteps=true;
   if(typeof m._openSubSub==='undefined') m._openSubSub=false;
+  if(m.kind==='sub' && m.subSub && !Array.isArray(m.subSub.steps)){
+    m.subSub.steps=[];
+  }
 
   const card=document.createElement('div');
   card.className='module';
@@ -1885,7 +1887,7 @@ function modCard(p,m){
 
   const head=document.createElement('div'); head.className='mod-head';
   head.style.setProperty('--proc',p.color);
-  head.innerHTML=`<input class="mod-title" value="${m.title}">
+  head.innerHTML=`<input class="mod-title" value="${m.title||''}">
     <select class="sel">${RESPONSABLES.map(r=>`<option ${m.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
     <input class="resp-extra" placeholder="Nombre otros…" value="${m.respOtro||''}" style="${m.responsable==='Otros'?'display:inline-block':'display:none'}">
     <button class="pill" data-act="toggle-detail" aria-expanded="${m._openDetail?'true':'false'}">▾ Detalle</button>
@@ -1898,7 +1900,7 @@ function modCard(p,m){
   titleEl.title = m.title || '';
   titleEl.ondblclick=()=>{ m._openDetail=!m._openDetail; toggleBlock(det,m._openDetail); if(m._openDetail){ setTimeout(()=>det.querySelector('textarea').focus(),0);} save(); };
 
-  const selEl=head.querySelector('select');
+  const selEl=head.querySelector('select.sel');
   const respExtra=head.querySelector('.resp-extra');
   selEl.onchange=e=>{
     m.responsable=e.target.value;
@@ -1914,7 +1916,18 @@ function modCard(p,m){
     save();
   };
 
-  head.querySelector('[data-act="add-step"]').onclick=()=>{
+  // Ajustar textos según tipo de módulo
+  const btnStepsToggle=head.querySelector('[data-act="toggle-steps"]');
+  const btnAddStep=head.querySelector('[data-act="add-step"]');
+  if(m.kind==='sub'){
+    btnStepsToggle.textContent='▾ Pasos del subproceso';
+    btnAddStep.textContent='+ Pasos del subproceso';
+  }else{
+    btnStepsToggle.textContent='▾ Pasos del proceso';
+    btnAddStep.textContent='+ Paso';
+  }
+
+  btnAddStep.onclick=()=>{
     m.steps.push(makeStep());
     m._openSteps = true;
     save();
@@ -1960,12 +1973,12 @@ function modCard(p,m){
           respOtro: m.respOtro || '',
           detail:'',
           steps:[makeStep()],
-          subSubSteps:[],
           kind:'sub',
           completed:false,
           _openDetail:false,
           _openSteps:true,
           _openSubSub:false,
+          subSub:null,
           isSub:true,
           parentId:m.id
         };
@@ -2006,63 +2019,6 @@ function modCard(p,m){
   });
   card.appendChild(steps);
 
-  /* SUB-SUBPROCESOS: faldón vinculado con sus Pasos+ */
-  if(m.kind === 'sub'){
-    const subWrap=document.createElement('div');
-    subWrap.style.marginTop='6px';
-
-    const subSteps=document.createElement('div');
-    subSteps.className='steps';
-    subSteps.style.setProperty('--proc',p.color);
-    m.subSubSteps.forEach((sst,idx2)=>{
-      if(typeof sst.detail === 'undefined') sst.detail='';
-      if(typeof sst._openDetailStep === 'undefined') sst._openDetailStep=false;
-      if(typeof sst._openBranches === 'undefined') sst._openBranches=false;
-      if(typeof sst._editingBranches === 'undefined') sst._editingBranches=false;
-      if(!Array.isArray(sst.yes)) sst.yes=[];
-      if(!Array.isArray(sst.no))  sst.no=[];
-      if(!Array.isArray(sst.links)) sst.links=[];
-      if(!Array.isArray(sst.docs))  sst.docs=[];
-      subSteps.appendChild(stepRow(p,m,sst,idx2,m.subSubSteps));
-    });
-
-    const subFaldon=document.createElement('div');
-    subFaldon.className='dept-faldon';
-    subFaldon.innerHTML=`<span class="label">SUB-SUBPROCESOS</span><span class="chevron">${m._openSubSub?'▾':'▸'}</span>`;
-    const subChevron=subFaldon.querySelector('.chevron');
-    subFaldon.onclick=()=>{
-      m._openSubSub=!m._openSubSub;
-      toggleBlock(subSteps,m._openSubSub);
-      subChevron.textContent=m._openSubSub?'▾':'▸';
-      save();
-    };
-
-    const subControls=document.createElement('div');
-    subControls.style.margin='4px 0 0 0';
-    const btnAddSubSub=document.createElement('button');
-    btnAddSubSub.className='pill';
-    btnAddSubSub.setAttribute('data-act','add-subsub-step');
-    btnAddSubSub.textContent='+ Paso';
-    btnAddSubSub.onclick=()=>{
-      m._openSubSub = true;
-      m.subSubSteps.push(makeStep());
-      save();
-      renderModules();
-    };
-    subControls.appendChild(btnAddSubSub);
-
-    if(m._openSubSub === false){
-      hideBlock(subSteps);
-    }else{
-      showBlock(subSteps);
-    }
-
-    subWrap.appendChild(subFaldon);
-    subWrap.appendChild(subControls);
-    subWrap.appendChild(subSteps);
-    card.appendChild(subWrap);
-  }
-
   if(m._openSteps === false){
     hideBlock(steps);
   }else{
@@ -2080,6 +2036,161 @@ function modCard(p,m){
       save();
       requestAnimationFrame(()=>{ layoutAllSteps(); drawAllFlows(); });
     };
+  }
+
+  /* SUB-SUBPROCESOS: faldón + faldón pequeño con audiólogo, detalle, +Pasos, desplegar pasos, guardar y - */
+  if(m.kind === 'sub'){
+    const subWrap=document.createElement('div');
+    subWrap.style.marginTop='6px';
+
+    const subFaldon=document.createElement('div');
+    subFaldon.className='dept-faldon';
+    subFaldon.innerHTML=`<span class="label">SUB-SUBPROCESOS</span><span class="chevron">${m._openSubSub?'▾':'▸'}</span>`;
+    const subChevron=subFaldon.querySelector('.chevron');
+
+    const holder=document.createElement('div');
+
+    function renderSubSub(){
+      holder.innerHTML='';
+      if(!m.subSub) return;
+      const sub=m.subSub;
+
+      if(typeof sub._openDetail==='undefined') sub._openDetail=false;
+      if(typeof sub._openSteps==='undefined') sub._openSteps=true;
+      if(!Array.isArray(sub.steps)) sub.steps=[makeStep()];
+      if(!sub.responsable) sub.responsable=RESPONSABLES[0];
+
+      const sCard=document.createElement('div');
+      sCard.className='module module-subchild';
+      sCard.style.setProperty('--proc',p.color);
+
+      const sHead=document.createElement('div');
+      sHead.className='mod-head';
+      sHead.style.setProperty('--proc',p.color);
+      sHead.innerHTML=`
+        <select class="sel sel-subsub">${RESPONSABLES.map(r=>`<option ${sub.responsable===r?'selected':''}>${r}</option>`).join('')}</select>
+        <input class="resp-extra resp-extra-subsub" placeholder="Nombre otros…" value="${sub.respOtro||''}" style="${sub.responsable==='Otros'?'display:inline-block':'display:none'}">
+        <button class="pill" data-act="subsub-toggle-detail">▾ Detalle</button>
+        <button class="pill" data-act="subsub-toggle-steps" aria-expanded="${sub._openSteps===false?'false':'true'}">▾ Pasos</button>
+        <button class="pill" data-act="subsub-add-step">+ Paso</button>
+        <button class="pill" data-act="subsub-close">${sub.completed?'🎯 Cerrado':'🎯 Guardar'}</button>
+        <button class="pill" data-act="subsub-del">–</button>`;
+      sCard.appendChild(sHead);
+
+      const sSel = sHead.querySelector('.sel-subsub');
+      const sExtra = sHead.querySelector('.resp-extra-subsub');
+      sSel.onchange=e=>{
+        sub.responsable=e.target.value;
+        if(sub.responsable==='Otros'){
+          sExtra.style.display='inline-block';
+        }else{
+          sExtra.style.display='none';
+        }
+        save();
+      };
+      sExtra.oninput=e=>{
+        sub.respOtro=e.target.value;
+        save();
+      };
+
+      const sDet=document.createElement('div');
+      sDet.className='mod-detail'+(sub._openDetail?'':' hide');
+      sDet.innerHTML=`<textarea placeholder="Descripción del sub-subproceso…">${sub.detail||''}</textarea>`;
+      const sTa=sDet.querySelector('textarea');
+      sTa.title=sub.detail||'';
+      sTa.oninput=e=>{ sub.detail=e.target.value; sTa.title=sub.detail||''; save(); };
+      sCard.appendChild(sDet);
+
+      const sSteps=document.createElement('div');
+      sSteps.className='steps';
+      sSteps.style.setProperty('--proc',p.color);
+      sub.steps.forEach((sst,idx2)=>{
+        if(typeof sst.detail === 'undefined') sst.detail='';
+        if(typeof sst._openDetailStep === 'undefined') sst._openDetailStep=false;
+        if(typeof sst._openBranches === 'undefined') sst._openBranches=false;
+        if(typeof sst._editingBranches === 'undefined') sst._editingBranches=false;
+        if(!Array.isArray(sst.yes)) sst.yes=[];
+        if(!Array.isArray(sst.no))  sst.no=[];
+        if(!Array.isArray(sst.links)) sst.links=[];
+        if(!Array.isArray(sst.docs))  sst.docs=[];
+        sSteps.appendChild(stepRow(p,m,sst,idx2,sub.steps));
+      });
+      sCard.appendChild(sSteps);
+
+      if(sub._openSteps===false) hideBlock(sSteps); else showBlock(sSteps);
+
+      const bToggleDet=sHead.querySelector('[data-act="subsub-toggle-detail"]');
+      const bToggleSteps=sHead.querySelector('[data-act="subsub-toggle-steps"]');
+      const bAddStep=sHead.querySelector('[data-act="subsub-add-step"]');
+      const bClose=sHead.querySelector('[data-act="subsub-close"]');
+      const bDel=sHead.querySelector('[data-act="subsub-del"]');
+
+      bToggleDet.onclick=()=>{
+        sub._openDetail=!sub._openDetail;
+        toggleBlock(sDet,sub._openDetail);
+        save();
+      };
+      bToggleSteps.onclick=()=>{
+        const curr = sub._openSteps===false?false:true;
+        const next=!curr;
+        sub._openSteps=next;
+        bToggleSteps.setAttribute('aria-expanded',next?'true':'false');
+        toggleBlock(sSteps,next);
+        save();
+        requestAnimationFrame(()=>{layoutAllSteps();drawAllFlows();});
+      };
+      bAddStep.onclick=()=>{
+        sub.steps.push(makeStep());
+        sub._openSteps=true;
+        save();
+        renderModules();
+      };
+      bClose.onclick=()=>{
+        sub.completed=!sub.completed;
+        save();
+        renderModules();
+      };
+      bDel.onclick=()=>{
+        if(confirm('¿Eliminar sub-subproceso completo?')){
+          m.subSub=null;
+          m._openSubSub=false;
+          save();
+          renderModules();
+        }
+      };
+
+      holder.appendChild(sCard);
+    }
+
+    subFaldon.onclick=()=>{
+      if(!m.subSub){
+        m.subSub={
+          id:uid(),
+          responsable:RESPONSABLES[0],
+          respOtro:'',
+          detail:'',
+          steps:[makeStep()],
+          completed:false,
+          _openDetail:false,
+          _openSteps:true
+        };
+      }
+      m._openSubSub = !m._openSubSub;
+      subChevron.textContent = m._openSubSub ? '▾' : '▸';
+      save();
+      renderModules();
+    };
+
+    if(m.subSub && m._openSubSub){
+      renderSubSub();
+      showBlock(holder);
+    }else{
+      hideBlock(holder);
+    }
+
+    subWrap.appendChild(subFaldon);
+    subWrap.appendChild(holder);
+    card.appendChild(subWrap);
   }
 
   if(m.completed){
@@ -2110,7 +2221,7 @@ function createModuleForProcess(pid,titleOverride,kind){
   if(!Array.isArray(dept.processes)) dept.processes=[];
   const p=dept.processes.find(x=>x.id===pid); if(!p) return null;
   if(!Array.isArray(p.modules)) p.modules=[];
-  const moduleKind = kind || 'sub'; // 'main' (Pasos del proceso) o 'sub' (Subprocesos)
+  const moduleKind = kind || 'sub';
   let defaultTitle;
   if(titleOverride){
     defaultTitle = titleOverride;
@@ -2126,12 +2237,12 @@ function createModuleForProcess(pid,titleOverride,kind){
     respOtro:'',
     detail:'',
     steps:[makeStep()],
-    subSubSteps:[],
     kind:moduleKind,
     completed:false,
     _openDetail:false,
     _openSteps:true,
-    _openSubSub:false
+    _openSubSub:false,
+    subSub:null
   };
   p.modules.push(m); save(); renderModules(); return m;
 }
@@ -2202,7 +2313,7 @@ document.getElementById('btnAddSubprocPaso').onclick=()=>{
   if(!Array.isArray(dept.processes) || !dept.processes.length){alert('Crea un proceso');return;}
   const p=findProcessById(activePid) || dept.processes[0];
   if(!p){alert('Crea un proceso');return;}
-  createModuleForProcess(p.id,'Subprocesos','sub');
+  createModuleForProcess(p.id,'Subproceso','sub');
 };
 document.getElementById('btnAddStepGlobal').onclick=addStepGlobal;
 document.getElementById('btnSave').onclick=save;
@@ -2251,8 +2362,8 @@ function moduleMatches(m, q){
       if(stepMatches(st, ql)) return true;
     }
   }
-  if(Array.isArray(m.subSubSteps)){
-    for(const st of m.subSubSteps){
+  if(m.subSub && Array.isArray(m.subSub.steps)){
+    for(const st of m.subSub.steps){
       if(stepMatches(st, ql)) return true;
     }
   }
@@ -2358,7 +2469,7 @@ if(filePicker){
       s.classList.toggle('is-readonly', locked);
     });
 
-    document.querySelectorAll('[data-act="add-step"], [data-act="add-subsub-step"], [data-act="close"], [data-act="del"], [data-act="add-submodule"]').forEach(b=>{
+    document.querySelectorAll('[data-act="add-step"], [data-act="subsub-add-step"], [data-act="close"], [data-act="subsub-close"], [data-act="del"], [data-act="subsub-del"], [data-act="add-submodule"]').forEach(b=>{
       b.classList.toggle('lock-block', locked);
       b.toggleAttribute('disabled', locked);
     });
@@ -2377,7 +2488,7 @@ if(filePicker){
 
     if(
       t.matches('#btnAddProcess, #btnAddStepGlobal, #btnAddSubprocPaso, #btnDeptAdd') ||
-      t.matches('[data-act="add-step"], [data-act="add-subsub-step"], [data-act="close"], [data-act="del"], [data-act="add-submodule"]') ||
+      t.matches('[data-act="add-step"], [data-act="subsub-add-step"], [data-act="close"], [data-act="subsub-close"], [data-act="del"], [data-act="subsub-del"], [data-act="add-submodule"]') ||
       t.matches('.branch .p-mini') ||
       t.matches('.dept-edit-menu button[data-act="edit"], .dept-edit-menu button[data-act="delete"]')
     ){
@@ -2468,10 +2579,10 @@ if(filePicker){
           html.push('</ul>');
         }
 
-        const subSub = Array.isArray(mod.subSubSteps) ? mod.subSubSteps : [];
-        if(subSub.length){
+        const subSub = mod.subSub;
+        if(subSub && Array.isArray(subSub.steps) && subSub.steps.length){
           html.push('<h3>Sub-subprocesos</h3><ul>');
-          subSub.forEach((st,sIndex)=>{
+          subSub.steps.forEach((st,sIndex)=>{
             if(!st) return;
             const title = st.title || ('Paso '+(sIndex+1));
             html.push('<li><strong>Paso '+(sIndex+1)+':</strong> '+escapeHTML(title));
@@ -2579,10 +2690,10 @@ if(filePicker){
             html.push('</ul>');
           }
 
-          const subSub = Array.isArray(mod.subSubSteps)?mod.subSubSteps:[];
-          if(subSub.length){
+          const subSub = mod.subSub;
+          if(subSub && Array.isArray(subSub.steps) && subSub.steps.length){
             html.push('<h3>Sub-subprocesos</h3><ul>');
-            subSub.forEach((st,sIndex)=>{
+            subSub.steps.forEach((st,sIndex)=>{
               if(!st) return;
               const title = st.title || ('Paso '+(sIndex+1));
               html.push('<li><strong>Paso '+(sIndex+1)+':</strong> '+escapeHTML(title));
